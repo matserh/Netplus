@@ -1,149 +1,116 @@
-<div align="center">
+<div align="center">NETPLUS
 
-# NETPLUS
+Premium Cinema Streaming • Free Forever
 
-### Premium Cinema Streaming — Free Forever
+</div><p align="center">
+  <strong>Une plateforme de streaming nouvelle génération conçue pour offrir une expérience immersive sur tous les écrans.</strong>
+</p>Aperçu
 
-</div>
+NetPlus est une plateforme de streaming moderne dédiée aux films, séries TV et formats courts. Développée avec Next.js 16, elle privilégie la rapidité, la fluidité et une interface élégante pensée aussi bien pour mobile que pour ordinateur.
 
-<p align="center">
-  <strong>Une expérience cinématographique complète, propulsée par Next.js 16 et l'intelligence artificiale.</strong>
-</p>
+Le projet exploite l'API TMDB pour son catalogue multimédia, intègre un lecteur vidéo multi-serveurs capable de basculer automatiquement lorsqu'une source devient indisponible, ainsi qu'un assistant intelligent, Maître NetPlus, qui accompagne les utilisateurs dans leurs recherches et leurs découvertes.
 
----
+Fonctionnalités
 
-## Aperçu
+Catalogue & Lecture
 
-NetPlus est une plateforme de streaming moderne qui réunit films, séries TV et contenu court dans une interface élégante inspirée des meilleurs services du marché. Construite autour de Next.js 16, elle offre une expérience fluide, réactive et accessible sur tous les appareils.
-
-Le projet s'appuie sur l'API TMDB pour son catalogue, intègre un lecteur vidéo intelligent avec fallback automatique sur six serveurs, et propose un assistant IA conversationnel — le Maître Netplus — pour guider les utilisateurs dans leurs découvertes.
-
-## Fonctionnalités principales
-
-**Catalogue & Lecture**
-- Catalogue complet de films et séries alimenté par TMDB
-- Lecteur vidéo intelligent avec fallback automatique sur 6 serveurs
-- Sous-titres multilingues avec traduction
+- Catalogue de films et séries alimenté par TMDB
+- Lecteur vidéo multi-serveurs avec bascule automatique
+- Sous-titres multilingues
 - Shorts au format vertical 9:16
 
-**Expérience utilisateur**
-- Système de profils multiples (Jeunesse, Frénésie, Nocturne)
-- Assistant IA « Maître Netplus » propulsé par z-ai-web-dev-sdk
-- Recherche intelligente avec suggestions contextuelles
-- Mode sombre et clair avec thème dynamique
+Expérience utilisateur
+
+- Profils personnalisés (Jeunesse, Frénésie, Nocturne)
+- Assistant intelligent Maître NetPlus
+- Recherche intelligente avec suggestions
+- Thème clair et sombre dynamique
 - Historique de visionnage personnalisé
 
-**Architecture**
-- Authentification sécurisée via NextAuth.js
-- Système premium avec gestion des limitations
-- Base de données Prisma + SQLite
-- API routes Next.js pour la logique serveur
-- Design responsive mobile-first
+Infrastructure
 
-## Stack technique
+- Authentification sécurisée avec NextAuth.js
+- Gestion des comptes Premium
+- Prisma ORM + SQLite
+- API Routes Next.js
+- Interface responsive optimisée Mobile First
 
-| Catégorie | Technologie |
-|-----------|-------------|
-| Framework | Next.js 16 (App Router) |
-| Langage | TypeScript 5 |
-| Style | Tailwind CSS 4 + shadcn/ui |
-| Base de données | Prisma ORM + SQLite |
-| Authentification | NextAuth.js v4 |
-| État client | Zustand + TanStack Query |
-| Animations | Framer Motion |
-| API externe | TMDB (The Movie Database) |
-| Intelligence artificielle | z-ai-web-dev-sdk |
+Stack technique
 
-## Installation
+Catégorie| Technologie
+Framework| Next.js 16 (App Router)
+Langage| TypeScript 5
+Interface| Tailwind CSS 4 + shadcn/ui
+Base de données| Prisma ORM + SQLite
+Authentification| NextAuth.js
+Gestion d'état| Zustand + TanStack Query
+Animations| Framer Motion
+API| TMDB
+Intelligence artificielle| z-ai-web-dev-sdk
 
-```bash
-# Cloner le dépôt
+Installation
+
 git clone https://github.com/matserh/Netplus.git
+
 cd Netplus
 
-# Installer les dépendances
 npm install
 
-# Générer le client Prisma
 npx prisma generate
 
-# Initialiser la base de données
 npx prisma db push
 
-# Configurer les variables d'environnement
 echo "DATABASE_URL=file:./db/custom.db" > .env
 
-# Démarrer le serveur de développement
 npm run dev
-```
 
-Le site est ensuite accessible sur `http://localhost:3000`.
+Application disponible sur :
 
-## Scripts disponibles
+http://localhost:3000
 
-| Commande | Description |
-|----------|-------------|
-| `npm run dev` | Démarre le serveur de développement |
-| `npm run build` | Compile le projet pour la production |
-| `npm run start` | Démarre le serveur de production |
-| `npm run lint` | Vérifie la qualité du code |
-| `npx prisma generate` | Génère le client Prisma |
-| `npx prisma db push` | Synchronise le schéma avec la base de données |
+Scripts
 
-## Structure du projet
+Commande| Description
+"npm run dev"| Lance le serveur de développement
+"npm run build"| Compile le projet
+"npm run start"| Lance la version de production
+"npm run lint"| Analyse la qualité du code
+"npx prisma generate"| Génère le client Prisma
+"npx prisma db push"| Met à jour la base de données
 
-```
+Structure
+
 Netplus/
-├── prisma/                  Schéma de base de données
-├── public/                  Assets statiques (logo, images)
+├── prisma/
+├── public/
 ├── src/
-│   ├── app/                 Pages Next.js (App Router)
-│   │   ├── api/             Routes API
-│   │   ├── watch/           Page de lecture vidéo
-│   │   ├── download/        Téléchargement du code source
-│   │   ├── shorts/          Contenu court vertical
-│   │   ├── profiles/        Gestion des profils
-│   │   ├── search/          Recherche
-│   │   ├── login/           Authentification
-│   │   ├── page.tsx         Page d'accueil
-│   │   └── layout.tsx       Layout racine
+│   ├── app/
 │   ├── components/
-│   │   ├── ui/              Composants shadcn/ui
-│   │   ├── layout/          Navigation, footer, sidebar
-│   │   ├── media/           Cards, modales, bannières
-│   │   └── ai/              Chat IA
-│   ├── contexts/            Contextes React
-│   ├── hooks/               Hooks personnalisés
-│   ├── lib/                 Utilitaires (db, tmdb, auth)
-│   └── types/               Types TypeScript
+│   ├── contexts/
+│   ├── hooks/
+│   ├── lib/
+│   └── types/
 ├── package.json
 └── README.md
-```
 
-## Configuration
+Configuration
 
-### Variables d'environnement
+Variables d'environnement
 
-Créez un fichier `.env` à la racine du projet :
-
-```env
 DATABASE_URL=file:./db/custom.db
-```
 
-### API TMDB
+API TMDB
 
-La clé API TMDB est configurée dans `src/types/media.ts`. Pour utiliser votre propre clé :
+Remplacez simplement la clé présente dans :
 
-1. Créez un compte sur [themoviedb.org](https://www.themoviedb.org/)
-2. Générez une clé API dans les paramètres de votre compte
-3. Remplacez la valeur de `API_CONFIG.tmdb.apiKey` dans `src/types/media.ts`
+src/types/media.ts
 
-## Licence
+par votre propre clé API TMDB.
 
-Projet open source distribué à but éducatif.
+Licence
 
----
+Projet open source distribué à des fins éducatives.
 
 <p align="center">
-  <sub>Propulsé par NetPlus — Conçu avec soin pour les passionnés de cinéma.</sub>
+  <sub>NETPLUS • Streaming moderne, rapide et pensé pour une expérience cinéma sans compromis.</sub>
 </p>
