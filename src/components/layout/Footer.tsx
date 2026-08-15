@@ -17,8 +17,8 @@ export function Footer() {
           {/* Links */}
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
-            <Link href="/search" className="hover:text-primary transition-colors">Films</Link>
-            <Link href="/search" className="hover:text-primary transition-colors">Séries</Link>
+            <Link href="/movies/popular" className="hover:text-primary transition-colors">Films</Link>
+            <Link href="/tv/popular" className="hover:text-primary transition-colors">Séries</Link>
             <Link href="/history" className="hover:text-primary transition-colors">Ma Liste</Link>
             <Link href="/pricing" className="hover:text-primary transition-colors">Premium</Link>
             <Link href="/about" className="hover:text-primary transition-colors">À propos</Link>

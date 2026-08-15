@@ -503,12 +503,11 @@ function ShortCard({ item, isActive }: { item: ShortItem; isActive: boolean }) {
   };
 
   const handleOpenFullWatch = () => {
-    const params = new URLSearchParams({ id: String(item.id), type: item.mediaType });
+    let url = `/watch/${item.mediaType}/${item.id}`;
     if (item.mediaType === 'tv' && item.season && item.episode) {
-      params.set('s', String(item.season));
-      params.set('e', String(item.episode));
+      url += `?s=${item.season}&e=${item.episode}`;
     }
-    router.push(`/watch?${params}`);
+    router.push(url);
   };
 
   return (

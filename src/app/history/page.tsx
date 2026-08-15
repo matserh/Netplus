@@ -236,7 +236,7 @@ function HistoryContent() {
               <HistoryCard
                 key={`${entry.id}-${entry.mediaType}`}
                 entry={entry}
-                onPlay={() => router.push(`/watch?id=${entry.id}&type=${entry.mediaType}`)}
+                onPlay={() => router.push(`/watch/${entry.mediaType}/${entry.id}`)}
                 onRemove={() => removeFromHistory(entry.id, entry.mediaType)}
               />
             ))}

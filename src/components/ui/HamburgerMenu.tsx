@@ -20,7 +20,9 @@ import {
   User,
   Info,
   FileText,
-  Shield
+  Shield,
+  Award,
+  Calendar
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 
@@ -106,15 +108,39 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
               </Link>
             </Button>
             <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
-              <Link href="/search">
+              <Link href="/trending">
                 <TrendingUp className="w-5 h-5" />
                 Tendances
               </Link>
             </Button>
             <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
-              <Link href="/search">
+              <Link href="/movies/popular">
+                <Film className="w-5 h-5" />
+                Films Populaires
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/tv/popular">
+                <Tv className="w-5 h-5" />
+                Séries Populaires
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/movies/top-rated">
+                <Award className="w-5 h-5" />
+                Films Mieux Notés
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/tv/top-rated">
                 <Star className="w-5 h-5" />
-                Top Films
+                Séries Mieux Notées
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/upcoming">
+                <Calendar className="w-5 h-5" />
+                Prochainement
               </Link>
             </Button>
             <Button

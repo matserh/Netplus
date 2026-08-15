@@ -227,7 +227,7 @@ export default function SearchPage() {
                     <Poster
                       key={`${item.id}-${i}`}
                       media={item}
-                      onClick={() => router.push(`/watch?id=${item.id}&type=${item.media_type}`)}
+                      onClick={() => router.push(`/watch/${item.media_type}/${item.id}`)}
                     />
                   ))}
                 </div>
@@ -257,7 +257,7 @@ export default function SearchPage() {
                   {recentHistory.map((entry) => (
                     <button
                       key={`${entry.id}-${entry.mediaType}`}
-                      onClick={() => router.push(`/watch?id=${entry.id}&type=${entry.mediaType}`)}
+                      onClick={() => router.push(`/watch/${entry.mediaType}/${entry.id}`)}
                       className="flex-shrink-0 w-28 group"
                     >
                       <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-card ring-1 ring-white/5">
@@ -295,7 +295,7 @@ export default function SearchPage() {
                   <TrendingPill
                     key={item.id}
                     media={item}
-                    onClick={() => router.push(`/watch?id=${item.id}&type=${item.media_type || 'movie'}`)}
+                    onClick={() => router.push(`/watch/${item.media_type || 'movie'}/${item.id}`)}
                   />
                 ))}
               </div>

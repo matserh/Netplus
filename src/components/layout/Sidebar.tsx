@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/ui/Logo';
@@ -39,16 +40,25 @@ interface SidebarProps {
 
 export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggle }: SidebarProps) {
   const [showGenres, setShowGenres] = useState(true);
+  const pathname = usePathname();
 
   const mainNav = [
-    { icon: Home, label: 'Accueil', href: '/', active: true },
-    { icon: TrendingUp, label: 'Tendances', href: '/?tab=trending' },
-    { icon: Film, label: 'Films Populaires', href: '/?section=movie-popular' },
-    { icon: Tv, label: 'Séries Populaires', href: '/?section=tv-popular' },
-    { icon: Award, label: 'Films Mieux Notés', href: '/?section=movie-top-rated' },
-    { icon: Star, label: 'Séries Mieux Notées', href: '/?section=tv-top-rated' },
-    { icon: Calendar, label: 'Prochainement', href: '/?section=upcoming' },
+    { icon: Home, label: 'Accueil', href: '/' },
+    { icon: TrendingUp, label: 'Tendances', href: '/trending' },
+    { icon: Film, label: 'Films Populaires', href: '/movies/popular' },
+    { icon: Tv, label: 'Séries Populaires', href: '/tv/popular' },
+    { icon: Award, label: 'Films Mieux Notés', href: '/movies/top-rated' },
+    { icon: Star, label: 'Séries Mieux Notées', href: '/tv/top-rated' },
+    { icon: Calendar, label: 'Prochainement', href: '/upcoming' },
   ];
+
+  // Determine which nav item is active based on current URL
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   const accountNav = [
     { icon: User, label: 'Profils', href: '/profiles' },
@@ -102,19 +112,19 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                 href={item.href}
                 className={cn(
                   "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden",
-                  item.active 
+                  isActive(item.href)
                     ? "bg-primary/15 text-primary shadow-sm shadow-primary/10" 
                     : "text-sidebar-foreground/60 hover:text-primary hover:bg-primary/8",
                   isCollapsed && "justify-center px-2"
                 )}
               >
                 {/* Active indicator */}
-                {item.active && (
+                {isActive(item.href) && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
                 )}
                 <item.icon className={cn(
                   "w-[18px] h-[18px] flex-shrink-0 transition-all duration-300",
-                  item.active ? "text-primary" : "text-sidebar-foreground/40 group-hover:text-primary"
+                  isActive(item.href) ? "text-primary" : "text-sidebar-foreground/40 group-hover:text-primary"
                 )} />
                 {!isCollapsed && <span className="truncate">{item.label}</span>}
               </Link>
