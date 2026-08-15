@@ -17,7 +17,12 @@ import {
   Heart,
   Clock,
   Bookmark,
-  ChevronDown
+  ChevronDown,
+  Crown,
+  User,
+  Info,
+  FileText,
+  Shield
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 import { cn } from '@/lib/utils';
@@ -35,10 +40,21 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
 
   const mainNav = [
     { icon: Home, label: 'Accueil', href: '/', active: true },
-    { icon: TrendingUp, label: 'Tendances', href: '/' },
-    { icon: Film, label: 'Films', href: '/' },
-    { icon: Tv, label: 'Séries', href: '/' },
-    { icon: Star, label: 'Top', href: '/' },
+    { icon: TrendingUp, label: 'Tendances', href: '/?tab=trending' },
+    { icon: Film, label: 'Films', href: '/?type=movie' },
+    { icon: Tv, label: 'Séries', href: '/?type=tv' },
+    { icon: Star, label: 'Top', href: '/?tab=top-rated' },
+  ];
+
+  const accountNav = [
+    { icon: User, label: 'Profils', href: '/profiles' },
+    { icon: Crown, label: 'Premium', href: '/pricing' },
+  ];
+
+  const legalNav = [
+    { icon: Info, label: 'À propos', href: '/about' },
+    { icon: FileText, label: 'Conditions', href: '/terms' },
+    { icon: Shield, label: 'Confidentialité', href: '/privacy' },
   ];
 
   const library = [
@@ -133,6 +149,29 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
             </>
           )}
 
+          {/* Account & Premium */}
+          {!isCollapsed && (
+            <>
+              <div className="my-3 h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
+
+              <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest px-3 mb-2">
+                Compte
+              </p>
+              <nav className="space-y-0.5">
+                {accountNav.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200"
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+            </>
+          )}
+
           {/* Genres */}
           {!isCollapsed && (
             <>
@@ -176,10 +215,22 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
         </Button>
       )}
 
-      {/* Footer */}
+      {/* Legal Links & Footer */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-sidebar-border/50">
-          <p className="text-[10px] text-muted-foreground text-center">© 2026 Netplus</p>
+        <div className="p-3 border-t border-sidebar-border/50 space-y-1">
+          <nav className="space-y-0.5">
+            {legalNav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-1.5 rounded-lg text-[11px] text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent/50 transition-all duration-200"
+              >
+                <item.icon className="w-3.5 h-3.5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+          <p className="text-[9px] text-muted-foreground/30 text-center pt-1">© 2026 Netplus</p>
         </div>
       )}
     </aside>

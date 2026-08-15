@@ -15,7 +15,12 @@ import {
   Sparkles,
   X,
   Maximize,
-  Minimize
+  Minimize,
+  Crown,
+  User,
+  Info,
+  FileText,
+  Shield
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 
@@ -100,13 +105,17 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
                 Accueil
               </Link>
             </Button>
-            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary">
-              <TrendingUp className="w-5 h-5" />
-              Tendances
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/search">
+                <TrendingUp className="w-5 h-5" />
+                Tendances
+              </Link>
             </Button>
-            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary">
-              <Star className="w-5 h-5" />
-              Top Films
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/search">
+                <Star className="w-5 h-5" />
+                Top Films
+              </Link>
             </Button>
             <Button
               variant="ghost"
@@ -118,6 +127,52 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
             >
               <Sparkles className="w-5 h-5" />
               Assistant IA
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Account & Premium */}
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Compte</h3>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/profiles">
+                <User className="w-5 h-5" />
+                Profils
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 text-primary" asChild>
+              <Link href="/pricing">
+                <Crown className="w-5 h-5" />
+                Premium
+              </Link>
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Legal */}
+          <div className="space-y-1">
+            <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Légal</h3>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary text-xs" asChild>
+              <Link href="/about">
+                <Info className="w-4 h-4" />
+                À propos
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary text-xs" asChild>
+              <Link href="/terms">
+                <FileText className="w-4 h-4" />
+                Conditions
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary text-xs" asChild>
+              <Link href="/privacy">
+                <Shield className="w-4 h-4" />
+                Confidentialité
+              </Link>
             </Button>
           </div>
 

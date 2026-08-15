@@ -17,17 +17,19 @@ export function Footer() {
           {/* Links */}
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Films</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Séries</Link>
-            <Link href="/" className="hover:text-primary transition-colors">Ma Liste</Link>
+            <Link href="/search" className="hover:text-primary transition-colors">Films</Link>
+            <Link href="/search" className="hover:text-primary transition-colors">Séries</Link>
+            <Link href="/history" className="hover:text-primary transition-colors">Ma Liste</Link>
+            <Link href="/pricing" className="hover:text-primary transition-colors">Premium</Link>
+            <Link href="/about" className="hover:text-primary transition-colors">À propos</Link>
           </div>
 
           {/* Legal */}
           <div className="flex flex-col items-start md:items-end gap-2">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <Link href="/" className="hover:text-foreground transition-colors">Conditions</Link>
-              <Link href="/" className="hover:text-foreground transition-colors">Confidentialité</Link>
-              <Link href="/" className="hover:text-foreground transition-colors">Contact</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Conditions</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Confidentialité</Link>
+              <Link href="/about" className="hover:text-foreground transition-colors">Contact</Link>
             </div>
             <p className="text-[11px] text-muted-foreground/60">© 2026 Netplus. Tous droits réservés.</p>
           </div>

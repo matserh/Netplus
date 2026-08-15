@@ -308,22 +308,23 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Comparison Section */}
+        {/* Comparison Section — 3 Tiers */}
         <div className="mt-8 sm:mt-12">
           <h2 className="text-xl sm:text-2xl font-black text-center text-foreground mb-6 sm:mb-8">
             Comparez les offres
           </h2>
 
-          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Basic Plan */}
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
+            {/* Tier 1: Basique — Gratuit */}
             <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-foreground mb-1">Basique</h3>
-                <p className="text-xs text-muted-foreground">Accès limité sans compléter les défis</p>
+                <p className="text-xs text-muted-foreground">Découverte gratuite du catalogue</p>
               </div>
-              <div className="text-3xl sm:text-4xl font-black text-foreground mb-4">
-                Gratuit<span className="text-sm font-normal text-muted-foreground"></span>
+              <div className="text-3xl sm:text-4xl font-black text-foreground mb-1">
+                Gratuit
               </div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground/60 mb-4">Aucune carte bancaire</p>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm">
                   <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
@@ -338,10 +339,14 @@ export default function PricingPage() {
                   <span className="text-muted-foreground">Assistant Maître Netplus</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-muted-foreground">1 serveur de streaming</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
                   <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span className="text-muted-foreground/50">Accès illimité bloqué</span>
+                  <span className="text-muted-foreground/50">Accès illimité</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,18 +355,82 @@ export default function PricingPage() {
                   <span className="text-muted-foreground/50">Badge VIP</span>
                 </li>
               </ul>
-              <div className="px-4 py-2.5 rounded-lg bg-white/5 text-center">
-                <span className="text-sm text-muted-foreground">Votre plan actuel</span>
-              </div>
+              {!isPremium ? (
+                <div className="px-4 py-2.5 rounded-lg bg-white/5 text-center">
+                  <span className="text-sm text-muted-foreground">Plan actuel</span>
+                </div>
+              ) : (
+                <div className="px-4 py-2.5 rounded-lg bg-white/5 text-center">
+                  <span className="text-sm text-muted-foreground/50">Plan de base</span>
+                </div>
+              )}
             </div>
 
-            {/* Premium Plan */}
+            {/* Tier 2: Par Tâche — Freemium via défis */}
+            <div className="relative rounded-xl sm:rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-transparent p-5 sm:p-6">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs font-bold text-black">
+                Par Tâche
+              </div>
+
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                  <SparkleIcon className="w-5 h-5 text-amber-500" />
+                  <h3 className="text-lg font-bold text-amber-500">Freemium</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Débloquez en accomplissant des tâches</p>
+              </div>
+              <div className="text-3xl sm:text-4xl font-black text-amber-500 mb-1">
+                Gratuit
+              </div>
+              <p className="text-[10px] sm:text-xs text-amber-500/60 mb-4">3 tâches rapides = accès total</p>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-foreground">Contenus illimités</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-foreground">Tout le catalogue</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-foreground">Assistant Maître Netplus</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-foreground">3 serveurs de streaming</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span className="text-foreground">Badge VIP</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-muted-foreground/50">5 serveurs de streaming</span>
+                </li>
+              </ul>
+              {isPremium ? (
+                <div className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-center">
+                  <span className="text-sm font-bold text-black">Tâches complétées !</span>
+                </div>
+              ) : (
+                <Link
+                  href="/"
+                  className="block px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-500/90 text-center transition-colors"
+                >
+                  <span className="text-sm font-bold text-black">Accomplir les tâches</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Tier 3: Premium Illimité */}
             <div className={`relative rounded-xl sm:rounded-2xl border p-5 sm:p-6 transition-all duration-500 ${
               isPremium
                 ? 'border-primary/50 bg-primary/5 shadow-xl shadow-primary/10'
                 : 'border-primary/30 bg-gradient-to-b from-primary/10 to-transparent'
             }`}>
-              {/* Popular badge */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-amber-500 text-[10px] sm:text-xs font-bold text-black">
                 Recommandé
               </div>
@@ -371,12 +440,12 @@ export default function PricingPage() {
                   <CrownIcon className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-bold text-primary">Premium</h3>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Accès illimité - 3 défis simples</p>
+                <p className="text-xs text-muted-foreground mt-1">Accès total — le meilleur de NetPlus</p>
               </div>
               <div className="text-3xl sm:text-4xl font-black text-primary mb-1">
-                Gratuit<span className="text-sm font-normal text-primary/60"></span>
+                Gratuit
               </div>
-              <p className="text-[10px] sm:text-xs text-primary/60 mb-4">3 tâches rapides = accès total</p>
+              <p className="text-[10px] sm:text-xs text-primary/60 mb-4">Après les 3 défis = premium automatique</p>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm">
                   <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
@@ -396,7 +465,11 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-foreground">Badge VIP</span>
+                  <span className="text-foreground">Badge VIP + accès exclusif</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-foreground">Sous-titres traduits en FR</span>
                 </li>
               </ul>
               {isPremium ? (
@@ -413,6 +486,34 @@ export default function PricingPage() {
               )}
             </div>
           </div>
+
+          {/* Pricing mode explanation */}
+          <div className="mt-6 sm:mt-8 p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/5">
+            <h3 className="text-sm font-bold text-foreground mb-3">Comment ça marche ?</h3>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm font-bold text-muted-foreground">1</div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Gratuit</p>
+                  <p className="text-[11px] text-muted-foreground">Regardez {BASIC_LIMIT} contenus sans rien faire. Aucun engagement, aucune inscription.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm font-bold text-amber-500">2</div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Par Tâche</p>
+                  <p className="text-[11px] text-muted-foreground">Accomplissez 3 actions simples (chat IA, watch 5s, scroll 5x) pour débloquer l&apos;accès illimité.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">3</div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Premium</p>
+                  <p className="text-[11px] text-muted-foreground">Les tâches complétées vous donnent automatiquement le statut Premium avec tous les avantages.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* FAQ */}
@@ -423,15 +524,27 @@ export default function PricingPage() {
           <div className="space-y-3">
             <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
               <h4 className="font-semibold text-sm text-foreground mb-1">Est-ce vraiment gratuit ?</h4>
-              <p className="text-xs text-muted-foreground">Oui, à 100% ! NetPlus est entièrement gratuit. Les 3 défis sont juste une façon fun de découvrir la plateforme. Aucune carte bancaire, aucun abonnement.</p>
+              <p className="text-xs text-muted-foreground">Oui, à 100% ! NetPlus est entièrement gratuit. Aucune carte bancaire, aucun abonnement, aucun coût caché. Les 3 défis sont juste une façon fun de découvrir la plateforme tout en débloquant l&apos;accès complet.</p>
             </div>
             <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
-              <h4 className="font-semibold text-sm text-foreground mb-1">Que se passe-t-il après 10 contenus en version basique ?</h4>
-              <p className="text-xs text-muted-foreground">Vous ne pourrez plus lancer de nouveaux contenus. Mais vous pouvez compléter les défis à tout moment pour débloquer l&apos;accès illimité immédiatement.</p>
+              <h4 className="font-semibold text-sm text-foreground mb-1">Que se passe-t-il après {BASIC_LIMIT} contenus en version basique ?</h4>
+              <p className="text-xs text-muted-foreground">Vous ne pourrez plus lancer de nouveaux contenus. Mais vous pouvez compléter les défis à tout moment pour débloquer l&apos;accès illimité immédiatement. Votre progression n&apos;est pas perdue.</p>
             </div>
             <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
               <h4 className="font-semibold text-sm text-foreground mb-1">Les défis sont-ils difficiles ?</h4>
               <p className="text-xs text-muted-foreground">Pas du tout ! Il suffit de parler à l&apos;assistant, regarder quelques secondes de contenu, et scroller sur l&apos;accueil. Ça prend moins de 2 minutes !</p>
+            </div>
+            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+              <h4 className="font-semibold text-sm text-foreground mb-1">Quelle est la différence entre Par Tâche et Premium ?</h4>
+              <p className="text-xs text-muted-foreground">Le mode &quot;Par Tâche&quot; correspond à la progression des 3 défis. Une fois tous les défis complétés, vous obtenez automatiquement le statut Premium avec des avantages supplémentaires comme l&apos;accès à 5 serveurs de streaming et les sous-titres traduits.</p>
+            </div>
+            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+              <h4 className="font-semibold text-sm text-foreground mb-1">Mes profils (Jeunesse, Frénésie, Nocturne) fonctionnent-ils avec tous les modes ?</h4>
+              <p className="text-xs text-muted-foreground">Oui ! Les profils sont disponibles dans tous les modes. Le profil Jeunesse filtre les contenus familiaux, Frénésie les action/horreur, et Nocturne donne accès à tout sans filtre. Le mode Premium vous permet de changer de profil librement.</p>
+            </div>
+            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+              <h4 className="font-semibold text-sm text-foreground mb-1">Perdrai-je mon accès si je change d&apos;appareil ?</h4>
+              <p className="text-xs text-muted-foreground">Votre progression est stockée localement sur votre navigateur. En changeant d&apos;appareil, vous devrez refaire les 3 défis, mais cela prend moins de 2 minutes. Nous travaillons sur une synchronisation cloud pour une future mise à jour.</p>
             </div>
           </div>
         </div>
