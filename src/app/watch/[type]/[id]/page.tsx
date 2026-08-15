@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Play, Star, Calendar, Clock, Film, Tv, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Play, Star, Calendar, Clock, Film, Tv, ChevronDown, ChevronUp, Sparkles, Brain } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 
 interface MediaDetails {
@@ -54,6 +54,99 @@ const VIDEO_SERVERS = {
     tv: (id: number, season: number, episode: number) => `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`,
   }
 };
+
+// AI Content Explanation Component
+function AIContentExplanation({ title, type, overview, genres }: { title: string; type: 'movie' | 'tv'; overview: string; genres: { id: number; name: string }[] }) {
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  useEffect(() => {
+    if (!title) return;
+    
+    const fetchExplanation = async () => {
+      setLoading(true);
+      setError(false);
+      try {
+        const genreNames = genres.map(g => g.name).join(', ');
+        const typeLabel = type === 'movie' ? 'film' : 'série';
+        const prompt = `Explique brièvement le ${typeLabel} "${title}"${genreNames ? ` (${genreNames})` : ''} en 3-4 phrases. Parle de l'intrigue sans spoilers majeurs, du style, et de pourquoi on devrait le regarder. Sois enthousiaste et concis.`;
+        
+        const res = await fetch('/api/ai/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: prompt }),
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.message) {
+            setExplanation(data.message);
+          } else {
+            // Fallback: use overview as explanation
+            setExplanation(overview || 'Aucune analyse disponible.');
+          }
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExplanation();
+  }, [title, type, overview, genres]);
+
+  return (
+    <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-amber-500/5 overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md shadow-primary/20">
+            <Brain className="w-4 h-4 text-black" />
+          </div>
+          <div className="text-left">
+            <span className="text-sm font-bold text-primary">Maître Netplus vous explique</span>
+            <p className="text-[10px] text-primary/50">Analyse IA de ce contenu</p>
+          </div>
+        </div>
+        {isExpanded ? <ChevronUp className="w-4 h-4 text-primary/50" /> : <ChevronDown className="w-4 h-4 text-primary/50" />}
+      </button>
+      
+      {isExpanded && (
+        <div className="px-4 pb-4 pt-1">
+          {loading ? (
+            <div className="flex items-center gap-3 py-3">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-muted-foreground">Maître Netplus analyse ce contenu...</span>
+            </div>
+          ) : error ? (
+            <div className="py-2">
+              <p className="text-xs text-muted-foreground/60 italic">
+                {overview || 'Aucune analyse disponible pour le moment.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-foreground/80 leading-relaxed">
+                {explanation || overview || 'Aucune analyse disponible.'}
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <Sparkles className="w-3 h-3 text-primary/40" />
+                <span className="text-[10px] text-primary/30">Généré par Maître Netplus</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function WatchContent() {
   const params = useParams();
@@ -267,7 +360,15 @@ function WatchContent() {
 
         {/* Media Details */}
         {details && (
-          <div className="p-4 border-t border-border/50">
+          <div className="p-4 border-t border-border/50 space-y-4">
+            {/* AI Explanation — Maître Netplus */}
+            <AIContentExplanation 
+              title={title}
+              type={type}
+              overview={details.overview || ''}
+              genres={details.genres || []}
+            />
+
             <div className="flex gap-4">
               {details.poster_path && (
                 <div className="hidden sm:block w-24 flex-shrink-0">
