@@ -22,7 +22,9 @@ import {
   User,
   Info,
   FileText,
-  Shield
+  Shield,
+  Calendar,
+  Award
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 import { cn } from '@/lib/utils';
@@ -41,9 +43,11 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
   const mainNav = [
     { icon: Home, label: 'Accueil', href: '/', active: true },
     { icon: TrendingUp, label: 'Tendances', href: '/?tab=trending' },
-    { icon: Film, label: 'Films', href: '/?type=movie' },
-    { icon: Tv, label: 'Séries', href: '/?type=tv' },
-    { icon: Star, label: 'Top', href: '/?tab=top-rated' },
+    { icon: Film, label: 'Films Populaires', href: '/?section=movie-popular' },
+    { icon: Tv, label: 'Séries Populaires', href: '/?section=tv-popular' },
+    { icon: Award, label: 'Films Mieux Notés', href: '/?section=movie-top-rated' },
+    { icon: Star, label: 'Séries Mieux Notées', href: '/?section=tv-top-rated' },
+    { icon: Calendar, label: 'Prochainement', href: '/?section=upcoming' },
   ];
 
   const accountNav = [
