@@ -8,7 +8,6 @@ import { Search, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Genre } from '@/types/media';
 import { HamburgerMenu } from '@/components/ui/HamburgerMenu';
-import { AIButton } from '@/components/ui/AIButton';
 
 interface NavbarProps {
   genres: Genre[];
@@ -49,8 +48,6 @@ export function Navbar({ genres, onSearch, onGenreSelect, onAIClick }: NavbarPro
           </Link>
 
           <div className="flex items-center gap-2">
-            <AIButton onClick={onAIClick} />
-            
             <Button
               variant="ghost"
               size="icon"

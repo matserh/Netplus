@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
-import { Search, UserCircle, Sparkles, Bell } from 'lucide-react';
+import { Search, UserCircle, Bell } from 'lucide-react';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -305,14 +305,6 @@ export default function HomePage() {
                 onKeyDown={e => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
               />
             </div>
-
-            {/* AI Quick Button */}
-            <button
-              onClick={() => setIsAIOpen(true)}
-              className="h-9 w-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 hover:border-primary/40 transition-all group"
-            >
-              <Sparkles className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-            </button>
 
             {/* Notifications */}
             <button className="h-9 w-9 rounded-full bg-muted/40 border border-border/30 flex items-center justify-center hover:bg-muted/60 transition-colors relative">

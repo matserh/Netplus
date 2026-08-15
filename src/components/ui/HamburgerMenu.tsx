@@ -12,7 +12,6 @@ import {
   Tv,
   TrendingUp,
   Star,
-  Sparkles,
   X,
   Maximize,
   Minimize,
@@ -142,17 +141,6 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
                 <Calendar className="w-5 h-5" />
                 Prochainement
               </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 hover:bg-primary/10 text-primary"
-              onClick={() => {
-                setIsOpen(false);
-                onAIClick();
-              }}
-            >
-              <Sparkles className="w-5 h-5" />
-              Assistant IA
             </Button>
           </div>
 
