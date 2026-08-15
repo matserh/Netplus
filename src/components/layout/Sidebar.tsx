@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Logo } from '@/components/ui/Logo';
 import {
   Home,
@@ -102,7 +101,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--primary) transparent' }}>
         <div className="p-3 space-y-1">
           {/* Main Nav */}
           <nav className="space-y-1">
@@ -222,7 +221,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
             </>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Collapse Toggle (when collapsed) */}
       {isCollapsed && (

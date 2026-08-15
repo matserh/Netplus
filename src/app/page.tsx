@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Banner } from '@/components/media/Banner';
@@ -10,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
+import { Search, UserCircle, Sparkles, Bell } from 'lucide-react';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -266,7 +268,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex overflow-x-hidden">
+    <div className="h-screen bg-background flex overflow-hidden">
+      {/* Sidebar — fixed, no page scroll */}
       <div className="hidden lg:block flex-shrink-0">
         <Sidebar
           genres={genres}
@@ -278,7 +281,7 @@ export default function HomePage() {
       </div>
 
       <main className={cn(
-        "flex-1 min-h-screen overflow-x-hidden transition-all duration-300",
+        "flex-1 h-screen overflow-y-auto overflow-x-hidden transition-all duration-300",
         isSidebarCollapsed ? "lg:ml-16" : "lg:ml-60"
       )}>
         {/* Mobile Nav */}
@@ -287,27 +290,49 @@ export default function HomePage() {
         </div>
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-14 items-center justify-between px-6 border-b border-border/50 bg-background/90 backdrop-blur sticky top-0 z-30">
-          <h1 className="text-lg font-bold">
+        <header className="hidden lg:flex h-14 items-center justify-between px-6 border-b border-border/30 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
+          <h1 className="text-lg font-bold tracking-tight">
             {searchResults.length > 0 ? searchTitle : 'Accueil'}
           </h1>
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="w-64 h-10 px-4 bg-muted/50 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              onKeyDown={e => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
-            />
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-              <span className="text-sm font-bold text-black">U</span>
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+              <input
+                type="text"
+                placeholder="Rechercher un film, une série..."
+                className="w-72 h-9 pl-9 pr-4 bg-muted/40 border border-border/30 rounded-full text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:bg-muted/60 transition-colors"
+                onKeyDown={e => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
+              />
             </div>
+
+            {/* AI Quick Button */}
+            <button
+              onClick={() => setIsAIOpen(true)}
+              className="h-9 w-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 hover:border-primary/40 transition-all group"
+            >
+              <Sparkles className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+            </button>
+
+            {/* Notifications */}
+            <button className="h-9 w-9 rounded-full bg-muted/40 border border-border/30 flex items-center justify-center hover:bg-muted/60 transition-colors relative">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background" />
+            </button>
+
+            {/* User Profile */}
+            <Link href="/profiles" className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/80 to-amber-500/80 border border-primary/30 flex items-center justify-center hover:from-primary hover:to-amber-500 hover:scale-105 transition-all shadow-sm shadow-primary/10">
+              <UserCircle className="w-5 h-5 text-black" />
+            </Link>
           </div>
         </header>
 
         {/* Content */}
         {searchResults.length > 0 ? (
-          <div className="p-6 sm:p-10 lg:p-16">
-            <button onClick={() => setSearchResults([])} className="text-sm text-muted-foreground hover:text-primary mb-4">← Retour</button>
+          <div className="p-6 sm:p-8 lg:p-10">
+            <button onClick={() => setSearchResults([])} className="text-sm text-muted-foreground hover:text-primary mb-6 flex items-center gap-1 group">
+              <span className="group-hover:-translate-x-0.5 transition-transform">←</span> Retour
+            </button>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {searchResults.map((item, i) => (
                 <Poster key={`${item.id}-${i}`} media={item} onClick={() => { setSelectedMedia(item); setIsModalOpen(true); }} />

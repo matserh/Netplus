@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sparkles, Send, X, Play, Star, Calendar } from 'lucide-react';
 import { Media, getPosterUrl, getMediaTitle, getMediaYear } from '@/types/media';
 
@@ -144,7 +143,7 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <div className="flex-1 overflow-y-auto p-4" ref={scrollRef} style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--primary) transparent' }}>
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <div
@@ -226,7 +225,7 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Input */}
         <div className="p-4 border-t border-border">
