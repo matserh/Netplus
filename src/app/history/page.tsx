@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
@@ -131,7 +133,27 @@ function HistoryCard({ entry, onPlay, onRemove }: {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#0f0f23] flex items-center justify-center">
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <HistoryContent />;
+}
+
+function HistoryContent() {
+  const router = useRouter();
+  const sessionData = useSession() || {};
+  const { data: session, status } = sessionData;
   const { history, removeFromHistory, clearHistory } = useWatchHistory();
   const [mounted, setMounted] = useState(false);
 
