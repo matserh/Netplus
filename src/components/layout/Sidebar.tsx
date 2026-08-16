@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Sparkles,
   Heart,
-  Clock,
   Bookmark,
   ChevronDown,
   Crown,
@@ -24,8 +23,7 @@ import {
   FileText,
   Shield,
   Calendar,
-  Award,
-  Zap
+  Award
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 import { cn } from '@/lib/utils';
@@ -50,7 +48,6 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
     { icon: Award, label: 'Films Mieux Notés', href: '/movies/top-rated' },
     { icon: Star, label: 'Séries Mieux Notées', href: '/tv/top-rated' },
     { icon: Calendar, label: 'Prochainement', href: '/upcoming' },
-    { icon: Zap, label: 'Shorts', href: '/shorts' },
   ];
 
   // Determine which nav item is active based on current URL
@@ -73,9 +70,8 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
   ];
 
   const library = [
-    { icon: Heart, label: 'Favoris' },
-    { icon: Clock, label: 'Historique', href: '/history' },
-    { icon: Bookmark, label: 'Ma liste' },
+    { icon: Heart, label: 'Favoris', href: '#' },
+    { icon: Bookmark, label: 'Ma liste', href: '#' },
   ];
 
   return (
