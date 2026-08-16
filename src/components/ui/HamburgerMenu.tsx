@@ -21,14 +21,15 @@ import {
   FileText,
   Shield,
   Award,
-  Calendar
+  Calendar,
+  Sparkles
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 
 interface HamburgerMenuProps {
   genres: Genre[];
   onGenreSelect: (genreId: string, genreName: string) => void;
-  onAIClick: () => void;
+  onAIClick?: () => void;
 }
 
 export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMenuProps) {
@@ -143,6 +144,22 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
               </Link>
             </Button>
           </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* AI Assistant (mobile sidebar) */}
+          {onAIClick && (
+            <div className="space-y-1">
+              <button
+                onClick={() => { onAIClick(); setIsOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-primary via-primary to-amber-600 text-black hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
+              >
+                <Sparkles className="w-5 h-5 flex-shrink-0" />
+                <span>Assistant IA</span>
+              </button>
+            </div>
+          )}
 
           {/* Divider */}
           <div className="h-px bg-border" />

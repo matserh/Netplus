@@ -107,6 +107,7 @@ export default function ProfilesPage() {
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -195,7 +196,7 @@ export default function ProfilesPage() {
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
                   >
                     <Camera className="w-4 h-4" />
-                    Changer l&apos;avatar
+                    Changer le logo
                   </button>
 
                   <button
@@ -212,7 +213,10 @@ export default function ProfilesPage() {
                   <div className="my-1.5 h-px bg-border/50" />
 
                   <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setShowDisconnectConfirm(true);
+                    }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
                   >
                     <LogOut className="w-4 h-4" />
@@ -231,7 +235,7 @@ export default function ProfilesPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAvatarPicker(false)} />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold">Changer l&apos;avatar</h3>
+              <h3 className="text-lg font-bold">Changer le logo</h3>
               <button onClick={() => setShowAvatarPicker(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
@@ -264,6 +268,38 @@ export default function ProfilesPage() {
                   <span className="text-xs font-medium text-foreground/60 group-hover:text-foreground transition-colors">{profile.name}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Disconnect confirmation modal */}
+      {showDisconnectConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDisconnectConfirm(false)} />
+          <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                <LogOut className="w-7 h-7 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-1">Déconnexion</h3>
+                <p className="text-sm text-muted-foreground">Voulez-vous vraiment vous déconnecter de Netplus ?</p>
+              </div>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowDisconnectConfirm(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all text-sm"
+                >
+                  Déconnexion
+                </button>
+              </div>
             </div>
           </div>
         </div>
