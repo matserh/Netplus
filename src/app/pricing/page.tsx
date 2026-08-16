@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useChallenge } from '@/contexts/ChallengeContext';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -558,6 +559,11 @@ export default function PricingPage() {
             Réinitialiser les défis (debug)
           </button>
         </div>
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );

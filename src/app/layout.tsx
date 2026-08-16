@@ -41,6 +41,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning className="dark">
       <head>
         <meta name="theme-color" content="#0f0f23" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen`}

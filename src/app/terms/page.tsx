@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { useState } from 'react';
 
 export default function TermsPage() {
@@ -115,6 +116,11 @@ export default function TermsPage() {
             </Link>
           </p>
         </div>
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );

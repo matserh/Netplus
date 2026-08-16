@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 
 export default function DownloadPage() {
   const [downloading, setDownloading] = useState(false);
@@ -170,6 +171,11 @@ export default function DownloadPage() {
       <footer className="relative z-10 text-center py-4 text-white/20 text-xs">
         Propulsé par NetPlus
       </footer>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
+      </div>
     </div>
   );
 }

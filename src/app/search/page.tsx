@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { Search, X, TrendingUp, Film, Clock, ArrowRight } from 'lucide-react';
 import { Media, Genre, TMDBResponse, API_CONFIG } from '@/types/media';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
   try {
@@ -321,6 +322,11 @@ export default function SearchPage() {
             </section>
           </div>
         )}
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );

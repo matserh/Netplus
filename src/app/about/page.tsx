@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { ArrowLeft, Code2, Layers, Sparkles, Palette, Rocket, Cpu, Heart, Zap, Globe, Mail, Send } from 'lucide-react';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Bilingual text pairs: [French, English]
@@ -404,6 +405,11 @@ export default function AboutPage() {
           </p>
           <p className="text-xs text-muted-foreground/50">© 2026 Netplus</p>
         </div>
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );

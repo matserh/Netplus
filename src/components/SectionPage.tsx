@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { MediaModal } from '@/components/media/MediaModal';
 import { AIAssistant } from '@/components/ui/AIAssistant';
 import { Media, Genre, TMDBResponse } from '@/types/media';
@@ -229,7 +230,15 @@ export function SectionPage({ title, endpoint, icon }: SectionPageProps) {
             <p className="text-center text-sm text-muted-foreground/40 pt-4">— Fin des résultats —</p>
           )}
         </div>
+
+        {/* Spacer for bottom nav on mobile/tablet */}
+        <div className="h-20 lg:hidden" />
       </main>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
+      </div>
 
       <MediaModal media={selectedMedia} open={isModalOpen} onOpenChange={setIsModalOpen} />
       <AIAssistant isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} onMediaClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />

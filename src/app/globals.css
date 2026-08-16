@@ -137,3 +137,32 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Bottom navigation safe area for iOS notch/home bar */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Shimmer animation for premium bottom nav glow */
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(100%) rotate(25deg); }
+}
+
+/* Mobile bottom nav spacing — add padding to main content on mobile so bottom bar doesn't overlap */
+.pb-safe-mobile {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .pb-safe-mobile {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* On desktop (lg+), no extra bottom padding needed since bottom bar is hidden */
+@media (min-width: 1024px) {
+  .pb-safe-mobile {
+    padding-bottom: 0;
+  }
+}

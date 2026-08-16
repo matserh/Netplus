@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
 import { ArrowLeft, Shield, Eye, Server, Cookie, Lock, Globe, Bell, Scale } from 'lucide-react';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { useState } from 'react';
 
 function cn(...classes: (string | boolean | undefined | null)[]) {
@@ -139,6 +140,11 @@ export default function PrivacyPage() {
             </Link>
           </p>
         </div>
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );

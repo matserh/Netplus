@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { Banner } from '@/components/media/Banner';
 import { MediaModal } from '@/components/media/MediaModal';
 import { AIAssistant } from '@/components/ui/AIAssistant';
@@ -493,7 +494,15 @@ export default function HomePage() {
             <InfiniteGrid onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
           </Fragment>
         )}
+
+        {/* Spacer for bottom nav on mobile/tablet */}
+        <div className="h-20 lg:hidden" />
       </main>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
+      </div>
 
       <MediaModal media={selectedMedia} open={isModalOpen} onOpenChange={setIsModalOpen} />
       <AIAssistant isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} onMediaClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />

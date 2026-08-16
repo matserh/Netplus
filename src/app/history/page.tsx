@@ -8,6 +8,7 @@ import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryConte
 import { useEffect, useState } from 'react';
 import { Trash2, Play, Film, Tv, Clock, Filter, LayoutGrid, List, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BottomNavBar } from '@/components/layout/BottomNavBar';
 
 function formatTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -453,6 +454,11 @@ function HistoryContent() {
             )}
           </>
         )}
+      </div>
+
+      {/* Mobile/Tablet Bottom Navigation */}
+      <div className="lg:hidden">
+        <BottomNavBar />
       </div>
     </div>
   );
