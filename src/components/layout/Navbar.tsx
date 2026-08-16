@@ -17,19 +17,19 @@ export function Navbar({ genres, onSearch, onGenreSelect, onAIClick }: NavbarPro
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-background/80 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.3)]' 
-          : 'bg-background/40 backdrop-blur-xl border-b border-white/[0.03]'
+          ? 'bg-[#0a0a0f]/90 backdrop-blur-2xl shadow-[0_2px_20px_rgba(0,0,0,0.4)]' 
+          : 'bg-gradient-to-b from-black/70 via-black/30 to-transparent'
       }`}>
-        <div className="flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-12 px-4">
           <Link href="/">
             <Logo />
           </Link>
@@ -38,7 +38,7 @@ export function Navbar({ genres, onSearch, onGenreSelect, onAIClick }: NavbarPro
         </div>
       </nav>
 
-      <div className="h-16" />
+      <div className="h-12" />
     </>
   );
 }

@@ -9,12 +9,11 @@ import { BottomNavBar } from '@/components/layout/BottomNavBar';
 import { Banner } from '@/components/media/Banner';
 import { MediaModal } from '@/components/media/MediaModal';
 import { AIAssistant } from '@/components/ui/AIAssistant';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
-import { Search, UserCircle, Bell, Play, Clock } from 'lucide-react';
+import { Search, UserCircle, Bell, Play, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -29,36 +28,42 @@ const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
   }
 };
 
-// Poster component with lazy loading
+// Netflix-style poster — compact, with smooth hover scale
 function Poster({ media, onClick }: { media: Media; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
   const title = media.title || media.name || '';
   
   return (
     <div className="group cursor-pointer" onClick={onClick}>
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-card">
-        {!loaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
+      <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-card/50 ring-1 ring-white/[0.04]">
+        {!loaded && <div className="absolute inset-0 bg-muted/30 animate-pulse" />}
         {media.poster_path && (
           <img
             src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
             alt={title}
-            className={`w-full h-full object-cover transition-all duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105`}
+            className={`w-full h-full object-cover transition-all duration-300 ease-out ${loaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-110`}
             onLoad={() => setLoaded(true)}
             loading="lazy"
           />
         )}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-          <div className="p-3 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
-            <svg className="w-5 h-5 text-black fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute bottom-2 left-2 right-2">
+            <p className="text-[10px] font-medium text-white/90 truncate">{title}</p>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Play icon on hover */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+          <div className="p-1.5 rounded-full bg-white/20 backdrop-blur-sm scale-75 group-hover:scale-100 transition-transform">
+            <Play className="w-3.5 h-3.5 text-white fill-white" />
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Horizontal infinite scroll section
+// Netflix-style horizontal row with scroll arrows
 function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint: string; onItemClick: (m: Media) => void }) {
   const [items, setItems] = useState<Media[]>([]);
   const [page, setPage] = useState(1);
@@ -66,6 +71,8 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
@@ -97,12 +104,19 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
     loadMore();
   }, [retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Detect scroll near end
+  const checkArrows = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowLeftArrow(el.scrollLeft > 20);
+    setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 20);
+  }, []);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
     const onScroll = () => {
+      checkArrows();
       const { scrollLeft, scrollWidth, clientWidth } = el;
       if (scrollWidth - scrollLeft - clientWidth < 500 && !loadingRef.current) {
         loadMore();
@@ -110,55 +124,86 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
     };
 
     el.addEventListener('scroll', onScroll);
+    checkArrows();
     return () => el.removeEventListener('scroll', onScroll);
-  }, [loadMore]);
+  }, [loadMore, checkArrows]);
 
-  // Skeleton placeholders for initial load
-  const skeletons = Array.from({ length: 8 }, (_, i) => (
-    <div key={`skel-${i}`} className="flex-shrink-0 w-[130px] sm:w-[145px] md:w-[160px] lg:w-[175px]">
-      <div className="aspect-[2/3] rounded-lg bg-muted/40 animate-pulse" />
+  const scrollByAmount = (dir: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.75, behavior: 'smooth' });
+  };
+
+  // Compact Netflix-style skeletons
+  const skeletons = Array.from({ length: 7 }, (_, i) => (
+    <div key={`skel-${i}`} className="flex-shrink-0 w-[100px] sm:w-[115px] md:w-[130px] lg:w-[140px]">
+      <div className="aspect-[2/3] rounded-md bg-muted/30 animate-pulse" />
     </div>
   ));
 
   return (
-    <section className="py-4 md:py-6">
-      <h2 className="text-lg sm:text-xl font-bold text-foreground px-6 sm:px-10 lg:px-16 mb-3 section-title">{title}</h2>
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-6 sm:px-10 lg:px-16 pb-2 min-h-[180px]">
-        {items.length === 0 && loading ? (
-          // Show skeletons while loading
-          skeletons
-        ) : error ? (
-          // Show retry button on error
-          <div className="flex items-center gap-3 py-8">
-            <p className="text-sm text-muted-foreground/60">Impossible de charger</p>
-            <button 
-              onClick={() => setRetryCount(c => c + 1)}
-              className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1.5"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              Réessayer
-            </button>
-          </div>
-        ) : (
-          <>
-            {items.map((item, i) => (
-              <div key={`${item.id}-${i}`} className="flex-shrink-0 w-[130px] sm:w-[145px] md:w-[160px] lg:w-[175px]">
-                <Poster media={item} onClick={() => onItemClick(item)} />
-              </div>
-            ))}
-            {loading && (
-              <div className="flex-shrink-0 w-[130px] flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </>
+    <section className="relative py-2 md:py-3 group/section">
+      {/* Section title — Netflix style */}
+      <h2 className="text-sm sm:text-base md:text-lg font-bold text-foreground/90 px-4 sm:px-8 lg:px-12 mb-1.5 md:mb-2">
+        {title}
+      </h2>
+
+      <div className="relative">
+        {/* Left scroll arrow */}
+        {showLeftArrow && (
+          <button
+            onClick={() => scrollByAmount(-1)}
+            className="absolute left-0 top-0 bottom-0 z-10 w-10 sm:w-12 bg-gradient-to-r from-background/90 to-transparent flex items-center justify-start pl-1 opacity-0 group-hover/section:opacity-100 transition-opacity duration-200"
+          >
+            <ChevronLeft className="w-5 h-5 text-white/70" />
+          </button>
         )}
+
+        {/* Right scroll arrow */}
+        {showRightArrow && (
+          <button
+            onClick={() => scrollByAmount(1)}
+            className="absolute right-0 top-0 bottom-0 z-10 w-10 sm:w-12 bg-gradient-to-l from-background/90 to-transparent flex items-center justify-end pr-1 opacity-0 group-hover/section:opacity-100 transition-opacity duration-200"
+          >
+            <ChevronRight className="w-5 h-5 text-white/70" />
+          </button>
+        )}
+
+        <div ref={scrollRef} className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide px-4 sm:px-8 lg:px-12 pb-1 min-h-[160px]">
+          {items.length === 0 && loading ? (
+            skeletons
+          ) : error ? (
+            <div className="flex items-center gap-3 py-6 px-2">
+              <p className="text-xs text-muted-foreground/60">Impossible de charger</p>
+              <button 
+                onClick={() => setRetryCount(c => c + 1)}
+                className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                Réessayer
+              </button>
+            </div>
+          ) : (
+            <>
+              {items.map((item, i) => (
+                <div key={`${item.id}-${i}`} className="flex-shrink-0 w-[100px] sm:w-[115px] md:w-[130px] lg:w-[140px] xl:w-[150px]">
+                  <Poster media={item} onClick={() => onItemClick(item)} />
+                </div>
+              ))}
+              {loading && (
+                <div className="flex-shrink-0 w-[100px] flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );
 }
 
-// Continue Watching section — shows in-progress items from history
+// Continue Watching section — Netflix-style landscape cards
 function ContinueWatching() {
   const router = useRouter();
   const { getContinueWatching } = useWatchHistory();
@@ -172,23 +217,21 @@ function ContinueWatching() {
   if (items.length === 0) return null;
 
   return (
-    <section className="py-4 md:py-6">
-      <div className="flex items-center justify-between px-6 sm:px-10 lg:px-16 mb-3">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-primary" />
-          <h2 className="text-lg sm:text-xl font-bold text-foreground section-title">Continuer à regarder</h2>
+    <section className="py-2 md:py-3">
+      <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 mb-1.5 md:mb-2">
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-primary" />
+          <h2 className="text-sm sm:text-base md:text-lg font-bold text-foreground/90">Continuer à regarder</h2>
         </div>
         <Link
           href="/history"
-          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          className="text-[11px] text-muted-foreground/60 hover:text-primary transition-colors flex items-center gap-0.5"
         >
           Tout voir
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className="w-3 h-3" />
         </Link>
       </div>
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-6 sm:px-10 lg:px-16 pb-2">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide px-4 sm:px-8 lg:px-12 pb-1">
         {items.map((entry) => (
           <ContinueWatchingCard key={`${entry.id}-${entry.mediaType}`} entry={entry} onPlay={() => {
             router.push(`/watch/${entry.mediaType}/${entry.id}`);
@@ -210,10 +253,10 @@ function ContinueWatchingCard({ entry, onPlay }: { entry: WatchHistoryEntry; onP
   return (
     <button
       onClick={onPlay}
-      className="flex-shrink-0 w-[180px] sm:w-[200px] md:w-[220px] lg:w-[240px] group cursor-pointer text-left"
+      className="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[185px] lg:w-[200px] group cursor-pointer text-left"
     >
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-        {!loaded && <div className="absolute inset-0 bg-muted/40 animate-pulse" />}
+      <div className="relative aspect-video rounded-md overflow-hidden bg-muted/30 ring-1 ring-white/[0.04]">
+        {!loaded && <div className="absolute inset-0 bg-muted/20 animate-pulse" />}
         {imgUrl ? (
           <img
             src={imgUrl}
@@ -224,47 +267,37 @@ function ContinueWatchingCard({ entry, onPlay }: { entry: WatchHistoryEntry; onP
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Play className="w-6 h-6 text-muted-foreground/20" />
+            <Play className="w-4 h-4 text-muted-foreground/20" />
           </div>
         )}
 
         {/* Play overlay */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all">
-          <div className="p-2.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
-            <Play className="w-4 h-4 text-black fill-current" />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+          <div className="p-1.5 rounded-full bg-white/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100">
+            <Play className="w-3.5 h-3.5 text-white fill-white" />
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/10">
           <div className="h-full bg-primary rounded-r-full" style={{ width: `${Math.min(entry.progress, 100)}%` }} />
         </div>
 
         {/* TV Badge */}
         {entry.mediaType === 'tv' && entry.season && entry.episode && (
-          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-white/80 font-medium">
+          <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-black/60 text-[8px] text-white/70 font-medium">
             S{entry.season}E{entry.episode}
           </div>
         )}
-
-        {/* Progress % badge */}
-        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-primary font-bold">
-          {entry.progress}%
-        </div>
       </div>
 
-      {/* Title */}
-      <div className="mt-1.5">
-        <p className="text-xs sm:text-sm font-medium text-foreground truncate">{entry.title}</p>
-        {entry.mediaType === 'tv' && entry.episodeTitle && (
-          <p className="text-[10px] text-muted-foreground/50 truncate">{entry.episodeTitle}</p>
-        )}
-      </div>
+      {/* Title — compact */}
+      <p className="mt-1 text-[10px] sm:text-xs font-medium text-foreground/70 truncate group-hover:text-foreground transition-colors">{entry.title}</p>
     </button>
   );
 }
 
-// Vertical infinite grid
+// Vertical discovery grid — more columns, less gap
 function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
   const [items, setItems] = useState<Media[]>([]);
   const [page, setPage] = useState(0);
@@ -279,7 +312,6 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
 
     const nextPage = page + 1;
     
-    // Load from multiple endpoints for variety
     const endpoints = [
       `/discover/movie?sort_by=popularity.desc&page=${nextPage}`,
       `/discover/tv?sort_by=popularity.desc&page=${nextPage}`,
@@ -301,7 +333,6 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
       }
     });
     
-    // Shuffle for variety
     newItems.sort(() => Math.random() - 0.5);
     
     setItems(prev => [...prev, ...newItems]);
@@ -310,12 +341,10 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
     loadingRef.current = false;
   }, [page]);
 
-  // Initial load
   useEffect(() => {
     loadMore();
   }, []);
 
-  // Intersection observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -331,17 +360,17 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
   }, [loadMore]);
 
   return (
-    <section className="py-6">
-      <h2 className="text-lg sm:text-xl font-bold text-foreground px-6 sm:px-10 lg:px-16 mb-4 section-title">
+    <section className="py-3 md:py-4">
+      <h2 className="text-sm sm:text-base md:text-lg font-bold text-foreground/90 px-4 sm:px-8 lg:px-12 mb-2">
         À découvrir
       </h2>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 px-6 sm:px-10 lg:px-16">
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-1.5 sm:gap-2 px-4 sm:px-8 lg:px-12">
         {items.map((item, i) => (
           <Poster key={`${item.id}-${i}`} media={item} onClick={() => onItemClick(item)} />
         ))}
       </div>
-      <div ref={loaderRef} className="py-8 flex justify-center">
-        {loading && <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
+      <div ref={loaderRef} className="py-6 flex justify-center">
+        {loading && <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />}
       </div>
     </section>
   );
@@ -405,14 +434,14 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
-      {/* Sidebar — fixed, no page scroll */}
+      {/* Sidebar — desktop only */}
       <div className="hidden lg:block flex-shrink-0">
         <Sidebar
           genres={genres}
@@ -427,48 +456,49 @@ export default function HomePage() {
         "flex-1 h-screen overflow-y-auto overflow-x-hidden transition-all duration-300",
         isSidebarCollapsed ? "lg:ml-16" : "lg:ml-60"
       )}>
-        {/* Mobile Nav */}
+        {/* Mobile Nav — overlaid on banner like Netflix */}
         <div className="lg:hidden">
           <Navbar genres={genres} onSearch={handleSearch} onGenreSelect={handleGenreSelect} onAIClick={() => setIsAIOpen(true)} />
         </div>
 
-        {/* Desktop Header */}
-        <header className="hidden lg:flex h-14 items-center justify-between px-6 border-b border-border/30 bg-background/80 backdrop-blur-xl sticky top-0 z-30">
-          <h1 className="text-lg font-bold tracking-tight">
+        {/* Desktop Header — Netflix-style slim bar */}
+        <header className="hidden lg:flex h-12 items-center justify-between px-4 lg:px-12 sticky top-0 z-30 bg-background/70 backdrop-blur-xl">
+          <h1 className="text-sm font-semibold text-foreground/80 tracking-wide">
             {searchResults.length > 0 ? searchTitle : 'Accueil'}
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
               <input
                 type="text"
-                placeholder="Rechercher un film, une série..."
-                className="w-72 h-9 pl-9 pr-4 bg-muted/40 border border-border/30 rounded-full text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:bg-muted/60 transition-colors"
+                placeholder="Titres, genres, personnes..."
+                className="w-56 xl:w-64 h-8 pl-8 pr-3 bg-muted/30 border border-white/[0.06] rounded-md text-xs placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/40 focus:bg-muted/50 transition-colors"
                 onKeyDown={e => e.key === 'Enter' && handleSearch((e.target as HTMLInputElement).value)}
               />
             </div>
 
             {/* Notifications */}
-            <button className="h-9 w-9 rounded-full bg-muted/40 border border-border/30 flex items-center justify-center hover:bg-muted/60 transition-colors relative">
-              <Bell className="w-4 h-4 text-muted-foreground" />
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background" />
+            <button className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative">
+              <Bell className="w-4 h-4 text-foreground/50" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full" />
             </button>
 
             {/* User Profile */}
-            <Link href="/profiles" className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/80 to-amber-500/80 border border-primary/30 flex items-center justify-center hover:from-primary hover:to-amber-500 hover:scale-105 transition-all shadow-sm shadow-primary/10">
-              <UserCircle className="w-5 h-5 text-black" />
+            <Link href="/profiles" className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/70 to-amber-500/70 flex items-center justify-center hover:from-primary hover:to-amber-500 transition-all">
+              <UserCircle className="w-4 h-4 text-black" />
             </Link>
           </div>
         </header>
 
         {/* Content */}
         {searchResults.length > 0 ? (
-          <div className="p-6 sm:p-8 lg:p-10">
-            <button onClick={() => setSearchResults([])} className="text-sm text-muted-foreground hover:text-primary mb-6 flex items-center gap-1 group">
-              <span className="group-hover:-translate-x-0.5 transition-transform">←</span> Retour
+          <div className="px-4 sm:px-8 lg:px-12 py-4">
+            <button onClick={() => setSearchResults([])} className="text-xs text-muted-foreground/60 hover:text-primary mb-4 flex items-center gap-1 group">
+              <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              Retour
             </button>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-1.5 sm:gap-2">
               {searchResults.map((item, i) => (
                 <Poster key={`${item.id}-${i}`} media={item} onClick={() => { setSelectedMedia(item); setIsModalOpen(true); }} />
               ))}
@@ -478,10 +508,10 @@ export default function HomePage() {
           <Fragment>
             <Banner items={bannerItems} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
 
-            {/* Continue Watching — from watch history */}
+            {/* Continue Watching */}
             <ContinueWatching />
             
-            {/* Infinite horizontal rows */}
+            {/* Netflix-style horizontal rows */}
             <InfiniteRow title="Au Cinéma" endpoint="/movie/now_playing?region=FR" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
             <InfiniteRow title="Tendances" endpoint="/trending/all/week" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
             <InfiniteRow title="Films Populaires" endpoint="/movie/popular" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
@@ -490,7 +520,7 @@ export default function HomePage() {
             <InfiniteRow title="Séries Mieux Notées" endpoint="/tv/top_rated" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
             <InfiniteRow title="Prochainement" endpoint="/movie/upcoming?region=FR" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
             
-            {/* Infinite vertical grid */}
+            {/* Discovery grid */}
             <InfiniteGrid onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
           </Fragment>
         )}
