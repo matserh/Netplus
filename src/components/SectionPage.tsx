@@ -94,7 +94,8 @@ export function SectionPage({ title, endpoint, icon }: SectionPageProps) {
     loadingRef.current = true;
     setLoading(true);
 
-    const data = await fetchTMDB<TMDBResponse<Media>>(`${endpoint}&page=${page}`);
+    const pageSep = endpoint.includes('?') ? '&' : '?';
+    const data = await fetchTMDB<TMDBResponse<Media>>(`${endpoint}${pageSep}page=${page}`);
     
     if (data?.results?.length) {
       setItems(prev => [...prev, ...data.results]);

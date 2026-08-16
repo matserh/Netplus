@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ZAI from 'z-ai-web-dev-sdk';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || 'demo';
+const TMDB_API_KEY = process.env.TMDB_API_KEY || '45a766dcce0da3d639845fd158b346e6';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 interface Media {
@@ -103,12 +103,14 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `Tu es Maître Netplus, un assistant cinématographique expert et passionné. Tu aides les utilisateurs à découvrir des films et séries.
     
 Règles:
-- Réponds de manière naturelle et conversationnelle
+- Réponds de manière naturelle, conversationnelle et DÉTAILLÉE
+- Donne des recommandations avec des descriptions et raisons
+- Quand tu recommandes, explique POURQUOI l'utilisateur pourrait aimer
 - Si l'utilisateur cherche quelque chose de spécifique, réponds avec un JSON: {"action": "search", "query": "terme de recherche", "type": "movie|tv|multi"}
 - Si l'utilisateur demande des populaires/top, réponds: {"action": "popular", "type": "movie|tv"}
 - Si l'utilisateur demande des mieux notés, réponds: {"action": "top_rated", "type": "movie|tv"}
 - Si l'utilisateur mentionne un genre, réponds: {"action": "genre", "genre": "nom du genre", "type": "movie|tv"}
-- Sinon, réponds normalement en texte simple
+- Sinon, réponds normalement en texte simple, de façon complète et utile
 
 Contexte précédent: ${memory?.lastTopic || 'Nouvelle conversation'}
 ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.join(', ')}` : ''}`;
@@ -119,7 +121,7 @@ ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.
         { role: 'user', content: message }
       ],
       temperature: 0.7,
-      max_tokens: 500
+      max_tokens: 2048
     });
 
     const aiResponse = completion.choices[0]?.message?.content || "Je ne comprends pas votre demande.";
@@ -159,6 +161,21 @@ ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.
       }
     } catch (parseError) {
       // Not a JSON response, use as plain text
+    }
+
+    // If no results found but the query seems like a search, also try TMDB search
+    if (results.length === 0 && message.length > 2) {
+      const searchKeywords = message.toLowerCase()
+        .replace(/^(cherche|trouve|recommande|montre|quel|quels|quelle|quelles|donne|je veux|je cherche)\s*/i, '')
+        .replace(/[?!.]/g, '')
+        .trim();
+      
+      if (searchKeywords.length > 2) {
+        const tmdbResults = await searchTMDB(searchKeywords, 'multi');
+        if (tmdbResults.length > 0) {
+          results = tmdbResults;
+        }
+      }
     }
 
     return NextResponse.json({

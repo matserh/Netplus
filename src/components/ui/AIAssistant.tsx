@@ -120,7 +120,7 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-lg h-[80vh] max-h-[600px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-xl h-[85vh] max-h-[700px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/10 to-accent/10">
           <div className="flex items-center gap-3">
@@ -151,13 +151,13 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3 ${
+                  className={`max-w-[90%] rounded-2xl p-3 ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-sm'
                       : 'bg-secondary text-foreground rounded-bl-sm'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
                   {/* Media Results */}
                   {msg.mediaResults && msg.mediaResults.length > 0 && (

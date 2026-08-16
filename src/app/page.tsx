@@ -16,8 +16,9 @@ import { Search, UserCircle, Bell } from 'lucide-react';
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
   try {
+    const separator = endpoint.includes('?') ? '&' : '?';
     const res = await fetch(
-      `${API_CONFIG.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`
+      `${API_CONFIG.tmdb.baseUrl}${endpoint}${separator}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`
     );
     return res.ok ? await res.json() : null;
   } catch {
@@ -60,31 +61,38 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
-
-  useEffect(() => {
-    loadMore();
-  }, []);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
     loadingRef.current = true;
     setLoading(true);
+    setError(false);
 
-    const data = await fetchTMDB<TMDBResponse<Media>>(`${endpoint}&page=${page}`);
+    const pageSeparator = endpoint.includes('?') ? '&' : '?';
+    const data = await fetchTMDB<TMDBResponse<Media>>(`${endpoint}${pageSeparator}page=${page}`);
     
     if (data?.results?.length) {
       setItems(prev => [...prev, ...data.results]);
       setPage(p => p + 1);
       setHasMore(page < (data.total_pages || 500));
     } else {
+      if (items.length === 0) {
+        setError(true);
+      }
       setHasMore(false);
     }
     
     setLoading(false);
     loadingRef.current = false;
-  }, [endpoint, page, hasMore]);
+  }, [endpoint, page, hasMore, items.length]);
+
+  useEffect(() => {
+    loadMore();
+  }, [retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Detect scroll near end
   useEffect(() => {
@@ -102,19 +110,45 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
     return () => el.removeEventListener('scroll', onScroll);
   }, [loadMore]);
 
+  // Skeleton placeholders for initial load
+  const skeletons = Array.from({ length: 8 }, (_, i) => (
+    <div key={`skel-${i}`} className="flex-shrink-0 w-[130px] sm:w-[145px] md:w-[160px] lg:w-[175px]">
+      <div className="aspect-[2/3] rounded-lg bg-muted/40 animate-pulse" />
+    </div>
+  ));
+
   return (
     <section className="py-4 md:py-6">
       <h2 className="text-lg sm:text-xl font-bold text-foreground px-6 sm:px-10 lg:px-16 mb-3 section-title">{title}</h2>
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-6 sm:px-10 lg:px-16 pb-2">
-        {items.map((item, i) => (
-          <div key={`${item.id}-${i}`} className="flex-shrink-0 w-[130px] sm:w-[145px] md:w-[160px] lg:w-[175px]">
-            <Poster media={item} onClick={() => onItemClick(item)} />
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-6 sm:px-10 lg:px-16 pb-2 min-h-[180px]">
+        {items.length === 0 && loading ? (
+          // Show skeletons while loading
+          skeletons
+        ) : error ? (
+          // Show retry button on error
+          <div className="flex items-center gap-3 py-8">
+            <p className="text-sm text-muted-foreground/60">Impossible de charger</p>
+            <button 
+              onClick={() => setRetryCount(c => c + 1)}
+              className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Réessayer
+            </button>
           </div>
-        ))}
-        {loading && (
-          <div className="flex-shrink-0 w-[130px] flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+        ) : (
+          <>
+            {items.map((item, i) => (
+              <div key={`${item.id}-${i}`} className="flex-shrink-0 w-[130px] sm:w-[145px] md:w-[160px] lg:w-[175px]">
+                <Poster media={item} onClick={() => onItemClick(item)} />
+              </div>
+            ))}
+            {loading && (
+              <div className="flex-shrink-0 w-[130px] flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
