@@ -1,15 +1,18 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: "/home/z/my-project",
+  // Use relative path for deployment compatibility
+  outputFileTracingRoot: path.resolve(__dirname),
   turbopack: {
-    root: "/home/z/my-project",
+    root: path.resolve(__dirname),
   },
   typescript: {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
