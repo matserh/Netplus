@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Languages, Loader2, AlertCircle, ChevronUp, ChevronDown, Subtitles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-url';
 
 // ─── Types ───
 interface SubtitleLine {
@@ -112,7 +111,7 @@ export function SubtitleOverlay({
         if (season) params.set('season', String(season));
         if (episode) params.set('episode', String(episode));
 
-        const res = await apiFetch(`/api/subtitles?${params}`);
+        const res = await fetch(`/api/subtitles?${params}`);
         const data = await res.json();
 
         if (data.error && data.subtitles?.length === 0) {
@@ -127,7 +126,7 @@ export function SubtitleOverlay({
           setTranslating(true);
           
           try {
-            const translateRes = await apiFetch('/api/subtitles/translate', {
+            const translateRes = await fetch('/api/subtitles/translate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

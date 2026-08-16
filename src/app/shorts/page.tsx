@@ -13,7 +13,7 @@ import {
   AlertTriangle, SkipForward, Wifi, WifiOff, RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-url';
+// api-url removed - using native fetch for PWA
 
 // ─── Fetch helper ───
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -308,7 +308,7 @@ function LikeButton({ mediaId, mediaType, segment, season, likeTriggerRef }: { m
 
   useEffect(() => {
     const params = new URLSearchParams({ mediaId: String(mediaId), mediaType, segment: String(segment), season: String(normalizedSeason) });
-    apiFetch(`/api/shorts/like?${params}`)
+    fetch(`/api/shorts/like?${params}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.count !== undefined) setData(d); })
       .catch(() => {});
@@ -325,7 +325,7 @@ function LikeButton({ mediaId, mediaType, segment, season, likeTriggerRef }: { m
     setData(prev => ({ count: prev.count + (willLike ? 1 : -1), liked: willLike }));
 
     try {
-      const res = await apiFetch('/api/shorts/like', {
+      const res = await fetch('/api/shorts/like', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mediaId, mediaType, segment, season: normalizedSeason }),
@@ -403,7 +403,7 @@ function CommentSheet({ mediaId, mediaType, segment, season, onClose }: {
 
   useEffect(() => {
     const params = new URLSearchParams({ mediaId: String(mediaId), mediaType, segment: String(segment), season: String(normalizedSeason) });
-    apiFetch(`/api/shorts/comments?${params}`)
+    fetch(`/api/shorts/comments?${params}`)
       .then(r => r?.json())
       .then(d => { if (d?.comments) setComments(d.comments); })
       .catch(() => {});
@@ -416,7 +416,7 @@ function CommentSheet({ mediaId, mediaType, segment, season, onClose }: {
     if (!session || !newComment.trim() || submitting) return;
     setSubmitting(true);
     try {
-      const res = await apiFetch('/api/shorts/comments', {
+      const res = await fetch('/api/shorts/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mediaId, mediaType, segment, season: normalizedSeason, content: newComment.trim() }),

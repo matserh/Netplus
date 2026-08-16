@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Logo } from '@/components/ui/Logo';
-import { apiFetch } from '@/lib/api-url';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2, Film, Shield, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
@@ -51,7 +50,7 @@ export default function LoginPage() {
           return;
         }
 
-        const res = await apiFetch('/api/auth/register', {
+        const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
