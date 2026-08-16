@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Banner } from '@/components/media/Banner';
@@ -11,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
-import { Search, UserCircle, Bell } from 'lucide-react';
+import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
+import { Search, UserCircle, Bell, Play, Clock } from 'lucide-react';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -152,6 +154,112 @@ function InfiniteRow({ title, endpoint, onItemClick }: { title: string; endpoint
         )}
       </div>
     </section>
+  );
+}
+
+// Continue Watching section — shows in-progress items from history
+function ContinueWatching() {
+  const router = useRouter();
+  const { getContinueWatching } = useWatchHistory();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
+
+  const items = getContinueWatching(12);
+  if (items.length === 0) return null;
+
+  return (
+    <section className="py-4 md:py-6">
+      <div className="flex items-center justify-between px-6 sm:px-10 lg:px-16 mb-3">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-lg sm:text-xl font-bold text-foreground section-title">Continuer à regarder</h2>
+        </div>
+        <Link
+          href="/history"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+        >
+          Tout voir
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-6 sm:px-10 lg:px-16 pb-2">
+        {items.map((entry) => (
+          <ContinueWatchingCard key={`${entry.id}-${entry.mediaType}`} entry={entry} onPlay={() => {
+            router.push(`/watch/${entry.mediaType}/${entry.id}`);
+          }} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ContinueWatchingCard({ entry, onPlay }: { entry: WatchHistoryEntry; onPlay: () => void }) {
+  const [loaded, setLoaded] = useState(false);
+  const imgUrl = entry.backdropPath
+    ? `https://image.tmdb.org/t/p/w500${entry.backdropPath}`
+    : entry.posterPath
+    ? `https://image.tmdb.org/t/p/w342${entry.posterPath}`
+    : null;
+
+  return (
+    <button
+      onClick={onPlay}
+      className="flex-shrink-0 w-[180px] sm:w-[200px] md:w-[220px] lg:w-[240px] group cursor-pointer text-left"
+    >
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+        {!loaded && <div className="absolute inset-0 bg-muted/40 animate-pulse" />}
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={entry.title}
+            className={`w-full h-full object-cover transition-all duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-105`}
+            onLoad={() => setLoaded(true)}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Play className="w-6 h-6 text-muted-foreground/20" />
+          </div>
+        )}
+
+        {/* Play overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-all">
+          <div className="p-2.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
+            <Play className="w-4 h-4 text-black fill-current" />
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+          <div className="h-full bg-primary rounded-r-full" style={{ width: `${Math.min(entry.progress, 100)}%` }} />
+        </div>
+
+        {/* TV Badge */}
+        {entry.mediaType === 'tv' && entry.season && entry.episode && (
+          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-white/80 font-medium">
+            S{entry.season}E{entry.episode}
+          </div>
+        )}
+
+        {/* Progress % badge */}
+        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-primary font-bold">
+          {entry.progress}%
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="mt-1.5">
+        <p className="text-xs sm:text-sm font-medium text-foreground truncate">{entry.title}</p>
+        {entry.mediaType === 'tv' && entry.episodeTitle && (
+          <p className="text-[10px] text-muted-foreground/50 truncate">{entry.episodeTitle}</p>
+        )}
+      </div>
+    </button>
   );
 }
 
@@ -368,6 +476,9 @@ export default function HomePage() {
         ) : (
           <Fragment>
             <Banner items={bannerItems} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+
+            {/* Continue Watching — from watch history */}
+            <ContinueWatching />
             
             {/* Infinite horizontal rows */}
             <InfiniteRow title="Au Cinéma" endpoint="/movie/now_playing?region=FR" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />

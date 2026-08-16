@@ -1,408 +1,49 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Play, Star, Calendar, Clock, Film, Tv, ChevronDown, ChevronUp, Sparkles, Brain } from 'lucide-react';
-import { Logo } from '@/components/ui/Logo';
+import {
+  Media,
+  MovieDetails,
+  TVDetails,
+  getBackdropUrl,
+  getMediaTitle,
+  getMediaYear,
+  API_CONFIG,
+} from '@/types/media';
+import { useChallenge } from '@/contexts/ChallengeContext';
+import { useWatchHistory } from '@/contexts/WatchHistoryContext';
+import { SmartVideoPlayer } from '@/components/ui/SmartVideoPlayer';
+import { SubtitleOverlay } from '@/components/ui/SubtitleOverlay';
 
-interface MediaDetails {
+interface Episode {
   id: number;
-  title?: string;
-  name?: string;
+  name: string;
   overview: string;
-  backdrop_path: string;
-  poster_path: string;
+  episode_number: number;
+  season_number: number;
+  still_path: string | null;
   vote_average: number;
-  release_date?: string;
-  first_air_date?: string;
   runtime?: number;
-  number_of_seasons?: number;
-  seasons?: { id: number; season_number: number; episode_count: number; name: string }[];
-  genres: { id: number; name: string }[];
 }
 
-// Working video servers
-const VIDEO_SERVERS = {
-  vidsrc: {
-    name: 'VidSrc',
-    movie: (id: number) => `https://vidsrc.pro/embed/movie/${id}`,
-    tv: (id: number, season: number, episode: number) => `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`,
-  },
-  embedsu: {
-    name: 'EmbedSu', 
-    movie: (id: number) => `https://embed.su/embed/movie/${id}`,
-    tv: (id: number, season: number, episode: number) => `https://embed.su/embed/tv/${id}/${season}/${episode}`,
-  },
-  vidsrccc: {
-    name: 'VidSrc CC',
-    movie: (id: number) => `https://vidsrc.cc/v2/embed/movie/${id}`,
-    tv: (id: number, season: number, episode: number) => `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`,
-  },
-  smashystream: {
-    name: 'Smashy',
-    movie: (id: number) => `https://player.smashy.stream/movie/${id}`,
-    tv: (id: number, season: number, episode: number) => `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`,
-  },
-  autoembed: {
-    name: 'AutoEmbed',
-    movie: (id: number) => `https://autoembed.co/movie/tmdb/${id}`,
-    tv: (id: number, season: number, episode: number) => `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`,
-  }
-};
-
-// AI Content Explanation Component
-function AIContentExplanation({ title, type, overview, genres }: { title: string; type: 'movie' | 'tv'; overview: string; genres: { id: number; name: string }[] }) {
-  const [explanation, setExplanation] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  useEffect(() => {
-    if (!title) return;
-    
-    const fetchExplanation = async () => {
-      setLoading(true);
-      setError(false);
-      try {
-        const genreNames = genres.map(g => g.name).join(', ');
-        const typeLabel = type === 'movie' ? 'film' : 'série';
-        const prompt = `Explique brièvement le ${typeLabel} "${title}"${genreNames ? ` (${genreNames})` : ''} en 3-4 phrases. Parle de l'intrigue sans spoilers majeurs, du style, et de pourquoi on devrait le regarder. Sois enthousiaste et concis.`;
-        
-        const res = await fetch('/api/ai/recommend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: prompt }),
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.message) {
-            setExplanation(data.message);
-          } else {
-            // Fallback: use overview as explanation
-            setExplanation(overview || 'Aucune analyse disponible.');
-          }
-        } else {
-          setError(true);
-        }
-      } catch {
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExplanation();
-  }, [title, type, overview, genres]);
-
-  return (
-    <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-amber-500/5 overflow-hidden">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-colors"
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-md shadow-primary/20">
-            <Brain className="w-4 h-4 text-black" />
-          </div>
-          <div className="text-left">
-            <span className="text-sm font-bold text-primary">Maître Netplus vous explique</span>
-            <p className="text-[10px] text-primary/50">Analyse IA de ce contenu</p>
-          </div>
-        </div>
-        {isExpanded ? <ChevronUp className="w-4 h-4 text-primary/50" /> : <ChevronDown className="w-4 h-4 text-primary/50" />}
-      </button>
-      
-      {isExpanded && (
-        <div className="px-4 pb-4 pt-1">
-          {loading ? (
-            <div className="flex items-center gap-3 py-3">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs text-muted-foreground">Maître Netplus analyse ce contenu...</span>
-            </div>
-          ) : error ? (
-            <div className="py-2">
-              <p className="text-xs text-muted-foreground/60 italic">
-                {overview || 'Aucune analyse disponible pour le moment.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-sm text-foreground/80 leading-relaxed">
-                {explanation || overview || 'Aucune analyse disponible.'}
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <Sparkles className="w-3 h-3 text-primary/40" />
-                <span className="text-[10px] text-primary/30">Généré par Maître Netplus</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+interface SeasonDetail {
+  id: number;
+  name: string;
+  season_number: number;
+  episodes: Episode[];
 }
 
-function WatchContent() {
-  const params = useParams();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  const type = params.type as 'movie' | 'tv';
-  const id = parseInt(params.id as string);
-  const urlSeason = searchParams.get('s') ? parseInt(searchParams.get('s')!) : 1;
-  const urlEpisode = searchParams.get('e') ? parseInt(searchParams.get('e')!) : 1;
-  
-  const [details, setDetails] = useState<MediaDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [currentServer, setCurrentServer] = useState<keyof typeof VIDEO_SERVERS>('vidsrc');
-  const [season, setSeason] = useState(urlSeason);
-  const [episode, setEpisode] = useState(urlEpisode);
-  const [showServers, setShowServers] = useState(false);
-  const [showEpisodes, setShowEpisodes] = useState(false);
-
-  useEffect(() => {
-    const fetchDetails = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `https://api.themoviedb.org/3/${type}/${id}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=fr-FR`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setDetails(data);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetails();
-  }, [type, id]);
-
-  useEffect(() => {
-    // Update URL when season/episode changes
-    if (type === 'tv') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('s', String(season));
-      url.searchParams.set('e', String(episode));
-      window.history.replaceState({}, '', url);
-    }
-  }, [season, episode, type]);
-
-  const getVideoUrl = () => {
-    const server = VIDEO_SERVERS[currentServer];
-    if (type === 'movie') {
-      return server.movie(id);
-    }
-    return server.tv(id, season, episode);
-  };
-
-  const title = details?.title || details?.name || '';
-  const year = details?.release_date?.slice(0, 4) || details?.first_air_date?.slice(0, 4) || '';
-  const rating = details?.vote_average?.toFixed(1) || 'N/A';
-  const runtime = details?.runtime;
-  const seasons = details?.seasons?.filter(s => s.season_number > 0) || [];
-  const currentSeasonData = seasons.find(s => s.season_number === season);
-  const episodeCount = currentSeasonData?.episode_count || 20;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+function WatchLoading() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="hover:bg-white/10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <Logo size="sm" />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Badge className="bg-primary text-black font-bold">
-              {type === 'movie' ? 'FILM' : 'SÉRIE'}
-            </Badge>
-          </div>
-        </div>
-      </header>
-
-      {/* Video Player */}
-      <div className="pt-14">
-        <div className="relative w-full aspect-video bg-black">
-          <iframe
-            key={`${currentServer}-${type}-${id}-${season}-${episode}`}
-            src={getVideoUrl()}
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
-        </div>
-
-        {/* Info Bar */}
-        <div className="bg-card border-b border-border/50">
-          <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-bold text-foreground line-clamp-1">{title}</h1>
-              <div className="flex items-center gap-1.5 text-sm">
-                <Star className="w-4 h-4 fill-primary text-primary" />
-                <span className="font-medium">{rating}</span>
-              </div>
-              {year && <span className="text-sm text-muted-foreground">{year}</span>}
-            </div>
-
-            {/* TV Show Controls */}
-            {type === 'tv' && seasons.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Select value={String(season)} onValueChange={(v) => { setSeason(parseInt(v)); setEpisode(1); }}>
-                  <SelectTrigger className="w-28 h-9 bg-muted/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasons.map(s => (
-                      <SelectItem key={s.id} value={String(s.season_number)}>
-                        S{s.season_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select value={String(episode)} onValueChange={(v) => setEpisode(parseInt(v))}>
-                  <SelectTrigger className="w-24 h-9 bg-muted/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: episodeCount }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>
-                        Ep {i + 1}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="p-4 space-y-3">
-          {/* Server Selection */}
-          <button
-            onClick={() => setShowServers(!showServers)}
-            className="w-full flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
-          >
-            <span className="font-medium">Serveur: {VIDEO_SERVERS[currentServer].name}</span>
-            {showServers ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-          
-          {showServers && (
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {Object.entries(VIDEO_SERVERS).map(([key, server]) => (
-                <Button
-                  key={key}
-                  variant={currentServer === key ? 'default' : 'outline'}
-                  onClick={() => { setCurrentServer(key as keyof typeof VIDEO_SERVERS); setShowServers(false); }}
-                  className={currentServer === key ? 'bg-primary text-black font-semibold' : ''}
-                >
-                  {server.name}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          {/* Episodes List for TV */}
-          {type === 'tv' && seasons.length > 0 && (
-            <>
-              <button
-                onClick={() => setShowEpisodes(!showEpisodes)}
-                className="w-full flex items-center justify-between p-3 bg-card rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
-              >
-                <span className="font-medium">Épisodes - Saison {season}</span>
-                {showEpisodes ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              
-              {showEpisodes && (
-                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-48 overflow-y-auto p-2 bg-card rounded-lg border border-border/50">
-                  {Array.from({ length: episodeCount }, (_, i) => (
-                    <Button
-                      key={i + 1}
-                      variant={episode === i + 1 ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setEpisode(i + 1)}
-                      className={episode === i + 1 ? 'bg-primary text-black font-bold' : ''}
-                    >
-                      {i + 1}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Media Details */}
-        {details && (
-          <div className="p-4 border-t border-border/50 space-y-4">
-            {/* AI Explanation — Maître Netplus */}
-            <AIContentExplanation 
-              title={title}
-              type={type}
-              overview={details.overview || ''}
-              genres={details.genres || []}
-            />
-
-            <div className="flex gap-4">
-              {details.poster_path && (
-                <div className="hidden sm:block w-24 flex-shrink-0">
-                  <Image
-                    src={`https://image.tmdb.org/t/p/w185${details.poster_path}`}
-                    alt={title}
-                    width={96}
-                    height={144}
-                    className="rounded-lg object-cover aspect-[2/3]"
-                  />
-                </div>
-              )}
-              
-              <div className="flex-1 space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {details.genres?.map(g => (
-                    <Badge key={g.id} variant="secondary" className="text-xs">{g.name}</Badge>
-                  ))}
-                </div>
-                
-                {runtime && (
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    {Math.floor(runtime / 60)}h {runtime % 60}min
-                  </div>
-                )}
-                
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
-                  {details.overview || 'Aucune description disponible.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground text-sm">Chargement...</p>
       </div>
     </div>
   );
@@ -410,12 +51,642 @@ function WatchContent() {
 
 export default function WatchPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<WatchLoading />}>
       <WatchContent />
     </Suspense>
+  );
+}
+
+function WatchContent() {
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const {
+    isPremium,
+    watchCount,
+    canWatch,
+    incrementWatchCount,
+    recordWatchSeconds,
+    hasWatchedContent,
+    BASIC_LIMIT,
+    isLoaded,
+  } = useChallenge();
+  const { addToHistory, updateProgress, getHistoryEntry } = useWatchHistory();
+  const progressSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const mediaType = params.type as 'movie' | 'tv';
+  const mediaId = parseInt(params.id as string);
+  const urlSeason = searchParams.get('s') ? parseInt(searchParams.get('s')!) : undefined;
+  const urlEpisode = searchParams.get('e') ? parseInt(searchParams.get('e')!) : undefined;
+
+  const isMovie = mediaType === 'movie';
+
+  const [details, setDetails] = useState<MovieDetails | TVDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentSeason, setCurrentSeason] = useState(urlSeason || 1);
+  const [currentEpisode, setCurrentEpisode] = useState(urlEpisode || 1);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [seasonsList, setSeasonsList] = useState<{ number: number; name: string; episodeCount: number }[]>([]);
+  const [serverIndex, setServerIndex] = useState(0);
+  const [iframeKey, setIframeKey] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [watchTimer, setWatchTimer] = useState(0);
+  const [subtitlesActive, setSubtitlesActive] = useState(false);
+
+  // Check access control
+  const hasCheckedAccess = useRef(false);
+  useEffect(() => {
+    if (!isLoaded || hasCheckedAccess.current) return;
+    hasCheckedAccess.current = true;
+
+    if (!canWatch()) {
+      setIsBlocked(true);
+    } else {
+      setIsBlocked(false);
+      const allowed = incrementWatchCount();
+      if (!allowed) {
+        setIsBlocked(true);
+      }
+    }
+  }, [isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Track watch time for challenge (Task 2)
+  const watchTimerRef = useRef(0);
+  useEffect(() => {
+    if (isBlocked || !isLoaded) return;
+    const interval = setInterval(() => {
+      setWatchTimer(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isBlocked, isLoaded]);
+
+  useEffect(() => {
+    watchTimerRef.current = watchTimer;
+    if (watchTimer > 0) {
+      recordWatchSeconds(watchTimer);
+    }
+  }, [watchTimer, recordWatchSeconds]);
+
+  // Restore last watched position from history
+  useEffect(() => {
+    if (!mediaId || !mediaType) return;
+    const saved = getHistoryEntry(mediaId, mediaType);
+    if (saved) {
+      if (!isMovie && saved.season) setCurrentSeason(saved.season);
+      if (!isMovie && saved.episode) setCurrentEpisode(saved.episode);
+    }
+  }, [mediaId, mediaType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch media details
+  useEffect(() => {
+    if (!mediaId || !mediaType) {
+      router.push('/');
+      return;
+    }
+
+    const fetchDetails = async () => {
+      setLoading(true);
+      try {
+        const endpoint = isMovie ? `/movie/${mediaId}` : `/tv/${mediaId}`;
+        const res = await fetch(
+          `${API_CONFIG.tmdb.baseUrl}${endpoint}?api_key=${API_CONFIG.tmdb.apiKey}&language=${API_CONFIG.language}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setDetails(data);
+
+          if (!isMovie && data.seasons) {
+            const filtered = data.seasons
+              .filter((s: { season_number: number }) => s.season_number > 0)
+              .map((s: { season_number: number; name: string; episode_count: number }) => ({
+                number: s.season_number,
+                name: s.name,
+                episodeCount: s.episode_count,
+              }));
+            setSeasonsList(filtered);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetails();
+  }, [mediaId, mediaType, isMovie, router]);
+
+  // Fetch episodes for TV when season changes
+  useEffect(() => {
+    if (isMovie || !mediaId) return;
+
+    const fetchEpisodes = async () => {
+      try {
+        const res = await fetch(
+          `${API_CONFIG.tmdb.baseUrl}/tv/${mediaId}/season/${currentSeason}?api_key=${API_CONFIG.tmdb.apiKey}&language=${API_CONFIG.language}`
+        );
+        if (res.ok) {
+          const data: SeasonDetail = await res.json();
+          setEpisodes(data.episodes || []);
+          if (currentEpisode > (data.episodes?.length || 1)) {
+            setCurrentEpisode(1);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch episodes:', err);
+      }
+    };
+
+    fetchEpisodes();
+  }, [mediaId, currentSeason, isMovie, currentEpisode]);
+
+  // Update URL when season/episode changes (for TV)
+  useEffect(() => {
+    if (!isMovie && typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('s', String(currentSeason));
+      url.searchParams.set('e', String(currentEpisode));
+      window.history.replaceState({}, '', url);
+    }
+  }, [currentSeason, currentEpisode, isMovie]);
+
+  // Build video URL using API_CONFIG servers
+  const getVideoUrl = useCallback(() => {
+    const servers = Object.values(API_CONFIG.videoServers);
+    const server = servers[serverIndex % servers.length];
+
+    if (isMovie) {
+      return server.movieUrl(mediaId);
+    } else {
+      return server.tvUrl(mediaId, currentSeason, currentEpisode);
+    }
+  }, [mediaId, isMovie, currentSeason, currentEpisode, serverIndex]);
+
+  // Reload iframe when switching server/episode
+  const reloadPlayer = () => {
+    setIframeKey(k => k + 1);
+  };
+
+  useEffect(() => {
+    reloadPlayer();
+  }, [serverIndex, currentSeason, currentEpisode]);
+
+  // Save progress to history periodically and on unmount
+  useEffect(() => {
+    if (!details || !mediaId || !mediaType || isBlocked) return;
+
+    const title = getMediaTitle(details);
+    addToHistory({
+      id: mediaId,
+      mediaType,
+      title,
+      posterPath: details.poster_path || null,
+      backdropPath: details.backdrop_path || null,
+      overview: details.overview || '',
+      progress: 0,
+      timestamp: 0,
+      duration: isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 0,
+      season: !isMovie ? currentSeason : undefined,
+      episode: !isMovie ? currentEpisode : undefined,
+      episodeTitle: !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined,
+      genreIds: details.genre_ids || details.genres?.map((g: { id: number }) => g.id),
+      voteAverage: details.vote_average,
+      year: getMediaYear(details as Media),
+    });
+
+    // Save progress every 15 seconds
+    progressSaveRef.current = setInterval(() => {
+      const elapsed = watchTimerRef.current;
+      const duration = isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400;
+      const progress = duration > 0 ? Math.min(Math.round((elapsed / duration) * 100), 100) : 0;
+      updateProgress(
+        mediaId,
+        mediaType,
+        progress,
+        elapsed,
+        duration,
+        !isMovie ? currentSeason : undefined,
+        !isMovie ? currentEpisode : undefined,
+        !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined
+      );
+    }, 15000);
+
+    return () => {
+      if (progressSaveRef.current) clearInterval(progressSaveRef.current);
+      // Final save on unmount
+      const elapsed = watchTimerRef.current;
+      const duration = isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400;
+      const progress = duration > 0 ? Math.min(Math.round((elapsed / duration) * 100), 100) : 0;
+      updateProgress(
+        mediaId,
+        mediaType,
+        progress,
+        elapsed,
+        duration,
+        !isMovie ? currentSeason : undefined,
+        !isMovie ? currentEpisode : undefined,
+        !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined
+      );
+    };
+  }, [details, mediaId, mediaType, isBlocked, currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset watch timer when switching episodes (TV series)
+  useEffect(() => {
+    if (!isMovie) {
+      setWatchTimer(0);
+    }
+  }, [currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Also save when episode/season changes
+  useEffect(() => {
+    if (!details || !mediaId || !mediaType) return;
+    const title = getMediaTitle(details);
+    const epTitle = !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined;
+    updateProgress(
+      mediaId,
+      mediaType,
+      0,
+      0,
+      isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400,
+      !isMovie ? currentSeason : undefined,
+      !isMovie ? currentEpisode : undefined,
+      epTitle
+    );
+  }, [currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const title = details ? getMediaTitle(details) : '';
+  const year = details ? getMediaYear(details as Media) : '';
+  const backdropUrl = getBackdropUrl(details?.backdrop_path || null, 'large');
+  const rating = details?.vote_average?.toFixed(1) || 'N/A';
+  const genres = (details as MovieDetails)?.genres || (details as TVDetails)?.genres || [];
+  const overview = details?.overview || '';
+  const runtime = (details as MovieDetails)?.runtime;
+  const formattedRuntime = runtime ? `${Math.floor(runtime / 60)}h ${runtime % 60}min` : null;
+  const numberOfSeasons = (details as TVDetails)?.number_of_seasons;
+  const tagline = (details as MovieDetails)?.tagline || (details as TVDetails)?.tagline;
+
+  // Show loading until both TMDB data and challenge state are ready
+  if (loading || !isLoaded) {
+    return <WatchLoading />;
+  }
+
+  if (!details) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Contenu introuvable</h1>
+          <p className="text-muted-foreground mb-4 text-sm">Le contenu demand&eacute; n&apos;existe pas.</p>
+          <Link href="/" className="text-primary hover:underline text-sm">Retour &agrave; l&apos;accueil</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Access blocked overlay
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Limite atteinte</h1>
+          <p className="text-sm text-muted-foreground mb-2">
+            Vous avez utilis&eacute; vos {BASIC_LIMIT} contenus gratuits de la version basique.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Accomplissez les 3 d&eacute;fis simples pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-black font-bold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all hover:scale-105"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
+            </svg>
+            D&eacute;bloquer l&apos;acc&egrave;s illimit&eacute;
+          </Link>
+          <div className="mt-4">
+            <Link href="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              ← Retour &agrave; l&apos;accueil
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const serverEntries = Object.values(API_CONFIG.videoServers);
+
+  // Get history entry for progress display
+  const historyEntry = getHistoryEntry(mediaId, mediaType);
+  const hasProgress = historyEntry && historyEntry.progress > 0 && historyEntry.progress < 95;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Top Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 h-11 sm:h-12 bg-black/90 backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link href="/" className="flex items-center gap-1.5 text-primary font-bold text-xs sm:text-sm flex-shrink-0">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 fill-primary">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span className="hidden xs:inline">NETPLUS</span>
+          </Link>
+          {isPremium && (
+            <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[9px] sm:text-[10px] font-bold flex-shrink-0 animate-premium-glow">
+              VIP
+            </span>
+          )}
+          <span className="text-white/20 flex-shrink-0">|</span>
+          <span className="text-white/70 text-xs sm:text-sm font-medium truncate">{title}</span>
+          {!isMovie && (
+            <span className="text-primary/60 text-[10px] sm:text-xs flex-shrink-0">
+              S{currentSeason}E{currentEpisode}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => router.back()}
+          className="text-white/50 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors flex-shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span className="hidden sm:inline">Fermer</span>
+        </button>
+      </div>
+
+      {/* Video Player with smart server detection + AI Subtitles */}
+      <div className="pt-11 sm:pt-12 relative">
+        <SmartVideoPlayer
+          key={iframeKey}
+          src={getVideoUrl()}
+          title={title}
+          serverIndex={serverIndex}
+          totalServers={serverEntries.length}
+          onNextServer={() => setServerIndex(i => (i + 1) % serverEntries.length)}
+          onRetry={() => setIframeKey(k => k + 1)}
+          aspectClass="aspect-video"
+        />
+        {/* AI Subtitle text overlay on top of video */}
+        <SubtitleOverlay
+          tmdbId={mediaId}
+          mediaType={isMovie ? 'movie' : 'tv'}
+          season={!isMovie ? currentSeason : undefined}
+          episode={!isMovie ? currentEpisode : undefined}
+          currentTime={watchTimer}
+          isActive={subtitlesActive}
+          onToggle={() => setSubtitlesActive(prev => !prev)}
+          overlayOnly
+        />
+      </div>
+
+      {/* Resume indicator */}
+      {hasProgress && (
+        <div className="px-3 sm:px-6 pt-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+            <svg className="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-xs text-primary/70">
+              Reprise &agrave; {historyEntry.progress}% &mdash; {historyEntry.timestamp > 60 ? `${Math.floor(historyEntry.timestamp / 60)}min` : `${historyEntry.timestamp}s`}
+            </span>
+            <div className="flex-1 h-1 bg-primary/10 rounded-full overflow-hidden ml-1">
+              <div className="h-full bg-primary rounded-full" style={{ width: `${historyEntry.progress}%` }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content Below Player */}
+      <div className="px-3 sm:px-6 py-4 sm:py-8">
+        {/* Title & Meta */}
+        <div className="mb-4 sm:mb-6">
+          {tagline && (
+            <p className="text-primary/70 text-[11px] sm:text-sm italic mb-0.5">{tagline}</p>
+          )}
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-foreground mb-2 leading-tight">{title}</h1>
+
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground mb-3">
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5 text-primary fill-primary" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="font-semibold">{rating}</span>
+            </span>
+            {year && <span>{year}</span>}
+            {formattedRuntime && <span>{formattedRuntime}</span>}
+            {numberOfSeasons && <span>{numberOfSeasons} saison{numberOfSeasons > 1 ? 's' : ''}</span>}
+            <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[10px] sm:text-xs font-bold">
+              {isMovie ? 'FILM' : 'SÉRIE'}
+            </span>
+          </div>
+
+          {/* Genres */}
+          {genres.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+              {genres.map(g => (
+                <span key={g.id} className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/5 text-[10px] sm:text-xs text-white/60 border border-white/10">
+                  {g.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Overview */}
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 sm:line-clamp-none">{overview}</p>
+        </div>
+
+        {/* Server Switch + AI Subtitles */}
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v4a2 2 0 00-2-2" />
+              </svg>
+              <span className="text-xs sm:text-sm text-muted-foreground font-medium">Serveur de lecture</span>
+            </div>
+            {/* AI Subtitles toggle */}
+            <button
+              onClick={() => setSubtitlesActive(prev => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                subtitlesActive
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'bg-white/5 text-white/60 hover:bg-primary/20 hover:text-primary border-white/10 hover:border-primary/30'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+              {subtitlesActive ? 'Sous-titres ON' : 'Sous-titres IA'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {serverEntries.map((server, idx) => {
+              const lang = (server as { lang?: string }).lang || 'VO';
+              const isVF = lang === 'VF';
+              const isVOSTFR = lang === 'VOSTFR';
+              return (
+                <button
+                  key={server.name}
+                  onClick={() => setServerIndex(idx)}
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                    serverIndex === idx
+                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                  }`}
+                >
+                  <span className={`px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-black leading-none ${
+                    serverIndex === idx
+                      ? 'bg-black/20 text-black'
+                      : isVF
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : isVOSTFR
+                      ? 'bg-amber-500/20 text-amber-400'
+                      : 'bg-white/10 text-white/40'
+                  }`}>
+                    {lang}
+                  </span>
+                  <span>{server.name.replace(' VF', '').replace(' VOSTFR', '')}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* TV Series: Season & Episode Selector */}
+        {!isMovie && seasonsList.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Épisodes</h2>
+
+            {/* Season Tabs */}
+            <div className="flex gap-1.5 sm:gap-2 mb-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+              {seasonsList.map(s => (
+                <button
+                  key={s.number}
+                  onClick={() => setCurrentSeason(s.number)}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                    currentSeason === s.number
+                      ? 'bg-primary text-black'
+                      : 'bg-white/5 text-white/50 hover:bg-white/10'
+                  }`}
+                >
+                  S{s.number}
+                </button>
+              ))}
+            </div>
+
+            {/* Episode List */}
+            <div className="space-y-1.5 sm:space-y-2 max-h-[50vh] overflow-y-auto pr-1"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'oklch(0.75 0.14 55) transparent' }}
+            >
+              {episodes.map(ep => {
+                const epHistory = getHistoryEntry(mediaId, mediaType);
+                const isCurrentlyPlaying = currentEpisode === ep.episode_number;
+                
+                return (
+                  <button
+                    key={ep.id}
+                    onClick={() => setCurrentEpisode(ep.episode_number)}
+                    className={`w-full flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg transition-all text-left ${
+                      isCurrentlyPlaying
+                        ? 'bg-primary/10 border border-primary/30'
+                        : 'bg-white/[0.02] hover:bg-white/5 border border-transparent'
+                    }`}
+                  >
+                    {/* Episode Number */}
+                    <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+                      isCurrentlyPlaying
+                        ? 'bg-primary text-black'
+                        : 'bg-white/5 text-white/40'
+                    }`}>
+                      {ep.episode_number}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs sm:text-sm font-medium text-foreground truncate">{ep.name}</p>
+                        {ep.runtime && (
+                          <span className="text-[10px] text-white/30 flex-shrink-0">{ep.runtime}min</span>
+                        )}
+                      </div>
+                      {ep.overview && (
+                        <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mt-0.5">{ep.overview}</p>
+                      )}
+                    </div>
+
+                    {/* Now Playing Indicator */}
+                    {isCurrentlyPlaying && (
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="text-[10px] text-primary font-medium hidden sm:inline">En cours</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Watch Progress Info */}
+        {watchTimer > 0 && (
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">
+                  Temps de visionnage : {Math.floor(watchTimer / 60)}min {watchTimer % 60}s
+                </p>
+                <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min((watchTimer / (isMovie ? ((details as MovieDetails)?.runtime || 120) * 60 : 2400)) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Link to History */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/history"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Voir l&apos;historique
+          </Link>
+          <Link
+            href="/shorts"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Shorts
+          </Link>
+        </div>
+      </div>
+
+      {/* Subtle backdrop decoration */}
+      {backdropUrl && (
+        <div className="fixed inset-0 -z-10 pointer-events-none">
+          <Image src={backdropUrl} alt="" fill className="object-cover opacity-[0.02]" />
+          <div className="absolute inset-0 bg-background" />
+        </div>
+      )}
+    </div>
   );
 }

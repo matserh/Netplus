@@ -22,7 +22,9 @@ import {
   Shield,
   Award,
   Calendar,
-  Sparkles
+  Sparkles,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 
@@ -141,6 +143,18 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
               <Link href="/upcoming">
                 <Calendar className="w-5 h-5" />
                 Prochainement
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/shorts">
+                <Zap className="w-5 h-5" />
+                Shorts
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-primary/10 hover:text-primary" asChild>
+              <Link href="/history">
+                <Clock className="w-5 h-5" />
+                Historique
               </Link>
             </Button>
           </div>
