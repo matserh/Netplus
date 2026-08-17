@@ -13,6 +13,7 @@ import {
   AlertTriangle, SkipForward, Wifi, WifiOff, RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGuest } from '@/contexts/GuestContext';
 // api-url removed - using native fetch for PWA
 
 // ─── Fetch helper ───
@@ -797,6 +798,7 @@ export default function ShortsPage() {
   const router = useRouter();
   const { status } = useSession();
   const { profile, getDiscoverEndpoint } = useProfile();
+  const { isGuest, enterGuestMode } = useGuest();
   const [shorts, setShorts] = useState<ShortItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -810,8 +812,8 @@ export default function ShortsPage() {
 
   // Auth guard
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login');
-  }, [status, router]);
+    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
+  }, [status, isGuest, enterGuestMode]);
 
   // Load initial shorts — profile-aware, same content as main page but in short format
   const loadShorts = useCallback(async (tab: ContentType, page: number = 1, append: boolean = false) => {

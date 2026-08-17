@@ -156,7 +156,7 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-primary via-primary to-amber-600 text-black hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
               >
                 <Sparkles className="w-5 h-5 flex-shrink-0" />
-                <span>Assistant IA</span>
+                <span>Maître Netplus</span>
               </button>
             </div>
           )}

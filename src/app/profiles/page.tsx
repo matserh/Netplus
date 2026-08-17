@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Logo } from '@/components/ui/Logo';
 import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
-import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X } from 'lucide-react';
+import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost } from 'lucide-react';
+import { useGuest } from '@/contexts/GuestContext';
 import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
 
 // Profile image mapping
@@ -104,17 +105,22 @@ export default function ProfilesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { profiles, setProfile, profile: currentProfile } = useProfile();
+  const { isGuest, enterGuestMode } = useGuest();
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Guest mode: auto-redirect guests to home
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+    if (isGuest && currentProfile) { router.push('/'); return; }
+  }, [isGuest, currentProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Instead of redirecting to /login, enter guest mode
+  useEffect(() => {
+    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
+  }, [status, isGuest, enterGuestMode]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -127,7 +133,7 @@ export default function ProfilesPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  if (status === 'loading') {
+  if (status === 'loading' && !isGuest) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -144,8 +150,8 @@ export default function ProfilesPage() {
     // Stay on the page — don't navigate away
   };
 
-  const userName = session?.user?.name || 'Utilisateur';
-  const userEmail = session?.user?.email || '';
+  const userName = session?.user?.name || (isGuest ? 'Invité' : 'Utilisateur');
+  const userEmail = session?.user?.email || (isGuest ? '' : '');
   const currentImg = currentProfile ? PROFILE_IMAGES[currentProfile.type] : '/profiles/nocturne.png';
 
   return (

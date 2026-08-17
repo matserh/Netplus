@@ -7,8 +7,12 @@ import { ChallengeProvider } from '@/contexts/ChallengeContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { WatchHistoryProvider } from '@/contexts/WatchHistoryContext';
 import { ShortsProvider } from '@/contexts/ShortsContext';
+import { GuestProvider } from '@/contexts/GuestContext';
 import { ReactNode } from 'react';
 import { SessionProvider } from 'next-auth/react';
+// Force-load API_CONFIG in the initial client bundle to prevent
+// "API_CONFIG is not defined" ReferenceError from chunk load ordering
+import '@/types/media';
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -17,21 +21,23 @@ interface ClientProvidersProps {
 export function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <SessionProvider>
-      <LanguageProvider>
-        <UserProgressProvider>
-          <DynamicThemeProvider>
-            <ChallengeProvider>
-              <ProfileProvider>
-                <WatchHistoryProvider>
-                  <ShortsProvider>
-                    {children}
-                  </ShortsProvider>
-                </WatchHistoryProvider>
-              </ProfileProvider>
-            </ChallengeProvider>
-          </DynamicThemeProvider>
-        </UserProgressProvider>
-      </LanguageProvider>
+      <GuestProvider>
+        <LanguageProvider>
+          <UserProgressProvider>
+            <DynamicThemeProvider>
+              <ChallengeProvider>
+                <ProfileProvider>
+                  <WatchHistoryProvider>
+                    <ShortsProvider>
+                      {children}
+                    </ShortsProvider>
+                  </WatchHistoryProvider>
+                </ProfileProvider>
+              </ChallengeProvider>
+            </DynamicThemeProvider>
+          </UserProgressProvider>
+        </LanguageProvider>
+      </GuestProvider>
     </SessionProvider>
   );
 }

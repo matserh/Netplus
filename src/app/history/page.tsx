@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { Trash2, Play, Film, Tv, Clock, Filter, LayoutGrid, List, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BottomNavBar } from '@/components/layout/BottomNavBar';
+import { useGuest } from '@/contexts/GuestContext';
 
 function formatTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -242,6 +243,7 @@ function HistoryContent() {
   const sessionData = useSession() || {};
   const { data: session, status } = sessionData;
   const { history, removeFromHistory, clearHistory } = useWatchHistory();
+  const { isGuest, enterGuestMode } = useGuest();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
   const [sort, setSort] = useState<SortType>('recent');
@@ -252,10 +254,8 @@ function HistoryContent() {
   }, []);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
+  }, [status, isGuest, enterGuestMode]);
 
   // Filter and sort
   const filteredHistory = history

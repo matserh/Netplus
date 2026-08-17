@@ -146,7 +146,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
             )}
           >
             <Sparkles className="w-5 h-5 flex-shrink-0" />
-            {!isCollapsed && <span>Assistant IA</span>}
+            {!isCollapsed && <span>Maître Netplus</span>}
           </button>
 
           {/* Library */}

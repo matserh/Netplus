@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { Search, X, TrendingUp, Film, Clock, ArrowRight } from 'lucide-react';
 import { Media, Genre, TMDBResponse, API_CONFIG } from '@/types/media';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
+import { useGuest } from '@/contexts/GuestContext';
 import { BottomNavBar } from '@/components/layout/BottomNavBar';
 
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -93,6 +94,7 @@ export default function SearchPage() {
   const router = useRouter();
   const { status } = useSession();
   const { history } = useWatchHistory();
+  const { isGuest, enterGuestMode } = useGuest();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Media[]>([]);
   const [trending, setTrending] = useState<Media[]>([]);
@@ -102,10 +104,8 @@ export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
+  }, [status, isGuest, enterGuestMode]);
 
   useEffect(() => {
     const load = async () => {

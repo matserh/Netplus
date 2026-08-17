@@ -354,20 +354,28 @@ function WatchContent() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Limite atteinte</h1>
           <p className="text-sm text-muted-foreground mb-2">
-            Vous avez utilis&eacute; vos {BASIC_LIMIT} contenus gratuits de la version basique.
+            Vous avez utilis&eacute; vos {BASIC_LIMIT} contenus gratuits.
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Accomplissez les 3 d&eacute;fis simples pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !
+            Cr&eacute;ez un compte ou accomplissez les 3 d&eacute;fis pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !
           </p>
           <Link
-            href="/pricing"
+            href="/login"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-black font-bold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all hover:scale-105"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
             </svg>
-            D&eacute;bloquer l&apos;acc&egrave;s illimit&eacute;
+            Cr&eacute;er un compte
           </Link>
+          <div className="mt-3">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/40 text-foreground/80 font-medium text-sm hover:border-primary/40 hover:text-primary transition-all"
+            >
+              Voir les d&eacute;fis
+            </Link>
+          </div>
           <div className="mt-4">
             <Link href="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               ← Retour &agrave; l&apos;accueil
