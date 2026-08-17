@@ -1,0 +1,840 @@
+- complementary
+  - link "N NET PLUS" [ref=e2]
+  - button [ref=e3]
+  - navigation
+    - link "Accueil" [ref=e83]
+    - link "Tendances" [ref=e84]
+    - link "Films Populaires" [ref=e85]
+    - link "Séries Populaires" [ref=e86]
+    - link "Films Mieux Notés" [ref=e87]
+    - link "Séries Mieux Notées" [ref=e88]
+    - link "Prochainement" [ref=e89]
+    - link "Shorts" [ref=e90]
+  - button "Assistant IA" [ref=e55]
+  - paragraph
+  - navigation
+    - link "Favoris" [ref=e91]
+    - link "Historique" [ref=e92]
+    - link "Ma liste" [ref=e93]
+  - paragraph
+  - navigation
+    - link "Profils" [ref=e94]
+    - link "Premium" [ref=e95]
+  - button "GENRES" [ref=e56]
+  - button "Action" [ref=e57]
+  - button "Action & Adventure" [ref=e58]
+  - button "Adventure" [ref=e59]
+  - button "Animation" [ref=e60]
+  - button "Comedy" [ref=e61]
+  - button "Crime" [ref=e62]
+  - button "Documentary" [ref=e63]
+  - button "Drama" [ref=e64]
+  - button "Family" [ref=e65]
+  - button "Fantasy" [ref=e66]
+  - button "History" [ref=e67]
+  - button "Horror" [ref=e68]
+  - navigation
+    - link "À propos" [ref=e69]
+    - link "Conditions" [ref=e70]
+    - link "Confidentialité" [ref=e71]
+- main
+  - sectionheader
+    - heading "Accueil" [level=1, ref=e4]
+    - textbox "Titres, genres, personnes..." [ref=e72]
+    - button [ref=e5]
+    - link [ref=e6]
+  - generic
+    - generic
+      - image "The Odyssey"
+    - StaticText "FILM"
+    - StaticText "8.0"
+    - StaticText "2026"
+    - heading "The Odyssey" [level=1, ref=e73]
+    - paragraph
+      - StaticText "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point."
+    - button "Regarder" [ref=e74]
+    - button "Plus d'infos" [ref=e75]
+    - generic
+      - button [ref=e96]
+      - button [ref=e97]
+      - button [ref=e98]
+      - button [ref=e99]
+      - button [ref=e100]
+  - generic
+    - heading "Au Cinéma" [level=2, ref=e7]
+    - generic
+      - button [ref=e76]
+      - generic
+        - generic [ref=e101] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spider-Man: Brand New Day"
+            - paragraph
+              - StaticText "Spider-Man: Brand New Day"
+        - generic [ref=e102] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Odyssey"
+            - paragraph
+        - generic [ref=e103] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Evil Dead Burn"
+            - paragraph
+        - generic [ref=e104] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The End of Oak Street"
+            - paragraph
+        - generic [ref=e105] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Moana"
+            - paragraph
+        - generic [ref=e106] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Matrix"
+            - paragraph
+        - generic [ref=e107] clickable [cursor:pointer, onclick]
+          - generic
+            - image "PAW Patrol: The Dino Movie"
+            - paragraph
+              - StaticText "PAW Patrol: The Dino Movie"
+        - generic [ref=e108] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Jana Nayagan"
+            - paragraph
+        - generic [ref=e109] clickable [cursor:pointer, onclick]
+          - generic
+            - image "DC"
+            - paragraph
+        - generic [ref=e110] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Alien"
+            - paragraph
+        - generic [ref=e111] clickable [cursor:pointer, onclick]
+          - generic
+            - image "2001: A Space Odyssey"
+            - paragraph
+              - StaticText "2001: A Space Odyssey"
+        - generic [ref=e112] clickable [cursor:pointer, onclick]
+          - generic
+            - image "One Night Only"
+            - paragraph
+        - generic [ref=e113] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Mutiny"
+            - paragraph
+        - generic [ref=e114] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Blade Runner"
+            - paragraph
+        - generic [ref=e115] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Insidious: Out of the Further"
+            - paragraph
+              - StaticText "Insidious: Out of the Further"
+        - generic [ref=e116] clickable [cursor:pointer, onclick]
+          - generic
+            - image "undertone"
+            - paragraph
+        - generic [ref=e117] clickable [cursor:pointer, onclick]
+          - generic
+            - image "I Want Your Sex"
+            - paragraph
+        - generic [ref=e118] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Her"
+            - paragraph
+        - generic [ref=e119] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Lawrence of Arabia"
+            - paragraph
+        - generic [ref=e120] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Dune"
+            - paragraph
+  - generic
+    - heading "Tendances" [level=2, ref=e8]
+    - generic
+      - button [ref=e77]
+      - generic
+        - generic [ref=e121] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spider-Man: Brand New Day"
+            - paragraph
+              - StaticText "Spider-Man: Brand New Day"
+        - generic [ref=e122] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Odyssey"
+            - paragraph
+        - generic [ref=e123] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Minions & Monsters"
+            - paragraph
+        - generic [ref=e124] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Reacher"
+            - paragraph
+        - generic [ref=e125] clickable [cursor:pointer, onclick]
+          - generic
+            - image "House of the Dragon"
+            - paragraph
+        - generic [ref=e126] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Invite"
+            - paragraph
+        - generic [ref=e127] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The End of Oak Street"
+            - paragraph
+        - generic [ref=e128] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Last House"
+            - paragraph
+        - generic [ref=e129] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Obsession"
+            - paragraph
+        - generic [ref=e130] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Silo"
+            - paragraph
+        - generic [ref=e131] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Avengers: Doomsday"
+            - paragraph
+              - StaticText "Avengers: Doomsday"
+        - generic [ref=e132] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Lioness"
+            - paragraph
+        - generic [ref=e133] clickable [cursor:pointer, onclick]
+          - generic
+            - image "X-Men '97"
+            - paragraph
+        - generic [ref=e134] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Ted Lasso"
+            - paragraph
+        - generic [ref=e135] clickable [cursor:pointer, onclick]
+          - generic
+            - image "A Shop for Killers"
+            - paragraph
+        - generic [ref=e136] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Camp Rock 3"
+            - paragraph
+        - generic [ref=e137] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Backrooms"
+            - paragraph
+        - generic [ref=e138] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Lanterns"
+            - paragraph
+        - generic [ref=e139] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Project Hail Mary"
+            - paragraph
+        - generic [ref=e140] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Bleach"
+            - paragraph
+  - generic
+    - heading "Films Populaires" [level=2, ref=e9]
+    - generic
+      - button [ref=e78]
+      - generic
+        - generic [ref=e141] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spider-Man: Brand New Day"
+            - paragraph
+              - StaticText "Spider-Man: Brand New Day"
+        - generic [ref=e142] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Odyssey"
+            - paragraph
+        - generic [ref=e143] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spider-Man: No Way Home"
+            - paragraph
+              - StaticText "Spider-Man: No Way Home"
+        - generic [ref=e144] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Last House"
+            - paragraph
+        - generic [ref=e145] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Minions & Monsters"
+            - paragraph
+        - generic [ref=e146] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Colony"
+            - paragraph
+        - generic [ref=e147] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Obsession"
+            - paragraph
+        - generic [ref=e148] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Toy Story 5"
+            - paragraph
+        - generic [ref=e149] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Death of Robin Hood"
+            - paragraph
+        - generic [ref=e150] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Evil Dead Burn"
+            - paragraph
+        - generic [ref=e151] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The End of Oak Street"
+            - paragraph
+        - generic [ref=e152] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Moana"
+            - paragraph
+        - generic [ref=e153] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Disclosure Day"
+            - paragraph
+        - generic [ref=e154] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spider-Man: Homecoming"
+            - paragraph
+              - StaticText "Spider-Man: Homecoming"
+        - generic [ref=e155] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Supergirl"
+            - paragraph
+        - generic [ref=e156] clickable [cursor:pointer, onclick]
+          - generic
+            - image "仙逆剧场版 弑仙之战"
+            - paragraph
+        - generic [ref=e157] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Rage of Stars"
+            - paragraph
+        - generic [ref=e158] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Soulm8te"
+            - paragraph
+        - generic [ref=e159] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Backrooms"
+            - paragraph
+        - generic [ref=e160] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Scary Movie"
+            - paragraph
+  - generic
+    - heading "Séries Populaires" [level=2, ref=e10]
+    - generic
+      - button [ref=e79]
+      - generic
+        - generic [ref=e161] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Reacher"
+            - paragraph
+        - generic [ref=e162] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Paradise Hotel"
+            - paragraph
+        - generic [ref=e163] clickable [cursor:pointer, onclick]
+          - generic
+            - image "House of the Dragon"
+            - paragraph
+        - generic [ref=e164] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Paradise Hotel"
+            - paragraph
+        - generic [ref=e165] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Mentalist"
+            - paragraph
+        - generic [ref=e166] clickable [cursor:pointer, onclick]
+          - generic
+            - paragraph
+        - generic [ref=e167] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Lioness"
+            - paragraph
+        - generic [ref=e168] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Gran hermano"
+            - paragraph
+        - generic [ref=e169] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Capitão Furacão"
+            - paragraph
+        - generic [ref=e170] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Law & Order: Special Victims Unit"
+            - paragraph
+              - StaticText "Law & Order: Special Victims Unit"
+        - generic [ref=e171] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Silo"
+            - paragraph
+        - generic [ref=e172] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Grey's Anatomy"
+            - paragraph
+        - generic [ref=e173] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Secret Story"
+            - paragraph
+        - generic [ref=e174] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Rookie"
+            - paragraph
+        - generic [ref=e175] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Paradise Hotel"
+            - paragraph
+        - generic [ref=e176] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Watch What Happens Live with Andy Cohen"
+            - paragraph
+        - generic [ref=e177] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Secret Mission - Undercover Agents Never Back Down!"
+            - paragraph
+        - generic [ref=e178] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Simpsons"
+            - paragraph
+        - generic [ref=e179] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Tonight Show Starring Jimmy Fallon"
+            - paragraph
+        - generic [ref=e180] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Family Guy"
+            - paragraph
+  - generic
+    - heading "Films Mieux Notés" [level=2, ref=e11]
+    - generic
+      - button [ref=e80]
+      - generic
+        - generic [ref=e181] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Avatar Aang: The Last Airbender"
+            - paragraph
+              - StaticText "Avatar Aang: The Last Airbender"
+        - generic [ref=e182] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Accidental Partners"
+            - paragraph
+        - generic [ref=e183] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Swapped"
+            - paragraph
+        - generic [ref=e184] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Shawshank Redemption"
+            - paragraph
+        - generic [ref=e185] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Demon Slayer: Kimetsu no Yaiba Infinity Castle"
+            - paragraph
+              - StaticText "Demon Slayer: Kimetsu no Yaiba Infinity Castle"
+        - generic [ref=e186] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Godfather"
+            - paragraph
+        - generic [ref=e187] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Michael"
+            - paragraph
+        - generic [ref=e188] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Project Hail Mary"
+            - paragraph
+        - generic [ref=e189] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Godfather Part II"
+            - paragraph
+        - generic [ref=e190] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Schindler's List"
+            - paragraph
+        - generic [ref=e191] clickable [cursor:pointer, onclick]
+          - generic
+            - image "12 Angry Men"
+            - paragraph
+        - generic [ref=e192] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Young Hearts"
+            - paragraph
+        - generic [ref=e193] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Dark Knight"
+            - paragraph
+        - generic [ref=e194] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Spirited Away"
+            - paragraph
+        - generic [ref=e195] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Chainsaw Man - The Movie: Reze Arc"
+            - paragraph
+              - StaticText "Chainsaw Man - The Movie: Reze Arc"
+        - generic [ref=e196] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Green Mile"
+            - paragraph
+        - generic [ref=e197] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Dilwale Dulhania Le Jayenge"
+            - paragraph
+        - generic [ref=e198] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Lord of the Rings: The Return of the King"
+            - paragraph
+              - StaticText "The Lord of the Rings: The Return of the King"
+        - generic [ref=e199] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Parasite"
+            - paragraph
+        - generic [ref=e200] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Your Name."
+            - paragraph
+  - generic
+    - heading "Séries Mieux Notées" [level=2, ref=e12]
+    - generic
+      - button [ref=e81]
+      - generic
+        - generic [ref=e201] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Teach You a Lesson"
+            - paragraph
+        - generic [ref=e202] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Dutton Ranch"
+            - paragraph
+        - generic [ref=e203] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Breaking Bad"
+            - paragraph
+        - generic [ref=e204] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Off Campus"
+            - paragraph
+        - generic [ref=e205] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The WONDERfools"
+            - paragraph
+        - generic [ref=e206] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Wizards Beyond Waverly Place"
+            - paragraph
+        - generic [ref=e207] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Frieren: Beyond Journey's End"
+            - paragraph
+              - StaticText "Frieren: Beyond Journey's End"
+        - generic [ref=e208] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Chosen"
+            - paragraph
+        - generic [ref=e209] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Avatar: The Last Airbender"
+            - paragraph
+              - StaticText "Avatar: The Last Airbender"
+        - generic [ref=e210] clickable [cursor:pointer, onclick]
+          - generic
+            - image "When Life Gives You Tangerines"
+            - paragraph
+        - generic [ref=e211] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Reply 1988"
+            - paragraph
+        - generic [ref=e212] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Arcane"
+            - paragraph
+        - generic [ref=e213] clickable [cursor:pointer, onclick]
+          - generic
+            - image "One Piece"
+            - paragraph
+        - generic [ref=e214] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Heated Rivalry"
+            - paragraph
+        - generic [ref=e215] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Pitt"
+            - paragraph
+        - generic [ref=e216] clickable [cursor:pointer, onclick]
+          - generic
+            - image "No One Will Miss Us"
+            - paragraph
+        - generic [ref=e217] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Chernobyl"
+            - paragraph
+        - generic [ref=e218] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Fullmetal Alchemist: Brotherhood"
+            - paragraph
+              - StaticText "Fullmetal Alchemist: Brotherhood"
+        - generic [ref=e219] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Better Call Saul"
+            - paragraph
+        - generic [ref=e220] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Weak Hero"
+            - paragraph
+  - generic
+    - heading "Prochainement" [level=2, ref=e13]
+    - generic
+      - button [ref=e82]
+      - generic
+        - generic [ref=e221] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Dear You"
+            - paragraph
+        - generic [ref=e222] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Insidious: Out of the Further"
+            - paragraph
+              - StaticText "Insidious: Out of the Further"
+        - generic [ref=e223] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Mutiny"
+            - paragraph
+        - generic [ref=e224] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Pressure"
+            - paragraph
+        - generic [ref=e225] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Dog Stars"
+            - paragraph
+        - generic [ref=e226] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Toxic: A Fairy Tale For Grown-ups"
+            - paragraph
+              - StaticText "Toxic: A Fairy Tale For Grown-ups"
+        - generic [ref=e227] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Rivals of Amziah King"
+            - paragraph
+        - generic [ref=e228] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Nimrods"
+            - paragraph
+        - generic [ref=e229] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Practical Magic 2"
+            - paragraph
+        - generic [ref=e230] clickable [cursor:pointer, onclick]
+          - generic
+            - image "The Holy Boy"
+            - paragraph
+        - generic [ref=e231] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Sacrifice"
+            - paragraph
+        - generic [ref=e232] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Fjord"
+            - paragraph
+        - generic [ref=e233] clickable [cursor:pointer, onclick]
+          - generic
+            - image "On the Sea"
+            - paragraph
+        - generic [ref=e234] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Tad and The Magic Lamp"
+            - paragraph
+        - generic [ref=e235] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Wake in Fright"
+            - paragraph
+        - generic [ref=e236] clickable [cursor:pointer, onclick]
+          - generic
+            - image "La Nirvana"
+            - paragraph
+        - generic [ref=e237] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Sovereign"
+            - paragraph
+        - generic [ref=e238] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Decorado"
+            - paragraph
+        - generic [ref=e239] clickable [cursor:pointer, onclick]
+          - generic
+            - image "Rufus: The Sea Serpent Who Couldn't Swim"
+            - paragraph
+              - StaticText "Rufus: The Sea Serpent Who Couldn't Swim"
+        - generic [ref=e240] clickable [cursor:pointer, onclick]
+  - generic
+    - heading "À découvrir" [level=2, ref=e14]
+    - generic [ref=e15] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Lioness"
+        - paragraph
+    - generic [ref=e16] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Capitão Furacão"
+        - paragraph
+    - generic [ref=e17] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The Odyssey"
+        - paragraph
+    - generic [ref=e18] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Silo"
+        - paragraph
+    - generic [ref=e19] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Toy Story 5"
+        - paragraph
+    - generic [ref=e20] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Colony"
+        - paragraph
+    - generic [ref=e21] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Scary Movie"
+        - paragraph
+    - generic [ref=e22] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The Rookie"
+        - paragraph
+    - generic [ref=e23] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Paradise Hotel"
+        - paragraph
+    - generic [ref=e24] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The Mentalist"
+        - paragraph
+    - generic [ref=e25] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Obsession"
+        - paragraph
+    - generic [ref=e26] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Tagesschau"
+        - paragraph
+    - generic [ref=e27] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Paradise Hotel"
+        - paragraph
+    - generic [ref=e28] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Gran hermano"
+        - paragraph
+    - generic [ref=e29] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Paradise Hotel"
+        - paragraph
+    - generic [ref=e30] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The End of Oak Street"
+        - paragraph
+    - generic [ref=e31] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Supergirl"
+        - paragraph
+    - generic [ref=e32] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Backrooms"
+        - paragraph
+    - generic [ref=e33] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Soulm8te"
+        - paragraph
+    - generic [ref=e34] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Secret Story"
+        - paragraph
+    - generic [ref=e35] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Law & Order: Special Victims Unit"
+        - paragraph
+          - StaticText "Law & Order: Special Victims Unit"
+    - generic [ref=e36] clickable [cursor:pointer, onclick]
+      - generic
+        - image "仙逆剧场版 弑仙之战"
+        - paragraph
+    - generic [ref=e37] clickable [cursor:pointer, onclick]
+      - generic
+        - image "House of the Dragon"
+        - paragraph
+    - generic [ref=e38] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Evil Dead Burn"
+        - paragraph
+    - generic [ref=e39] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Moana"
+        - paragraph
+    - generic [ref=e40] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The Last House"
+        - paragraph
+    - generic [ref=e41] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Secret Mission - Undercover Agents Never Back Down!"
+        - paragraph
+    - generic [ref=e42] clickable [cursor:pointer, onclick]
+      - generic
+        - image "The Death of Robin Hood"
+        - paragraph
+    - generic [ref=e43] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Reacher"
+        - paragraph
+    - generic [ref=e44] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Grey's Anatomy"
+        - paragraph
+    - generic [ref=e45] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Spider-Man: Homecoming"
+        - paragraph
+          - StaticText "Spider-Man: Homecoming"
+    - generic [ref=e46] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Among Friends"
+        - paragraph
+    - generic [ref=e47] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Spider-Man: No Way Home"
+        - paragraph
+          - StaticText "Spider-Man: No Way Home"
+    - generic [ref=e48] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Watch What Happens Live with Andy Cohen"
+        - paragraph
+    - generic [ref=e49] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Spider-Man: Brand New Day"
+        - paragraph
+          - StaticText "Spider-Man: Brand New Day"
+    - generic [ref=e50] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Rage of Stars"
+        - paragraph
+    - generic [ref=e51] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Disclosure Day"
+        - paragraph
+    - generic [ref=e52] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Minions & Monsters"
+        - paragraph
+    - generic [ref=e53] clickable [cursor:pointer, onclick]
+      - generic
+        - paragraph
+    - generic [ref=e54] clickable [cursor:pointer, onclick]
+      - generic
+        - image "Come Home Love: Lo and Behold"
+        - paragraph
+          - StaticText "Come Home Love: Lo and Behold"
+- region "Notifications (F8)" [ref=e1]
