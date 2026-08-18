@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              from: 'NetPlus <noreply@netplus.app>',
+              from: 'NetPlus <on@resend.dev>',
               to: normalizedEmail,
               subject: 'Votre code de vérification NetPlus',
               html: `

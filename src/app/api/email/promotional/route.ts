@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'NetPlus <noreply@netplus.app>',
+        from: 'NetPlus <on@resend.dev>',
         to,
         subject: customSubject || template.subject,
         html: template.html,
