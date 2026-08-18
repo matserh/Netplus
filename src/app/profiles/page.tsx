@@ -18,28 +18,28 @@ const PROFILE_IMAGES: Record<ProfileType, string> = {
   NOCTURNE: '/profiles/nocturne.png',
 };
 
-// 20 Official NetPlus logos — free, styled, matching platform identity
+// 20 Official NetPlus logos — real generated icons with distinct visual styles
 const OFFICIAL_LOGOS = [
-  { id: 'netplus-gold', name: 'Or Classic', src: '/logos/gold.png', color: '#D4A843' },
-  { id: 'netplus-fire', name: 'Flamme', src: '/logos/fire.png', color: '#E25822' },
-  { id: 'netplus-ocean', name: 'Oc\u00e9an', src: '/logos/ocean.png', color: '#1E90FF' },
-  { id: 'netplus-forest', name: 'For\u00eat', src: '/logos/forest.png', color: '#228B22' },
-  { id: 'netplus-night', name: 'Nuit', src: '/logos/night.png', color: '#191970' },
-  { id: 'netplus-sunset', name: 'Coucher', src: '/logos/sunset.png', color: '#FF6347' },
-  { id: 'netplus-ice', name: 'Glace', src: '/logos/ice.png', color: '#ADD8E6' },
-  { id: 'netplus-royal', name: 'Royal', src: '/logos/royal.png', color: '#4169E1' },
-  { id: 'netplus-emerald', name: '\u00c9meraude', src: '/logos/emerald.png', color: '#50C878' },
-  { id: 'netplus-ruby', name: 'Rubis', src: '/logos/ruby.png', color: '#E0115F' },
-  { id: 'netplus-amber', name: 'Ambre', src: '/logos/amber.png', color: '#FFBF00' },
-  { id: 'netplus-violet', name: 'Violet', src: '/logos/violet.png', color: '#8B00FF' },
-  { id: 'netplus-copper', name: 'Cuivre', src: '/logos/copper.png', color: '#B87333' },
-  { id: 'netplus-silver', name: 'Argent', src: '/logos/silver.png', color: '#C0C0C0' },
-  { id: 'netplus-platinum', name: 'Platine', src: '/logos/platinum.png', color: '#E5E4E2' },
-  { id: 'netplus-crimson', name: 'Cramoisi', src: '/logos/crimson.png', color: '#DC143C' },
-  { id: 'netplus-teal', name: 'Turquoise', src: '/logos/teal.png', color: '#008080' },
-  { id: 'netplus-rose', name: 'Rose', src: '/logos/rose.png', color: '#FF007F' },
-  { id: 'netplus-indigo', name: 'Indigo', src: '/logos/indigo.png', color: '#4B0082' },
-  { id: 'netplus-graphite', name: 'Graphite', src: '/logos/graphite.png', color: '#383838' },
+  { id: 'netplus-gold', name: 'Or Classic', src: '/logos/gold.png' },
+  { id: 'netplus-fire', name: 'Flamme', src: '/logos/fire.png' },
+  { id: 'netplus-ocean', name: 'Oc\u00e9an', src: '/logos/ocean.png' },
+  { id: 'netplus-forest', name: 'For\u00eat', src: '/logos/forest.png' },
+  { id: 'netplus-night', name: 'Nuit', src: '/logos/night.png' },
+  { id: 'netplus-sunset', name: 'Coucher', src: '/logos/sunset.png' },
+  { id: 'netplus-ice', name: 'Glace', src: '/logos/ice.png' },
+  { id: 'netplus-royal', name: 'Royal', src: '/logos/royal.png' },
+  { id: 'netplus-emerald', name: '\u00c9meraude', src: '/logos/emerald.png' },
+  { id: 'netplus-ruby', name: 'Rubis', src: '/logos/ruby.png' },
+  { id: 'netplus-amber', name: 'Ambre', src: '/logos/amber.png' },
+  { id: 'netplus-violet', name: 'Violet', src: '/logos/violet.png' },
+  { id: 'netplus-copper', name: 'Cuivre', src: '/logos/copper.png' },
+  { id: 'netplus-silver', name: 'Argent', src: '/logos/silver.png' },
+  { id: 'netplus-platinum', name: 'Platine', src: '/logos/platinum.png' },
+  { id: 'netplus-crimson', name: 'Cramoisi', src: '/logos/crimson.png' },
+  { id: 'netplus-teal', name: 'Turquoise', src: '/logos/teal.png' },
+  { id: 'netplus-rose', name: 'Rose', src: '/logos/rose.png' },
+  { id: 'netplus-indigo', name: 'Indigo', src: '/logos/indigo.png' },
+  { id: 'netplus-graphite', name: 'Graphite', src: '/logos/graphite.png' },
 ];
 
 const PROFILE_DESCRIPTIONS: Record<ProfileType, string> = {
@@ -204,9 +204,7 @@ export default function ProfilesPage() {
             >
               <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/30 group-hover:ring-primary/60 transition-all">
                 {officialLogoData ? (
-                  <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm" style={{ background: `linear-gradient(135deg, ${officialLogoData.color}, ${officialLogoData.color}cc)` }}>
-                    N
-                  </div>
+                  <img src={officialLogoData.src} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
                 )}
@@ -225,9 +223,7 @@ export default function ProfilesPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30">
                       {officialLogoData ? (
-                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-base" style={{ background: `linear-gradient(135deg, ${officialLogoData.color}, ${officialLogoData.color}cc)` }}>
-                          N
-                        </div>
+                        <img src={officialLogoData.src} alt="Logo" className="w-full h-full object-cover" />
                       ) : (
                         <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
                       )}
@@ -351,15 +347,15 @@ export default function ProfilesPage() {
         </div>
       )}
 
-      {/* Official logos modal — "Gérer le profil" = choose from 20 official NetPlus logos */}
+      {/* Official logos modal — "Gérer le profil" = choose from 20 real NetPlus logo icons */}
       {showOfficialLogosModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowOfficialLogosModal(false)} />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-lg w-full animate-scale-in max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h3 className="text-lg font-bold">Logos officiels Netplus</h3>
-                <p className="text-xs text-primary/70">20 logos gratuits, stylés et exclusifs</p>
+                <h3 className="text-lg font-bold">Thèmes Netplus</h3>
+                <p className="text-xs text-muted-foreground">20 icônes exclusives pour personnaliser votre profil</p>
               </div>
               <button onClick={() => setShowOfficialLogosModal(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
                 <X className="w-4 h-4" />
@@ -377,11 +373,8 @@ export default function ProfilesPage() {
                       isSelected ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted/50'
                     }`}
                   >
-                    <div
-                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
-                      style={{ background: `linear-gradient(135deg, ${logo.color}, ${logo.color}cc)` }}
-                    >
-                      N
+                    <div className="w-14 h-14 rounded-xl overflow-hidden shadow-md ring-1 ring-white/10">
+                      <img src={logo.src} alt={logo.name} className="w-full h-full object-cover" />
                     </div>
                     <span className="text-[10px] font-medium text-foreground/60 group-hover:text-foreground transition-colors truncate w-full text-center">
                       {logo.name}

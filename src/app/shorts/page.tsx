@@ -498,6 +498,10 @@ function ShortCard({ item, isActive }: { item: ShortItem; isActive: boolean }) {
           {!item.backdropPath && item.posterPath && (
             <img src={`${tmdbImgBase}/w780${item.posterPath}`} alt={item.title} className="absolute inset-0 w-full h-full object-cover object-top" loading="lazy" />
           )}
+          {/* Fallback background when no image — cinematic gradient based on title hash */}
+          {!item.backdropPath && !item.posterPath && (
+            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, hsl(${(item.title.charCodeAt(0) * 37) % 360}, 40%, 15%), hsl(${(item.title.charCodeAt(Math.min(1, item.title.length-1)) * 53 + 120) % 360}, 30%, 8%))` }} />
+          )}
 
           {/* Gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 z-10" />
@@ -525,6 +529,9 @@ function ShortCard({ item, isActive }: { item: ShortItem; isActive: boolean }) {
                 {item.mediaType === 'tv' && item.season && item.episode && (
                   <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] text-white/60 font-medium">S{item.season}E{item.episode}</span>
                 )}
+                {item.voteAverage > 0 && (
+                  <span className="px-2 py-0.5 rounded-md bg-primary/20 text-[10px] text-primary font-bold">★ {item.voteAverage.toFixed(1)}</span>
+                )}
               </div>
 
               <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white mb-1 leading-tight line-clamp-2">{item.title}</h2>
@@ -533,8 +540,22 @@ function ShortCard({ item, isActive }: { item: ShortItem; isActive: boolean }) {
                 <p className="text-xs text-white/40 mb-1.5">{item.episodeName}</p>
               )}
 
-              {item.overview && (
+              {item.overview ? (
                 <p className="text-[11px] sm:text-xs text-white/35 line-clamp-2 max-w-[300px] sm:max-w-[400px] leading-relaxed mb-3">{item.overview}</p>
+              ) : (
+                <div className="flex items-center gap-2 mb-3">
+                  {item.voteAverage > 0 && (
+                    <div className="flex items-center gap-1">
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(s => (
+                          <div key={s} className={cn('w-2.5 h-2.5 rounded-sm', s <= Math.round(item.voteAverage / 2) ? 'bg-primary' : 'bg-white/10')} />
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-primary/70 font-medium">{item.voteAverage.toFixed(1)}</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-white/20">{item.mediaType === 'movie' ? 'Film' : 'Série'} · {item.genreLabel || 'Populaire'}</span>
+                </div>
               )}
 
               {/* Action buttons */}
