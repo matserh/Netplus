@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useChallenge } from '@/contexts/ChallengeContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
-import { SmallProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
 import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
@@ -122,11 +122,11 @@ export function BottomNavBar() {
                       'overflow-hidden rounded-md transition-all',
                       active ? 'w-[22px] h-[22px] ring-[1.5px] ring-primary' : 'w-[18px] h-[18px]'
                     )}>
-                      {profile ? (
-                        <SmallProfileAvatar type={profile.type} className="w-full h-full" />
-                      ) : (
-                        <Clock className="w-[18px] h-[18px]" />
-                      )}
+                      <ProfileLogo
+                        profileType={profile?.type}
+                        className="w-full h-full"
+                        fallback={<Clock className="w-[18px] h-[18px]" />}
+                      />
                     </div>
                   )}
 

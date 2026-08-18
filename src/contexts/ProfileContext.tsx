@@ -17,8 +17,9 @@ const PROFILES: UserProfile[] = [
 ];
 
 // TMDB helper: build query string from params
+// NOTE: We do NOT encode | and , because TMDB requires them as literal separators
 function buildQuery(params: Record<string, string>): string {
-  return Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  return Object.entries(params).map(([k, v]) => `${k}=${v.replace(/[^\w|,.\-]/g, c => encodeURIComponent(c))}`).join('&');
 }
 
 interface ProfileContextType {
@@ -90,19 +91,35 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const getNowPlayingEndpoint = useCallback((): string => {
     const base = getBaseParams();
-    return `/movie/now_playing?region=FR&${buildQuery(base)}`;
+    // /movie/now_playing does NOT support with_genres/certification params
+    // When profile has filters, use /discover/movie instead
+    if (Object.keys(base).length > 0) {
+      return `/discover/movie?sort_by=popularity.desc&region=FR&with_release_type=3&${buildQuery(base)}`;
+    }
+    return '/movie/now_playing?region=FR';
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.type]);
 
   const getUpcomingEndpoint = useCallback((): string => {
     const base = getBaseParams();
-    return `/movie/upcoming?region=FR&${buildQuery(base)}`;
+    // /movie/upcoming does NOT support with_genres/certification params
+    // When profile has filters, use /discover/movie with upcoming primary_release_date filter
+    if (Object.keys(base).length > 0) {
+      const today = new Date().toISOString().split('T')[0];
+      return `/discover/movie?sort_by=primary_release_date.asc&region=FR&with_release_type=2|3&primary_release_date.gte=${today}&${buildQuery(base)}`;
+    }
+    return '/movie/upcoming?region=FR';
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.type]);
 
   const getBannerEndpoint = useCallback((): string => {
     const base = getBaseParams();
-    return `/movie/now_playing?region=FR&${buildQuery(base)}`;
+    // /movie/now_playing does NOT support with_genres/certification params
+    // When profile has filters, use /discover/movie instead
+    if (Object.keys(base).length > 0) {
+      return `/discover/movie?sort_by=popularity.desc&region=FR&with_release_type=3&${buildQuery(base)}`;
+    }
+    return '/movie/now_playing?region=FR';
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.type]);
 

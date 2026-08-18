@@ -13,9 +13,10 @@ import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
-import { Search, UserCircle, Bell, Play, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Search, UserCircle, Play, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useProfile } from '@/contexts/ProfileContext';
-import { SmallProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -336,11 +337,11 @@ function InfiniteGrid({ profileType, onItemClick }: { profileType?: string; onIt
   const loaderRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  // Build profile-aware discover endpoints
+  // Build profile-aware discover endpoints (consistent with ProfileContext)
   const getProfileParams = () => {
     switch (profileType) {
       case 'JEUNESSE':
-        return '&certification_country=FR&certification.lte=12&with_genres=16|10751|14&without_genres=27,53,80';
+        return '&certification_country=FR&certification.lte=12&with_genres=16|10751|14&without_genres=27|53|80';
       case 'FRENESIE':
         return '&with_genres=28|18|27|14|878';
       default:
@@ -530,23 +531,20 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Notifications — placeholder, coming soon */}
-            <button 
-              className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative"
-              title="Notifications bientôt disponibles"
-            >
-              <Bell className="w-4 h-4 text-foreground/30" />
-            </button>
+            {/* Notifications */}
+            <NotificationBell />
 
-            {/* User Profile — shows actual profile avatar */}
+            {/* User Profile — shows custom/official logo or profile avatar */}
             <Link href="/profiles" className="h-8 w-8 rounded-full overflow-hidden ring-2 ring-primary/30 hover:ring-primary/60 transition-all">
-              {profile ? (
-                <SmallProfileAvatar type={profile.type} className="w-full h-full" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/70 to-amber-500/70 flex items-center justify-center">
-                  <UserCircle className="w-4 h-4 text-black" />
-                </div>
-              )}
+              <ProfileLogo
+                profileType={profile?.type}
+                className="w-full h-full"
+                fallback={(
+                  <div className="w-full h-full bg-gradient-to-br from-primary/70 to-amber-500/70 flex items-center justify-center">
+                    <UserCircle className="w-4 h-4 text-black" />
+                  </div>
+                )}
+              />
             </Link>
           </div>
         </header>

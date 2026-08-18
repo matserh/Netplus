@@ -10,7 +10,7 @@ import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext'
 import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles } from 'lucide-react';
 import { useGuest } from '@/contexts/GuestContext';
 import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
-import { PROFILE_IMAGES, SmallProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { PROFILE_IMAGES, SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
 
 // 20 Official NetPlus logos — real generated icons with distinct visual styles
 const OFFICIAL_LOGOS = [
