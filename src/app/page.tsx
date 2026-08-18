@@ -14,6 +14,8 @@ import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
 import { Search, UserCircle, Bell, Play, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { useProfile } from '@/contexts/ProfileContext';
+import { SmallProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -327,12 +329,24 @@ function ContinueWatchingCard({ entry, onPlay }: { entry: WatchHistoryEntry; onP
 }
 
 // Vertical discovery grid — more columns, less gap
-function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
+function InfiniteGrid({ profileType, onItemClick }: { profileType?: string; onItemClick: (m: Media) => void }) {
   const [items, setItems] = useState<Media[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
+
+  // Build profile-aware discover endpoints
+  const getProfileParams = () => {
+    switch (profileType) {
+      case 'JEUNESSE':
+        return '&certification_country=FR&certification.lte=12&with_genres=16|10751|14&without_genres=27,53,80';
+      case 'FRENESIE':
+        return '&with_genres=28|18|27|14|878';
+      default:
+        return '';
+    }
+  };
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current) return;
@@ -340,10 +354,11 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
     setLoading(true);
 
     const nextPage = page + 1;
+    const params = getProfileParams();
     
     const endpoints = [
-      `/discover/movie?sort_by=popularity.desc&page=${nextPage}`,
-      `/discover/tv?sort_by=popularity.desc&page=${nextPage}`,
+      `/discover/movie?sort_by=popularity.desc&page=${nextPage}${params}`,
+      `/discover/tv?sort_by=popularity.desc&page=${nextPage}${params}`,
     ];
     
     const results = await Promise.all(
@@ -368,7 +383,7 @@ function InfiniteGrid({ onItemClick }: { onItemClick: (m: Media) => void }) {
     setPage(nextPage);
     setLoading(false);
     loadingRef.current = false;
-  }, [page]);
+  }, [page, profileType]);
 
   useEffect(() => {
     loadMore();
@@ -418,10 +433,14 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [searchTitle, setSearchTitle] = useState('');
 
+  // Profile-aware content filtering
+  const { profile, getBannerEndpoint, getNowPlayingEndpoint, getUpcomingEndpoint, getDiscoverEndpoint, getTrendingEndpoint, getPopularEndpoint, getTopRatedEndpoint } = useProfile();
+  const [profileKey, setProfileKey] = useState(0); // increment to force row re-fetch on profile change
+
   useEffect(() => {
     const init = async () => {
       const [now, movieGenres, tvGenres] = await Promise.all([
-        fetchTMDB<TMDBResponse<Media>>('/movie/now_playing?region=FR'),
+        fetchTMDB<TMDBResponse<Media>>(getBannerEndpoint()),
         fetchTMDB<{ genres: Genre[] }>('/genre/movie/list'),
         fetchTMDB<{ genres: Genre[] }>('/genre/tv/list'),
       ]);
@@ -438,7 +457,9 @@ export default function HomePage() {
       setLoading(false);
     };
     init();
-  }, []);
+    // When profile changes, re-fetch banner and bump row key
+    setProfileKey(k => k + 1);
+  }, [profile?.type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -449,9 +470,11 @@ export default function HomePage() {
 
   const handleGenreSelect = async (id: string, name: string) => {
     setSearchTitle(name);
+    // Apply profile filters on top of genre selection
+    const base = profile?.type === 'JEUNESSE' ? '&certification_country=FR&certification.lte=12&without_genres=27,53,80' : '';
     const [m, t] = await Promise.all([
-      fetchTMDB<TMDBResponse<Media>>(`/discover/movie?with_genres=${id}`),
-      fetchTMDB<TMDBResponse<Media>>(`/discover/tv?with_genres=${id}`),
+      fetchTMDB<TMDBResponse<Media>>(`/discover/movie?with_genres=${id}${base}`),
+      fetchTMDB<TMDBResponse<Media>>(`/discover/tv?with_genres=${id}${base}`),
     ]);
     const combined = [
       ...(m?.results?.map(x => ({ ...x, media_type: 'movie' as const })) || []),
@@ -507,15 +530,23 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Notifications */}
-            <button className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative">
-              <Bell className="w-4 h-4 text-foreground/50" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full" />
+            {/* Notifications — placeholder, coming soon */}
+            <button 
+              className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative"
+              title="Notifications bientôt disponibles"
+            >
+              <Bell className="w-4 h-4 text-foreground/30" />
             </button>
 
-            {/* User Profile */}
-            <Link href="/profiles" className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/70 to-amber-500/70 flex items-center justify-center hover:from-primary hover:to-amber-500 transition-all">
-              <UserCircle className="w-4 h-4 text-black" />
+            {/* User Profile — shows actual profile avatar */}
+            <Link href="/profiles" className="h-8 w-8 rounded-full overflow-hidden ring-2 ring-primary/30 hover:ring-primary/60 transition-all">
+              {profile ? (
+                <SmallProfileAvatar type={profile.type} className="w-full h-full" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/70 to-amber-500/70 flex items-center justify-center">
+                  <UserCircle className="w-4 h-4 text-black" />
+                </div>
+              )}
             </Link>
           </div>
         </header>
@@ -541,16 +572,16 @@ export default function HomePage() {
             <ContinueWatching />
             
             {/* Netflix-style horizontal rows */}
-            <InfiniteRow title="Au Cinéma" endpoint="/movie/now_playing?region=FR" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Tendances" endpoint="/trending/all/week" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Films Populaires" endpoint="/movie/popular" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Séries Populaires" endpoint="/tv/popular" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Films Mieux Notés" endpoint="/movie/top_rated" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Séries Mieux Notées" endpoint="/tv/top_rated" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
-            <InfiniteRow title="Prochainement" endpoint="/movie/upcoming?region=FR" onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`cinema-${profileKey}`} title="Au Cinéma" endpoint={getNowPlayingEndpoint()} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`trending-${profileKey}`} title="Tendances" endpoint={getTrendingEndpoint()} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`pop-movie-${profileKey}`} title="Films Populaires" endpoint={getPopularEndpoint('movie')} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`pop-tv-${profileKey}`} title="Séries Populaires" endpoint={getPopularEndpoint('tv')} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`top-movie-${profileKey}`} title="Films Mieux Notés" endpoint={getTopRatedEndpoint('movie')} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`top-tv-${profileKey}`} title="Séries Mieux Notées" endpoint={getTopRatedEndpoint('tv')} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteRow key={`upcoming-${profileKey}`} title="Prochainement" endpoint={getUpcomingEndpoint()} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
             
             {/* Discovery grid */}
-            <InfiniteGrid onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
+            <InfiniteGrid key={`grid-${profileKey}`} profileType={profile?.type} onItemClick={m => { setSelectedMedia(m); setIsModalOpen(true); }} />
           </Fragment>
         )}
 

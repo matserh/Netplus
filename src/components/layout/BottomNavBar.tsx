@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useChallenge } from '@/contexts/ChallengeContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
-import { SmallProfileAvatar } from '@/app/profiles/page';
+import { SmallProfileAvatar } from '@/components/ui/ProfileAvatar';
 import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [

@@ -13,7 +13,7 @@
     "db:reset": "prisma migrate reset",
     "postinstall": "npx --yes prisma generate || true",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && cp .pages-proxy/_worker.js .open-next/assets/_worker.js && opennextjs-cloudflare deploy",
+    "deploy": "opennextjs-cloudflare build && cp .pages-proxy/_worker.js .open-next/assets/_worker.js && echo '_worker.js' > .open-next/assets/.assetsignore && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },

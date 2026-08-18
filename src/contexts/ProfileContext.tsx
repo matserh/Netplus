@@ -23,7 +23,7 @@ function buildQuery(params: Record<string, string>): string {
 
 interface ProfileContextType {
   profile: UserProfile | null;
-  hydrated: boolean; // true once localStorage has been checked (avoids flash/error)
+  hydrated: boolean;
   setProfile: (profile: UserProfile) => void;
   clearProfile: () => void;
   profiles: UserProfile[];
@@ -31,6 +31,9 @@ interface ProfileContextType {
   getUpcomingEndpoint: () => string;
   getBannerEndpoint: () => string;
   getDiscoverEndpoint: (mediaType: 'movie' | 'tv') => string;
+  getTrendingEndpoint: () => string;
+  getPopularEndpoint: (mediaType: 'movie' | 'tv') => string;
+  getTopRatedEndpoint: (mediaType: 'movie' | 'tv') => string;
 }
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
@@ -53,7 +56,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('netplus-profile');
       }
     }
-    // Mark as hydrated regardless — even if no saved profile, we've checked
     setHydrated(true);
   }, []);
 
@@ -70,7 +72,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const getBaseParams = (): Record<string, string> => {
     switch (profile?.type) {
       case 'JEUNESSE':
-        // Pipe | = OR logic (any of these genres), comma = AND (must have ALL)
         return {
           certification_country: 'FR',
           'certification.lte': '12',
@@ -78,8 +79,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           without_genres: '27|53|80',
         };
       case 'FRENESIE':
-        // No certification filter — excludes movies without French cert data
-        // Pipe | = OR logic: Action OR Drama OR Horror OR Fantasy OR Sci-Fi
         return {
           with_genres: '28|18|27|14|878',
         };
@@ -113,10 +112,39 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.type]);
 
+  // Trending — uses /trending/all/week with profile genre params appended
+  const getTrendingEndpoint = useCallback((): string => {
+    const base = getBaseParams();
+    // trending doesn't support certification/without_genres natively,
+    // so we use discover as a fallback when profile has filters
+    if (Object.keys(base).length > 0) {
+      return `/discover/movie?sort_by=popularity.desc&${buildQuery(base)}`;
+    }
+    return '/trending/all/week';
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.type]);
+
+  // Popular — uses discover with popularity sort + profile params
+  const getPopularEndpoint = useCallback((mediaType: 'movie' | 'tv'): string => {
+    const base = getBaseParams();
+    return `/discover/${mediaType}?sort_by=popularity.desc&${buildQuery(base)}`;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.type]);
+
+  // Top Rated — uses discover with vote_average sort + profile params
+  const getTopRatedEndpoint = useCallback((mediaType: 'movie' | 'tv'): string => {
+    const base = getBaseParams();
+    // Add minimum vote count to avoid obscure items
+    const params = { ...base, 'vote_count.gte': '200' };
+    return `/discover/${mediaType}?sort_by=vote_average.desc&${buildQuery(params)}`;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.type]);
+
   return (
     <ProfileContext.Provider value={{
       profile, hydrated, setProfile, clearProfile, profiles: PROFILES,
-      getNowPlayingEndpoint, getUpcomingEndpoint, getBannerEndpoint, getDiscoverEndpoint,
+      getNowPlayingEndpoint, getUpcomingEndpoint, getBannerEndpoint,
+      getDiscoverEndpoint, getTrendingEndpoint, getPopularEndpoint, getTopRatedEndpoint,
     }}>
       {children}
     </ProfileContext.Provider>
