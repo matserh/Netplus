@@ -11,8 +11,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// This route runs in the Worker runtime with nodejs_compat — no need for edge runtime
-
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 // Read env var at request time (not module load time) for Cloudflare Workers compatibility
 

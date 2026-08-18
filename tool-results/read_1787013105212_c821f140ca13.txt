@@ -1,0 +1,701 @@
+     1→'use client';
+     2→
+     3→export const dynamic = 'force-dynamic';
+     4→
+     5→import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
+     6→import { useParams, useRouter, useSearchParams } from 'next/navigation';
+     7→import Image from 'next/image';
+     8→import Link from 'next/link';
+     9→import {
+    10→  Media,
+    11→  MovieDetails,
+    12→  TVDetails,
+    13→  getBackdropUrl,
+    14→  getMediaTitle,
+    15→  getMediaYear,
+    16→  API_CONFIG,
+    17→} from '@/types/media';
+    18→import { useChallenge } from '@/contexts/ChallengeContext';
+    19→import { useWatchHistory } from '@/contexts/WatchHistoryContext';
+    20→import { SmartVideoPlayer } from '@/components/ui/SmartVideoPlayer';
+    21→import { SubtitleOverlay } from '@/components/ui/SubtitleOverlay';
+    22→
+    23→interface Episode {
+    24→  id: number;
+    25→  name: string;
+    26→  overview: string;
+    27→  episode_number: number;
+    28→  season_number: number;
+    29→  still_path: string | null;
+    30→  vote_average: number;
+    31→  runtime?: number;
+    32→}
+    33→
+    34→interface SeasonDetail {
+    35→  id: number;
+    36→  name: string;
+    37→  season_number: number;
+    38→  episodes: Episode[];
+    39→}
+    40→
+    41→function WatchLoading() {
+    42→  return (
+    43→    <div className="min-h-screen bg-background flex items-center justify-center">
+    44→      <div className="flex flex-col items-center gap-4">
+    45→        <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+    46→        <p className="text-muted-foreground text-sm">Chargement...</p>
+    47→      </div>
+    48→    </div>
+    49→  );
+    50→}
+    51→
+    52→export default function WatchPage() {
+    53→  return (
+    54→    <Suspense fallback={<WatchLoading />}>
+    55→      <WatchContent />
+    56→    </Suspense>
+    57→  );
+    58→}
+    59→
+    60→function WatchContent() {
+    61→  const router = useRouter();
+    62→  const params = useParams();
+    63→  const searchParams = useSearchParams();
+    64→  const {
+    65→    isPremium,
+    66→    watchCount,
+    67→    canWatch,
+    68→    incrementWatchCount,
+    69→    recordWatchSeconds,
+    70→    hasWatchedContent,
+    71→    BASIC_LIMIT,
+    72→    isLoaded,
+    73→  } = useChallenge();
+    74→  const { addToHistory, updateProgress, getHistoryEntry } = useWatchHistory();
+    75→  const progressSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    76→
+    77→  const mediaType = params.type as 'movie' | 'tv';
+    78→  const mediaId = parseInt(params.id as string);
+    79→  const urlSeason = searchParams.get('s') ? parseInt(searchParams.get('s')!) : undefined;
+    80→  const urlEpisode = searchParams.get('e') ? parseInt(searchParams.get('e')!) : undefined;
+    81→
+    82→  const isMovie = mediaType === 'movie';
+    83→
+    84→  const [details, setDetails] = useState<MovieDetails | TVDetails | null>(null);
+    85→  const [loading, setLoading] = useState(true);
+    86→  const [currentSeason, setCurrentSeason] = useState(urlSeason || 1);
+    87→  const [currentEpisode, setCurrentEpisode] = useState(urlEpisode || 1);
+    88→  const [episodes, setEpisodes] = useState<Episode[]>([]);
+    89→  const [seasonsList, setSeasonsList] = useState<{ number: number; name: string; episodeCount: number }[]>([]);
+    90→  const [serverIndex, setServerIndex] = useState(0);
+    91→  const [iframeKey, setIframeKey] = useState(0);
+    92→  const [isBlocked, setIsBlocked] = useState(false);
+    93→  const [watchTimer, setWatchTimer] = useState(0);
+    94→  const [subtitlesActive, setSubtitlesActive] = useState(false);
+    95→
+    96→  // Check access control
+    97→  const hasCheckedAccess = useRef(false);
+    98→  useEffect(() => {
+    99→    if (!isLoaded || hasCheckedAccess.current) return;
+   100→    hasCheckedAccess.current = true;
+   101→
+   102→    if (!canWatch()) {
+   103→      setIsBlocked(true);
+   104→    } else {
+   105→      setIsBlocked(false);
+   106→      const allowed = incrementWatchCount();
+   107→      if (!allowed) {
+   108→        setIsBlocked(true);
+   109→      }
+   110→    }
+   111→  }, [isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+   112→
+   113→  // Track watch time for challenge (Task 2)
+   114→  const watchTimerRef = useRef(0);
+   115→  useEffect(() => {
+   116→    if (isBlocked || !isLoaded) return;
+   117→    const interval = setInterval(() => {
+   118→      setWatchTimer(prev => prev + 1);
+   119→    }, 1000);
+   120→    return () => clearInterval(interval);
+   121→  }, [isBlocked, isLoaded]);
+   122→
+   123→  useEffect(() => {
+   124→    watchTimerRef.current = watchTimer;
+   125→    if (watchTimer > 0) {
+   126→      recordWatchSeconds(watchTimer);
+   127→    }
+   128→  }, [watchTimer, recordWatchSeconds]);
+   129→
+   130→  // Restore last watched position from history
+   131→  useEffect(() => {
+   132→    if (!mediaId || !mediaType) return;
+   133→    const saved = getHistoryEntry(mediaId, mediaType);
+   134→    if (saved) {
+   135→      if (!isMovie && saved.season) setCurrentSeason(saved.season);
+   136→      if (!isMovie && saved.episode) setCurrentEpisode(saved.episode);
+   137→    }
+   138→  }, [mediaId, mediaType]); // eslint-disable-line react-hooks/exhaustive-deps
+   139→
+   140→  // Fetch media details
+   141→  useEffect(() => {
+   142→    if (!mediaId || !mediaType) {
+   143→      router.push('/');
+   144→      return;
+   145→    }
+   146→
+   147→    const fetchDetails = async () => {
+   148→      setLoading(true);
+   149→      try {
+   150→        const endpoint = isMovie ? `/movie/${mediaId}` : `/tv/${mediaId}`;
+   151→        const res = await fetch(
+   152→          `${API_CONFIG.tmdb.baseUrl}${endpoint}?api_key=${API_CONFIG.tmdb.apiKey}&language=${API_CONFIG.language}`
+   153→        );
+   154→        if (res.ok) {
+   155→          const data = await res.json();
+   156→          setDetails(data);
+   157→
+   158→          if (!isMovie && data.seasons) {
+   159→            const filtered = data.seasons
+   160→              .filter((s: { season_number: number }) => s.season_number > 0)
+   161→              .map((s: { season_number: number; name: string; episode_count: number }) => ({
+   162→                number: s.season_number,
+   163→                name: s.name,
+   164→                episodeCount: s.episode_count,
+   165→              }));
+   166→            setSeasonsList(filtered);
+   167→          }
+   168→        }
+   169→      } catch (err) {
+   170→        console.error('Failed to fetch details:', err);
+   171→      } finally {
+   172→        setLoading(false);
+   173→      }
+   174→    };
+   175→
+   176→    fetchDetails();
+   177→  }, [mediaId, mediaType, isMovie, router]);
+   178→
+   179→  // Fetch episodes for TV when season changes
+   180→  useEffect(() => {
+   181→    if (isMovie || !mediaId) return;
+   182→
+   183→    const fetchEpisodes = async () => {
+   184→      try {
+   185→        const res = await fetch(
+   186→          `${API_CONFIG.tmdb.baseUrl}/tv/${mediaId}/season/${currentSeason}?api_key=${API_CONFIG.tmdb.apiKey}&language=${API_CONFIG.language}`
+   187→        );
+   188→        if (res.ok) {
+   189→          const data: SeasonDetail = await res.json();
+   190→          setEpisodes(data.episodes || []);
+   191→          if (currentEpisode > (data.episodes?.length || 1)) {
+   192→            setCurrentEpisode(1);
+   193→          }
+   194→        }
+   195→      } catch (err) {
+   196→        console.error('Failed to fetch episodes:', err);
+   197→      }
+   198→    };
+   199→
+   200→    fetchEpisodes();
+   201→  }, [mediaId, currentSeason, isMovie, currentEpisode]);
+   202→
+   203→  // Update URL when season/episode changes (for TV)
+   204→  useEffect(() => {
+   205→    if (!isMovie && typeof window !== 'undefined') {
+   206→      const url = new URL(window.location.href);
+   207→      url.searchParams.set('s', String(currentSeason));
+   208→      url.searchParams.set('e', String(currentEpisode));
+   209→      window.history.replaceState({}, '', url);
+   210→    }
+   211→  }, [currentSeason, currentEpisode, isMovie]);
+   212→
+   213→  // Build video URL using API_CONFIG servers
+   214→  const getVideoUrl = useCallback(() => {
+   215→    const servers = Object.values(API_CONFIG.videoServers);
+   216→    const server = servers[serverIndex % servers.length];
+   217→
+   218→    if (isMovie) {
+   219→      return server.movieUrl(mediaId);
+   220→    } else {
+   221→      return server.tvUrl(mediaId, currentSeason, currentEpisode);
+   222→    }
+   223→  }, [mediaId, isMovie, currentSeason, currentEpisode, serverIndex]);
+   224→
+   225→  // Reload iframe when switching server/episode
+   226→  const reloadPlayer = () => {
+   227→    setIframeKey(k => k + 1);
+   228→  };
+   229→
+   230→  useEffect(() => {
+   231→    reloadPlayer();
+   232→  }, [serverIndex, currentSeason, currentEpisode]);
+   233→
+   234→  // Save progress to history periodically and on unmount
+   235→  useEffect(() => {
+   236→    if (!details || !mediaId || !mediaType || isBlocked) return;
+   237→
+   238→    const title = getMediaTitle(details);
+   239→    addToHistory({
+   240→      id: mediaId,
+   241→      mediaType,
+   242→      title,
+   243→      posterPath: details.poster_path || null,
+   244→      backdropPath: details.backdrop_path || null,
+   245→      overview: details.overview || '',
+   246→      progress: 0,
+   247→      timestamp: 0,
+   248→      duration: isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 0,
+   249→      season: !isMovie ? currentSeason : undefined,
+   250→      episode: !isMovie ? currentEpisode : undefined,
+   251→      episodeTitle: !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined,
+   252→      genreIds: details.genre_ids || details.genres?.map((g: { id: number }) => g.id),
+   253→      voteAverage: details.vote_average,
+   254→      year: getMediaYear(details as Media),
+   255→    });
+   256→
+   257→    // Save progress every 15 seconds
+   258→    progressSaveRef.current = setInterval(() => {
+   259→      const elapsed = watchTimerRef.current;
+   260→      const duration = isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400;
+   261→      const progress = duration > 0 ? Math.min(Math.round((elapsed / duration) * 100), 100) : 0;
+   262→      updateProgress(
+   263→        mediaId,
+   264→        mediaType,
+   265→        progress,
+   266→        elapsed,
+   267→        duration,
+   268→        !isMovie ? currentSeason : undefined,
+   269→        !isMovie ? currentEpisode : undefined,
+   270→        !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined
+   271→      );
+   272→    }, 15000);
+   273→
+   274→    return () => {
+   275→      if (progressSaveRef.current) clearInterval(progressSaveRef.current);
+   276→      // Final save on unmount
+   277→      const elapsed = watchTimerRef.current;
+   278→      const duration = isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400;
+   279→      const progress = duration > 0 ? Math.min(Math.round((elapsed / duration) * 100), 100) : 0;
+   280→      updateProgress(
+   281→        mediaId,
+   282→        mediaType,
+   283→        progress,
+   284→        elapsed,
+   285→        duration,
+   286→        !isMovie ? currentSeason : undefined,
+   287→        !isMovie ? currentEpisode : undefined,
+   288→        !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined
+   289→      );
+   290→    };
+   291→  }, [details, mediaId, mediaType, isBlocked, currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+   292→
+   293→  // Reset watch timer when switching episodes (TV series)
+   294→  useEffect(() => {
+   295→    if (!isMovie) {
+   296→      setWatchTimer(0);
+   297→    }
+   298→  }, [currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+   299→
+   300→  // Also save when episode/season changes
+   301→  useEffect(() => {
+   302→    if (!details || !mediaId || !mediaType) return;
+   303→    const title = getMediaTitle(details);
+   304→    const epTitle = !isMovie ? episodes.find(e => e.episode_number === currentEpisode)?.name : undefined;
+   305→    updateProgress(
+   306→      mediaId,
+   307→      mediaType,
+   308→      0,
+   309→      0,
+   310→      isMovie ? ((details as MovieDetails).runtime || 0) * 60 : 2400,
+   311→      !isMovie ? currentSeason : undefined,
+   312→      !isMovie ? currentEpisode : undefined,
+   313→      epTitle
+   314→    );
+   315→  }, [currentSeason, currentEpisode]); // eslint-disable-line react-hooks/exhaustive-deps
+   316→
+   317→  const title = details ? getMediaTitle(details) : '';
+   318→  const year = details ? getMediaYear(details as Media) : '';
+   319→  const backdropUrl = getBackdropUrl(details?.backdrop_path || null, 'large');
+   320→  const rating = details?.vote_average?.toFixed(1) || 'N/A';
+   321→  const genres = (details as MovieDetails)?.genres || (details as TVDetails)?.genres || [];
+   322→  const overview = details?.overview || '';
+   323→  const runtime = (details as MovieDetails)?.runtime;
+   324→  const formattedRuntime = runtime ? `${Math.floor(runtime / 60)}h ${runtime % 60}min` : null;
+   325→  const numberOfSeasons = (details as TVDetails)?.number_of_seasons;
+   326→  const tagline = (details as MovieDetails)?.tagline || (details as TVDetails)?.tagline;
+   327→
+   328→  // Show loading until both TMDB data and challenge state are ready
+   329→  if (loading || !isLoaded) {
+   330→    return <WatchLoading />;
+   331→  }
+   332→
+   333→  if (!details) {
+   334→    return (
+   335→      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+   336→        <div className="text-center">
+   337→          <h1 className="text-xl sm:text-2xl font-bold mb-2">Contenu introuvable</h1>
+   338→          <p className="text-muted-foreground mb-4 text-sm">Le contenu demand&eacute; n&apos;existe pas.</p>
+   339→          <Link href="/" className="text-primary hover:underline text-sm">Retour &agrave; l&apos;accueil</Link>
+   340→        </div>
+   341→      </div>
+   342→    );
+   343→  }
+   344→
+   345→  // Access blocked overlay
+   346→  if (isBlocked) {
+   347→    return (
+   348→      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+   349→        <div className="max-w-md w-full text-center">
+   350→          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+   351→            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   352→              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+   353→            </svg>
+   354→          </div>
+   355→          <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Limite atteinte</h1>
+   356→          <p className="text-sm text-muted-foreground mb-2">
+   357→            Vous avez utilis&eacute; vos {BASIC_LIMIT} contenus gratuits.
+   358→          </p>
+   359→          <p className="text-sm text-muted-foreground mb-6">
+   360→            Cr&eacute;ez un compte ou accomplissez les 3 d&eacute;fis pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !
+   361→          </p>
+   362→          <Link
+   363→            href="/login"
+   364→            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-black font-bold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all hover:scale-105"
+   365→          >
+   366→            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+   367→              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
+   368→            </svg>
+   369→            Cr&eacute;er un compte
+   370→          </Link>
+   371→          <div className="mt-3">
+   372→            <Link
+   373→              href="/pricing"
+   374→              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/40 text-foreground/80 font-medium text-sm hover:border-primary/40 hover:text-primary transition-all"
+   375→            >
+   376→              Voir les d&eacute;fis
+   377→            </Link>
+   378→          </div>
+   379→          <div className="mt-4">
+   380→            <Link href="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+   381→              ← Retour &agrave; l&apos;accueil
+   382→            </Link>
+   383→          </div>
+   384→        </div>
+   385→      </div>
+   386→    );
+   387→  }
+   388→
+   389→  const serverEntries = Object.values(API_CONFIG.videoServers);
+   390→
+   391→  // Get history entry for progress display
+   392→  const historyEntry = getHistoryEntry(mediaId, mediaType);
+   393→  const hasProgress = historyEntry && historyEntry.progress > 0 && historyEntry.progress < 95;
+   394→
+   395→  return (
+   396→    <div className="min-h-screen bg-background">
+   397→      {/* Top Bar */}
+   398→      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 h-11 sm:h-12 bg-black/90 backdrop-blur-md border-b border-white/5">
+   399→        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+   400→          <Link href="/" className="flex items-center gap-1.5 text-primary font-bold text-xs sm:text-sm flex-shrink-0">
+   401→            <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 fill-primary">
+   402→              <path d="M8 5v14l11-7z" />
+   403→            </svg>
+   404→            <span className="hidden xs:inline">NETPLUS</span>
+   405→          </Link>
+   406→          {isPremium && (
+   407→            <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[9px] sm:text-[10px] font-bold flex-shrink-0 animate-premium-glow">
+   408→              VIP
+   409→            </span>
+   410→          )}
+   411→          <span className="text-white/20 flex-shrink-0">|</span>
+   412→          <span className="text-white/70 text-xs sm:text-sm font-medium truncate">{title}</span>
+   413→          {!isMovie && (
+   414→            <span className="text-primary/60 text-[10px] sm:text-xs flex-shrink-0">
+   415→              S{currentSeason}E{currentEpisode}
+   416→            </span>
+   417→          )}
+   418→        </div>
+   419→        <button
+   420→          onClick={() => router.back()}
+   421→          className="text-white/50 hover:text-white text-xs sm:text-sm flex items-center gap-1 transition-colors flex-shrink-0"
+   422→        >
+   423→          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   424→            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+   425→          </svg>
+   426→          <span className="hidden sm:inline">Fermer</span>
+   427→        </button>
+   428→      </div>
+   429→
+   430→      {/* Video Player with smart server detection + AI Subtitles */}
+   431→      <div className="pt-11 sm:pt-12 relative">
+   432→        <SmartVideoPlayer
+   433→          key={iframeKey}
+   434→          src={getVideoUrl()}
+   435→          title={title}
+   436→          serverIndex={serverIndex}
+   437→          totalServers={serverEntries.length}
+   438→          onNextServer={() => setServerIndex(i => (i + 1) % serverEntries.length)}
+   439→          onRetry={() => setIframeKey(k => k + 1)}
+   440→          aspectClass="aspect-video"
+   441→        />
+   442→        {/* AI Subtitle text overlay on top of video */}
+   443→        <SubtitleOverlay
+   444→          tmdbId={mediaId}
+   445→          mediaType={isMovie ? 'movie' : 'tv'}
+   446→          season={!isMovie ? currentSeason : undefined}
+   447→          episode={!isMovie ? currentEpisode : undefined}
+   448→          currentTime={watchTimer}
+   449→          isActive={subtitlesActive}
+   450→          onToggle={() => setSubtitlesActive(prev => !prev)}
+   451→          overlayOnly
+   452→        />
+   453→      </div>
+   454→
+   455→      {/* Resume indicator */}
+   456→      {hasProgress && (
+   457→        <div className="px-3 sm:px-6 pt-3">
+   458→          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+   459→            <svg className="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   460→              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+   461→            </svg>
+   462→            <span className="text-xs text-primary/70">
+   463→              Reprise &agrave; {historyEntry.progress}% &mdash; {historyEntry.timestamp > 60 ? `${Math.floor(historyEntry.timestamp / 60)}min` : `${historyEntry.timestamp}s`}
+   464→            </span>
+   465→            <div className="flex-1 h-1 bg-primary/10 rounded-full overflow-hidden ml-1">
+   466→              <div className="h-full bg-primary rounded-full" style={{ width: `${historyEntry.progress}%` }} />
+   467→            </div>
+   468→          </div>
+   469→        </div>
+   470→      )}
+   471→
+   472→      {/* Content Below Player */}
+   473→      <div className="px-3 sm:px-6 py-4 sm:py-8">
+   474→        {/* Title & Meta */}
+   475→        <div className="mb-4 sm:mb-6">
+   476→          {tagline && (
+   477→            <p className="text-primary/70 text-[11px] sm:text-sm italic mb-0.5">{tagline}</p>
+   478→          )}
+   479→          <h1 className="text-lg sm:text-2xl lg:text-3xl font-black text-foreground mb-2 leading-tight">{title}</h1>
+   480→
+   481→          {/* Meta row */}
+   482→          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground mb-3">
+   483→            <span className="flex items-center gap-1">
+   484→              <svg className="w-3.5 h-3.5 text-primary fill-primary" viewBox="0 0 24 24">
+   485→                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+   486→              </svg>
+   487→              <span className="font-semibold">{rating}</span>
+   488→            </span>
+   489→            {year && <span>{year}</span>}
+   490→            {formattedRuntime && <span>{formattedRuntime}</span>}
+   491→            {numberOfSeasons && <span>{numberOfSeasons} saison{numberOfSeasons > 1 ? 's' : ''}</span>}
+   492→            <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary text-[10px] sm:text-xs font-bold">
+   493→              {isMovie ? 'FILM' : 'SÉRIE'}
+   494→            </span>
+   495→          </div>
+   496→
+   497→          {/* Genres */}
+   498→          {genres.length > 0 && (
+   499→            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+   500→              {genres.map(g => (
+   501→                <span key={g.id} className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/5 text-[10px] sm:text-xs text-white/60 border border-white/10">
+   502→                  {g.name}
+   503→                </span>
+   504→              ))}
+   505→            </div>
+   506→          )}
+   507→
+   508→          {/* Overview */}
+   509→          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 sm:line-clamp-none">{overview}</p>
+   510→        </div>
+   511→
+   512→        {/* Server Switch + AI Subtitles */}
+   513→        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+   514→          <div className="flex items-center justify-between mb-2">
+   515→            <div className="flex items-center gap-2">
+   516→              <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   517→                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v4a2 2 0 00-2-2" />
+   518→              </svg>
+   519→              <span className="text-xs sm:text-sm text-muted-foreground font-medium">Serveur de lecture</span>
+   520→            </div>
+   521→            {/* AI Subtitles toggle */}
+   522→            <button
+   523→              onClick={() => setSubtitlesActive(prev => !prev)}
+   524→              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+   525→                subtitlesActive
+   526→                  ? 'bg-primary/10 text-primary border-primary/30'
+   527→                  : 'bg-white/5 text-white/60 hover:bg-primary/20 hover:text-primary border-white/10 hover:border-primary/30'
+   528→              }`}
+   529→            >
+   530→              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   531→                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+   532→              </svg>
+   533→              {subtitlesActive ? 'Sous-titres ON' : 'Sous-titres IA'}
+   534→            </button>
+   535→          </div>
+   536→          <div className="flex flex-wrap gap-2">
+   537→            {serverEntries.map((server, idx) => {
+   538→              const lang = (server as { lang?: string }).lang || 'VO';
+   539→              const isVF = lang === 'VF';
+   540→              const isVOSTFR = lang === 'VOSTFR';
+   541→              return (
+   542→                <button
+   543→                  key={server.name}
+   544→                  onClick={() => setServerIndex(idx)}
+   545→                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+   546→                    serverIndex === idx
+   547→                      ? 'bg-primary text-black shadow-lg shadow-primary/20'
+   548→                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+   549→                  }`}
+   550→                >
+   551→                  <span className={`px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-black leading-none ${
+   552→                    serverIndex === idx
+   553→                      ? 'bg-black/20 text-black'
+   554→                      : isVF
+   555→                      ? 'bg-blue-500/20 text-blue-400'
+   556→                      : isVOSTFR
+   557→                      ? 'bg-amber-500/20 text-amber-400'
+   558→                      : 'bg-white/10 text-white/40'
+   559→                  }`}>
+   560→                    {lang}
+   561→                  </span>
+   562→                  <span>{server.name.replace(' VF', '').replace(' VOSTFR', '')}</span>
+   563→                </button>
+   564→              );
+   565→            })}
+   566→          </div>
+   567→        </div>
+   568→
+   569→        {/* TV Series: Season & Episode Selector */}
+   570→        {!isMovie && seasonsList.length > 0 && (
+   571→          <div className="mb-6">
+   572→            <h2 className="text-base sm:text-lg font-bold text-foreground mb-3">Épisodes</h2>
+   573→
+   574→            {/* Season Tabs */}
+   575→            <div className="flex gap-1.5 sm:gap-2 mb-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+   576→              {seasonsList.map(s => (
+   577→                <button
+   578→                  key={s.number}
+   579→                  onClick={() => setCurrentSeason(s.number)}
+   580→                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+   581→                    currentSeason === s.number
+   582→                      ? 'bg-primary text-black'
+   583→                      : 'bg-white/5 text-white/50 hover:bg-white/10'
+   584→                  }`}
+   585→                >
+   586→                  S{s.number}
+   587→                </button>
+   588→              ))}
+   589→            </div>
+   590→
+   591→            {/* Episode List */}
+   592→            <div className="space-y-1.5 sm:space-y-2 max-h-[50vh] overflow-y-auto pr-1"
+   593→              style={{ scrollbarWidth: 'thin', scrollbarColor: 'oklch(0.75 0.14 55) transparent' }}
+   594→            >
+   595→              {episodes.map(ep => {
+   596→                const epHistory = getHistoryEntry(mediaId, mediaType);
+   597→                const isCurrentlyPlaying = currentEpisode === ep.episode_number;
+   598→                
+   599→                return (
+   600→                  <button
+   601→                    key={ep.id}
+   602→                    onClick={() => setCurrentEpisode(ep.episode_number)}
+   603→                    className={`w-full flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-lg transition-all text-left ${
+   604→                      isCurrentlyPlaying
+   605→                        ? 'bg-primary/10 border border-primary/30'
+   606→                        : 'bg-white/[0.02] hover:bg-white/5 border border-transparent'
+   607→                    }`}
+   608→                  >
+   609→                    {/* Episode Number */}
+   610→                    <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+   611→                      isCurrentlyPlaying
+   612→                        ? 'bg-primary text-black'
+   613→                        : 'bg-white/5 text-white/40'
+   614→                    }`}>
+   615→                      {ep.episode_number}
+   616→                    </div>
+   617→
+   618→                    <div className="flex-1 min-w-0">
+   619→                      <div className="flex items-center gap-2">
+   620→                        <p className="text-xs sm:text-sm font-medium text-foreground truncate">{ep.name}</p>
+   621→                        {ep.runtime && (
+   622→                          <span className="text-[10px] text-white/30 flex-shrink-0">{ep.runtime}min</span>
+   623→                        )}
+   624→                      </div>
+   625→                      {ep.overview && (
+   626→                        <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 mt-0.5">{ep.overview}</p>
+   627→                      )}
+   628→                    </div>
+   629→
+   630→                    {/* Now Playing Indicator */}
+   631→                    {isCurrentlyPlaying && (
+   632→                      <div className="flex-shrink-0 flex items-center gap-1">
+   633→                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+   634→                        <span className="text-[10px] text-primary font-medium hidden sm:inline">En cours</span>
+   635→                      </div>
+   636→                    )}
+   637→                  </button>
+   638→                );
+   639→              })}
+   640→            </div>
+   641→          </div>
+   642→        )}
+   643→
+   644→        {/* Watch Progress Info */}
+   645→        {watchTimer > 0 && (
+   646→          <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+   647→            <div className="flex items-center gap-3">
+   648→              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+   649→                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   650→                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+   651→                </svg>
+   652→              </div>
+   653→              <div className="flex-1">
+   654→                <p className="text-xs text-muted-foreground">
+   655→                  Temps de visionnage : {Math.floor(watchTimer / 60)}min {watchTimer % 60}s
+   656→                </p>
+   657→                <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden">
+   658→                  <div 
+   659→                    className="h-full bg-primary rounded-full transition-all duration-1000"
+   660→                    style={{ width: `${Math.min((watchTimer / (isMovie ? ((details as MovieDetails)?.runtime || 120) * 60 : 2400)) * 100, 100)}%` }}
+   661→                  />
+   662→                </div>
+   663→              </div>
+   664→            </div>
+   665→          </div>
+   666→        )}
+   667→
+   668→        {/* Link to History */}
+   669→        <div className="flex items-center justify-between">
+   670→          <Link
+   671→            href="/history"
+   672→            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+   673→          >
+   674→            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   675→              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+   676→            </svg>
+   677→            Voir l&apos;historique
+   678→          </Link>
+   679→          <Link
+   680→            href="/shorts"
+   681→            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+   682→          >
+   683→            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   684→              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+   685→            </svg>
+   686→            Shorts
+   687→          </Link>
+   688→        </div>
+   689→      </div>
+   690→
+   691→      {/* Subtle backdrop decoration */}
+   692→      {backdropUrl && (
+   693→        <div className="fixed inset-0 -z-10 pointer-events-none">
+   694→          <Image src={backdropUrl} alt="" fill className="object-cover opacity-[0.02]" />
+   695→          <div className="absolute inset-0 bg-background" />
+   696→        </div>
+   697→      )}
+   698→    </div>
+   699→  );
+   700→}
+   701→
