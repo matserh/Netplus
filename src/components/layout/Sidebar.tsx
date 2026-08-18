@@ -172,14 +172,14 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs font-semibold text-foreground/80 truncate group-hover:text-foreground transition-colors">
+                  <p className="text-xs font-semibold text-white truncate group-hover:text-white transition-colors">
                     {profile?.name || 'Choisir profil'}
                   </p>
-                  <p className="text-[10px] text-muted-foreground/40">
+                  <p className="text-[10px] text-white/50">
                     {profile ? PROFILE_DESCRIPTIONS[profile.type] : 'Non sélectionné'}
                   </p>
                 </div>
-                <ChevronDown className={cn("w-3 h-3 text-muted-foreground/40 transition-transform", showProfileSwitcher && "rotate-180")} />
+                <ChevronDown className={cn("w-3 h-3 text-white/50 transition-transform", showProfileSwitcher && "rotate-180")} />
               </button>
 
               {/* Profile switcher dropdown */}
@@ -194,14 +194,14 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                         "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all",
                         profile?.type === p.type
                           ? "bg-primary/10 text-primary font-semibold"
-                          : "text-sidebar-foreground/60 hover:text-primary hover:bg-primary/5"
+                          : "text-white/70 hover:text-primary hover:bg-primary/5"
                       )}
                     >
                       <div className="w-6 h-6 rounded-md overflow-hidden ring-1 ring-white/10 flex-shrink-0">
                         <img src={PROFILE_IMAGES[p.type]} alt={p.name} className="w-full h-full object-cover" />
                       </div>
                       <span>{p.name}</span>
-                      <span className="ml-auto text-[9px] text-muted-foreground/30">{PROFILE_DESCRIPTIONS[p.type]}</span>
+                      <span className="ml-auto text-[9px] text-white/40">{PROFILE_DESCRIPTIONS[p.type]}</span>
                     </button>
                   ))}
 
@@ -209,7 +209,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                   <div className="my-1.5 h-px bg-sidebar-border/40 mx-3" />
 
                   {/* Official logos row */}
-                  <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest px-3 mb-1.5">Thèmes NetPlus</p>
+                  <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest px-3 mb-1.5">Thèmes NetPlus</p>
                   <div className="grid grid-cols-5 gap-1.5 px-3">
                     {OFFICIAL_LOGOS.map((logo) => {
                       const isSelected = customLogoId === logo.id;
@@ -238,7 +238,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                   <Link
                     href="/profiles"
                     onClick={() => setShowProfileSwitcher(false)}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground/40 hover:text-primary hover:bg-primary/5 transition-all mt-1"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:text-primary hover:bg-primary/5 transition-all mt-1"
                   >
                     <User className="w-3.5 h-3.5" />
                     Gérer les profils

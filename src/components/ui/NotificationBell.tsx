@@ -119,7 +119,7 @@ export function NotificationBell() {
   if (!mounted) {
     return (
       <button className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative">
-        <Bell className="w-4 h-4 text-foreground/30" />
+        <Bell className="w-4 h-4 text-white/70" />
       </button>
     );
   }
@@ -131,7 +131,7 @@ export function NotificationBell() {
         className="h-8 w-8 rounded-full hover:bg-white/[0.06] flex items-center justify-center transition-colors relative"
         title="Notifications"
       >
-        <Bell className="w-4 h-4 text-foreground/50 hover:text-foreground/70 transition-colors" />
+        <Bell className="w-4 h-4 text-white/80 hover:text-white transition-colors" />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-primary text-[8px] text-black font-bold flex items-center justify-center px-0.5 animate-scale-in">
             {unreadCount}
@@ -143,7 +143,7 @@ export function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl shadow-black/40 overflow-hidden animate-scale-in z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-            <h3 className="text-sm font-bold text-foreground/90">Notifications</h3>
+            <h3 className="text-sm font-bold text-white">Notifications</h3>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
                 <button
@@ -166,7 +166,7 @@ export function NotificationBell() {
           {/* Notifications list */}
           <div className="max-h-[320px] overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="py-8 flex flex-col items-center gap-2 text-muted-foreground/40">
+              <div className="py-8 flex flex-col items-center gap-2 text-white/50">
                 <Bell className="w-6 h-6" />
                 <p className="text-xs">Aucune notification</p>
               </div>
@@ -180,14 +180,14 @@ export function NotificationBell() {
                 >
                   {/* Icon */}
                   <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${TYPE_BG[notif.type] || 'bg-muted/30'}`}>
-                    {TYPE_ICON[notif.type] || <Info className="w-4 h-4 text-muted-foreground" />}
+                    {TYPE_ICON[notif.type] || <Info className="w-4 h-4 text-white/60" />}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground/80 truncate">{notif.title}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5 line-clamp-2">{notif.message}</p>
-                    <p className="text-[9px] text-muted-foreground/30 mt-1">{notif.time}</p>
+                    <p className="text-xs font-semibold text-white truncate">{notif.title}</p>
+                    <p className="text-[10px] text-white/60 mt-0.5 line-clamp-2">{notif.message}</p>
+                    <p className="text-[9px] text-white/40 mt-1">{notif.time}</p>
                   </div>
 
                   {/* Dismiss */}
@@ -195,7 +195,7 @@ export function NotificationBell() {
                     onClick={() => dismissNotification(notif.id)}
                     className="flex-shrink-0 h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors mt-0.5"
                   >
-                    <X className="w-2.5 h-2.5 text-muted-foreground/40" />
+                    <X className="w-2.5 h-2.5 text-white/40 hover:text-white/70" />
                   </button>
                 </div>
               ))
@@ -204,7 +204,7 @@ export function NotificationBell() {
 
           {/* Footer */}
           <div className="px-4 py-2 border-t border-border/30 bg-muted/10">
-            <p className="text-[9px] text-muted-foreground/30 text-center">
+            <p className="text-[9px] text-white/40 text-center">
               Les alertes de mises à jour et recommandations apparaîtront ici
             </p>
           </div>
