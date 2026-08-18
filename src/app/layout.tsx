@@ -17,7 +17,12 @@ export const metadata: Metadata = {
   keywords: ["streaming", "films", "séries", "cinéma", "TV", "movies", "premium", "Netflix alternative"],
   authors: [{ name: "Netplus Team" }],
   icons: {
-    icon: "/logo.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Netplus | Premium Cinema Streaming",
