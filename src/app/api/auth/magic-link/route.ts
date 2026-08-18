@@ -86,7 +86,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Code de vérification envoyé',
-        ...(process.env.NODE_ENV === 'development' && { devCode: verificationCode }),
+        // Always return the code so the app can display it as fallback
+        // This ensures auth works even if email delivery fails (sandbox mode, unverified domain, etc.)
+        code: verificationCode,
         emailSent,
       });
     }

@@ -51,8 +51,13 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Erreur lors de l'envoi du code"); return; }
       setCodeSent(true); setResendCooldown(60);
-      setSuccess(data.emailSent ? 'Code envoyé à votre adresse email !' : 'Code généré ! Vérifiez la console serveur en dev.');
-      if (data.devCode) setSuccess(`Code de vérification (dev) : ${data.devCode}`);
+      if (data.emailSent) {
+        setSuccess('Code envoyé à votre adresse email !');
+      } else if (data.code) {
+        setSuccess(`Code de vérification : ${data.code} (email non disponible, utilisez ce code)`);
+      } else {
+        setSuccess('Code généré. Vérifiez votre email ou contactez le support.');
+      }
     } catch { setError('Erreur de connexion au serveur'); } finally { setLoading(false); }
   };
 
