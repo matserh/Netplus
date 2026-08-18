@@ -97,13 +97,22 @@ export async function POST(request: NextRequest) {
   try {
     const { message, memory } = await request.json();
     
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return NextResponse.json({
+        response: "Posez-moi une question sur un film ou une série !",
+        results: [],
+        topic: null,
+        preferences: []
+      });
+    }
+
     let aiResponse = '';
     let results: Media[] = [];
     let responseText = '';
     let topic = message;
     let preferences = memory?.preferences || [];
 
-    // Try AI first, fallback to direct TMDB search
+    // Try AI first with timeout, fallback to direct TMDB search
     try {
       const zai = await ZAI.create();
       const systemPrompt = `Tu es Maître Netplus, un assistant cinématographique expert et passionné. Tu aides les utilisateurs à découvrir des films et séries.
@@ -121,7 +130,8 @@ Règles:
 Contexte précédent: ${memory?.lastTopic || 'Nouvelle conversation'}
 ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.join(', ')}` : ''}`;
 
-      const completion = await zai.chat.completions.create({
+      // AI call with 8-second timeout to avoid hanging
+      const aiPromise = zai.chat.completions.create({
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
@@ -129,8 +139,13 @@ ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.
         temperature: 0.7,
         max_tokens: 2048
       });
-
-      aiResponse = completion.choices[0]?.message?.content || '';
+      
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
+      const completion = await Promise.race([aiPromise, timeoutPromise]);
+      
+      if (completion) {
+        aiResponse = completion.choices[0]?.message?.content || '';
+      }
     } catch (aiError) {
       console.error('[ai-search] AI unavailable, using direct search:', aiError);
       aiResponse = ''; // Will fallback to direct TMDB search below

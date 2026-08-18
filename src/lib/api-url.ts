@@ -2,7 +2,7 @@
  * API URL Helper for Capacitor APK
  * 
  * In the APK, the app is a static site loaded from local files.
- * API calls need to go to the Space-Z backend server.
+ * API calls need to go to the NetPlus backend server.
  * In development, relative URLs work fine.
  */
 
@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 /**
  * Get the full API URL for a given path
- * In the APK: prepends the Space-Z backend URL
+ * In the APK: prepends the NetPlus backend URL
  * In development: returns the relative path as-is
  */
 export function apiUrl(path: string): string {

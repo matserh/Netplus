@@ -1,0 +1,1183 @@
+     1→'use client';
+     2→
+     3→export const dynamic = 'force-dynamic';
+     4→
+     5→import { useState, useEffect, useCallback, useRef } from 'react';
+     6→import { useRouter } from 'next/navigation';
+     7→import { useSession } from 'next-auth/react';
+     8→import { useProfile } from '@/contexts/ProfileContext';
+     9→import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
+    10→import {
+    11→  Heart, MessageCircle, Share2, Play, X, Pause,
+    12→  ArrowLeft, Zap, Minimize2, Maximize2, Search,
+    13→  AlertTriangle, SkipForward, Wifi, WifiOff, RefreshCw
+    14→} from 'lucide-react';
+    15→import { cn } from '@/lib/utils';
+    16→import { useGuest } from '@/contexts/GuestContext';
+    17→// api-url removed - using native fetch for PWA
+    18→
+    19→// ─── Fetch helper ───
+    20→const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
+    21→  try {
+    22→    const res = await fetch(
+    23→      `${API_CONFIG.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`
+    24→    );
+    25→    return res.ok ? await res.json() : null;
+    26→  } catch { return null; }
+    27→};
+    28→
+    29→// ─── Types ───
+    30→interface ShortItem {
+    31→  id: number;
+    32→  mediaType: 'movie' | 'tv';
+    33→  title: string;
+    34→  overview: string;
+    35→  posterPath: string | null;
+    36→  backdropPath: string | null;
+    37→  voteAverage: number;
+    38→  genreLabel?: string; // "Anime", "Animation", "Action" etc.
+    39→  // Movie segments
+    40→  segmentIndex?: number;
+    41→  segmentTitle?: string;
+    42→  segmentStart?: number;
+    43→  // TV episodes
+    44→  season?: number;
+    45→  episode?: number;
+    46→  episodeName?: string;
+    47→}
+    48→
+    49→interface LikeData {
+    50→  count: number;
+    51→  liked: boolean;
+    52→}
+    53→
+    54→interface CommentData {
+    55→  id: string;
+    56→  content: string;
+    57→  createdAt: string;
+    58→  user: { id: string; name: string | null; email: string };
+    59→}
+    60→
+    61→// ─── Format helpers ───
+    62→function formatTimeShort(seconds: number): string {
+    63→  const m = Math.floor(seconds / 60);
+    64→  const s = seconds % 60;
+    65→  return `${m}:${s.toString().padStart(2, '0')}`;
+    66→}
+    67→
+    68→function formatRelativeDate(dateStr: string): string {
+    69→  const diff = Date.now() - new Date(dateStr).getTime();
+    70→  const min = Math.floor(diff / 60000);
+    71→  if (min < 1) return "À l'instant";
+    72→  if (min < 60) return `Il y a ${min}min`;
+    73→  const h = Math.floor(min / 60);
+    74→  if (h < 24) return `Il y a ${h}h`;
+    75→  const d = Math.floor(h / 24);
+    76→  if (d < 7) return `Il y a ${d}j`;
+    77→  return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    78→}
+    79→
+    80→// ─── Segment generator for movies ───
+    81→function generateMovieSegments(runtime: number): { index: number; title: string; start: number }[] {
+    82→  if (!runtime || runtime <= 0) return [{ index: 0, title: 'Début', start: 0 }];
+    83→  const segmentLength = 5;
+    84→  const segments = [];
+    85→  for (let i = 0; i < Math.ceil(runtime / segmentLength); i++) {
+    86→    const startMin = i * segmentLength;
+    87→    const endMin = Math.min((i + 1) * segmentLength, runtime);
+    88→    segments.push({
+    89→      index: i,
+    90→      title: `${formatTimeShort(startMin * 60)} - ${formatTimeShort(endMin * 60)}`,
+    91→      start: startMin * 60,
+    92→    });
+    93→  }
+    94→  return segments;
+    95→}
+    96→
+    97→// ─── Build video URL for a short item using a specific server index ───
+    98→function getShortVideoUrl(item: ShortItem, serverIndex: number = 0): string {
+    99→  const servers = Object.values(API_CONFIG.videoServers);
+   100→  const server = servers[serverIndex % servers.length];
+   101→  const id = item.id;
+   102→  if (item.mediaType === 'tv' && item.season && item.episode) {
+   103→    return server.tvUrl(id, item.season, item.episode);
+   104→  }
+   105→  return server.movieUrl(id);
+   106→}
+   107→
+   108→// ─── Smart Short Player — compact version for shorts with auto-fallback ───
+   109→function SmartShortPlayer({ src, title, onSwitchServer, serverIndex, totalServers }: {
+   110→  src: string; title: string; onSwitchServer: () => void; serverIndex: number; totalServers: number;
+   111→}) {
+   112→  const [state, setState] = useState<'loading' | 'ready' | 'error' | 'timeout'>('loading');
+   113→  const [failedServers, setFailedServers] = useState<Set<number>>(new Set());
+   114→  const [autoFallbackAttempted, setAutoFallbackAttempted] = useState(false);
+   115→  const [allFailed, setAllFailed] = useState(false);
+   116→  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   117→
+   118→  useEffect(() => {
+   119→    setState('loading');
+   120→    setAutoFallbackAttempted(false);
+   121→    if (timerRef.current) clearTimeout(timerRef.current);
+   122→    timerRef.current = setTimeout(() => {
+   123→      setState(prev => prev === 'loading' ? 'timeout' : prev);
+   124→      setFailedServers(prev => new Set(prev).add(serverIndex));
+   125→    }, 15000);
+   126→    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+   127→  }, [src, serverIndex]);
+   128→
+   129→  // Auto-fallback when server fails
+   130→  useEffect(() => {
+   131→    if ((state === 'error' || state === 'timeout') && !autoFallbackAttempted) {
+   132→      setAutoFallbackAttempted(true);
+   133→      const newFailed = new Set(failedServers);
+   134→      newFailed.add(serverIndex);
+   135→      if (newFailed.size >= totalServers) {
+   136→        setAllFailed(true);
+   137→        return;
+   138→      }
+   139→      const timer = setTimeout(() => onSwitchServer(), 1500);
+   140→      return () => clearTimeout(timer);
+   141→    }
+   142→  }, [state, autoFallbackAttempted, failedServers, serverIndex, totalServers, onSwitchServer]);
+   143→
+   144→  const handleLoad = useCallback(() => {
+   145→    if (timerRef.current) clearTimeout(timerRef.current);
+   146→    setState('ready');
+   147→    setFailedServers(prev => { const n = new Set(prev); n.delete(serverIndex); return n; });
+   148→  }, [serverIndex]);
+   149→
+   150→  const handleError = useCallback(() => {
+   151→    if (timerRef.current) clearTimeout(timerRef.current);
+   152→    setState('error');
+   153→    setFailedServers(prev => new Set(prev).add(serverIndex));
+   154→  }, [serverIndex]);
+   155→
+   156→  const showOverlay = state === 'error' || state === 'timeout';
+   157→  const serverName = Object.values(API_CONFIG.videoServers)[serverIndex]?.name || `Serveur ${serverIndex + 1}`;
+   158→  const available = totalServers - failedServers.size;
+   159→  const isAutoFallingBack = showOverlay && !allFailed && !autoFallbackAttempted;
+   160→
+   161→  return (
+   162→    <div className="absolute inset-0 flex items-center justify-center">
+   163→      <iframe
+   164→        src={src}
+   165→        className={cn('w-full h-full transition-opacity duration-500', showOverlay ? 'opacity-0' : 'opacity-100')}
+   166→        style={{ aspectRatio: '16/9', minHeight: '100%', maxWidth: '177.78%' }}
+   167→        allowFullScreen
+   168→        allow="autoplay; fullscreen; picture-in-picture"
+   169→        referrerPolicy="origin"
+   170→        title={title}
+   171→        onLoad={handleLoad}
+   172→        onError={handleError}
+   173→      />
+   174→      {state === 'loading' && !showOverlay && (
+   175→        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/60">
+   176→          <div className="flex flex-col items-center gap-2">
+   177→            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+   178→            <span className="text-[10px] text-white/30">{serverName}</span>
+   179→          </div>
+   180→        </div>
+   181→      )}
+   182→      {/* Auto-fallback transition */}
+   183→      {isAutoFallingBack && (
+   184→        <div className="absolute inset-0 flex items-center justify-center z-15 bg-black/80">
+   185→          <div className="flex flex-col items-center gap-2 animate-pulse">
+   186→            <Wifi className="w-6 h-6 text-primary" />
+   187→            <p className="text-[11px] text-white/50">Serveur suivant...</p>
+   188→          </div>
+   189→        </div>
+   190→      )}
+   191→      {/* All servers failed */}
+   192→      {showOverlay && allFailed && (
+   193→        <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/90">
+   194→          <div className="flex flex-col items-center gap-3 px-6 text-center max-w-[260px]">
+   195→            <WifiOff className="w-8 h-8 text-red-400" />
+   196→            <p className="text-xs font-bold text-white">Contenu indisponible</p>
+   197→            <p className="text-[10px] text-white/30">Aucun serveur ne peut charger ce contenu. Réessayez plus tard.</p>
+   198→            <button onClick={() => { setAllFailed(false); setFailedServers(new Set()); onSwitchServer(); }}
+   199→              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-black text-xs font-bold active:scale-95 transition-transform">
+   200→              <RefreshCw className="w-3.5 h-3.5" />
+   201→              Réessayer
+   202→            </button>
+   203→          </div>
+   204→        </div>
+   205→      )}
+   206→      {/* Some servers still available */}
+   207→      {showOverlay && !allFailed && !isAutoFallingBack && (
+   208→        <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/90">
+   209→          <div className="flex flex-col items-center gap-3 px-6 text-center max-w-[260px]">
+   210→            <AlertTriangle className="w-8 h-8 text-amber-400" />
+   211→            <p className="text-xs font-bold text-white">Serveur indisponible</p>
+   212→            <p className="text-[10px] text-white/30">{serverName} ne répond pas</p>
+   213→            <p className="text-[10px] text-primary/50">{available} serveur{available > 1 ? 's' : ''} restant{available > 1 ? 's' : ''}</p>
+   214→            <button onClick={onSwitchServer}
+   215→              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-black text-xs font-bold active:scale-95 transition-transform">
+   216→              <SkipForward className="w-3.5 h-3.5" />
+   217→              Serveur suivant
+   218→            </button>
+   219→            <p className="text-[9px] text-white/15">{serverIndex + 1} / {totalServers} · {failedServers.size} échoué{failedServers.size > 1 ? 's' : ''}</p>
+   220→          </div>
+   221→        </div>
+   222→      )}
+   223→    </div>
+   224→  );
+   225→}
+   226→
+   227→// ─── Content sources for all types ───
+   228→type ContentType = 'all' | 'series' | 'films' | 'anime';
+   229→
+   230→const CONTENT_TABS: { key: ContentType; label: string }[] = [
+   231→  { key: 'all', label: 'Pour toi' },
+   232→  { key: 'series', label: 'Séries' },
+   233→  { key: 'films', label: 'Films' },
+   234→  { key: 'anime', label: 'Anime' },
+   235→];
+   236→
+   237→// ─── Load shorts from a single endpoint, deduped ───
+   238→async function loadShortsFromEndpoint(
+   239→  endpoint: string,
+   240→  mediaType: 'movie' | 'tv',
+   241→  genreLabel?: string,
+   242→  maxItems: number = 8,
+   243→  seenIds: Set<string> = new Set()
+   244→): Promise<ShortItem[]> {
+   245→  const data = await fetchTMDB<TMDBResponse<Media>>(endpoint);
+   246→  if (!data?.results) return [];
+   247→
+   248→  const items: ShortItem[] = [];
+   249→
+   250→  for (const item of data.results) {
+   251→    if (items.length >= maxItems) break;
+   252→
+   253→    // Dedup key: same id + same mediaType = skip
+   254→    const dedupKey = `${item.id}-${mediaType}`;
+   255→    if (seenIds.has(dedupKey)) continue;
+   256→    seenIds.add(dedupKey);
+   257→
+   258→    if (mediaType === 'tv') {
+   259→      // For TV: fetch first episode
+   260→      const detail = await fetchTMDB<any>(`/tv/${item.id}`);
+   261→      if (detail?.seasons) {
+   262→        const firstRealSeason = detail.seasons.find((s: any) => s.season_number > 0);
+   263→        if (firstRealSeason) {
+   264→          const seasonData = await fetchTMDB<any>(`/tv/${item.id}/season/${firstRealSeason.season_number}`);
+   265→          if (seasonData?.episodes?.[0]) {
+   266→            const ep = seasonData.episodes[0];
+   267→            items.push({
+   268→              id: item.id,
+   269→              mediaType: 'tv',
+   270→              title: item.name || item.original_name || '',
+   271→              overview: ep.overview || item.overview || '',
+   272→              posterPath: item.poster_path,
+   273→              backdropPath: ep.still_path || item.backdrop_path,
+   274→              voteAverage: item.vote_average,
+   275→              genreLabel,
+   276→              season: firstRealSeason.season_number,
+   277→              episode: ep.episode_number,
+   278→              episodeName: ep.name,
+   279→            });
+   280→          }
+   281→        }
+   282→      }
+   283→    } else {
+   284→      // For movies: single card (no segment splitting for cleaner feed)
+   285→      items.push({
+   286→        id: item.id,
+   287→        mediaType: 'movie',
+   288→        title: item.title || item.original_title || '',
+   289→        overview: item.overview || '',
+   290→        posterPath: item.poster_path,
+   291→        backdropPath: item.backdrop_path,
+   292→        voteAverage: item.vote_average,
+   293→        genreLabel,
+   294→      });
+   295→    }
+   296→  }
+   297→
+   298→  return items;
+   299→}
+   300→
+   301→// ─── Like Button with TikTok-style animation ───
+   302→function LikeButton({ mediaId, mediaType, segment, season, likeTriggerRef }: { mediaId: number; mediaType: string; segment: number; season?: number | null; likeTriggerRef?: React.MutableRefObject<(() => void) | null> }) {
+   303→  const [data, setData] = useState<LikeData>({ count: 0, liked: false });
+   304→  const [animating, setAnimating] = useState(false);
+   305→  const [justLiked, setJustLiked] = useState(false); // track if we JUST liked for animation direction
+   306→  const [isToggling, setIsToggling] = useState(false); // prevent double-clicks
+   307→  const { data: session } = useSession();
+   308→  const normalizedSeason = season || 0;
+   309→
+   310→  useEffect(() => {
+   311→    const params = new URLSearchParams({ mediaId: String(mediaId), mediaType, segment: String(segment), season: String(normalizedSeason) });
+   312→    fetch(`/api/shorts/like?${params}`)
+   313→      .then(r => r.ok ? r.json() : null)
+   314→      .then(d => { if (d?.count !== undefined) setData(d); })
+   315→      .catch(() => {});
+   316→  }, [mediaId, mediaType, segment, normalizedSeason]);
+   317→
+   318→  const toggleLike = async () => {
+   319→    if (!session || isToggling) return;
+   320→    setIsToggling(true);
+   321→    
+   322→    // Optimistic update — immediately show the animation
+   323→    const willLike = !data.liked;
+   324→    setJustLiked(willLike);
+   325→    setAnimating(true);
+   326→    setData(prev => ({ count: prev.count + (willLike ? 1 : -1), liked: willLike }));
+   327→
+   328→    try {
+   329→      const res = await fetch('/api/shorts/like', {
+   330→        method: 'POST',
+   331→        headers: { 'Content-Type': 'application/json' },
+   332→        body: JSON.stringify({ mediaId, mediaType, segment, season: normalizedSeason }),
+   333→      });
+   334→      
+   335→      if (!res.ok) {
+   336→        // HTTP error (401, 500, etc.) — revert optimistic update
+   337→        console.warn('[like] HTTP error:', res.status);
+   338→        setData(prev => ({ count: prev.count + (willLike ? -1 : 1), liked: !willLike }));
+   339→      } else {
+   340→        const d = await res.json();
+   341→        if (d?.liked !== undefined) {
+   342→          // Server confirmed — use server state
+   343→          setData(prev => ({ count: d.count ?? prev.count, liked: d.liked }));
+   344→        } else if (d?.error) {
+   345→          // Server error — revert optimistic update
+   346→          console.warn('[like] API error:', d.error);
+   347→          setData(prev => ({ count: prev.count + (willLike ? -1 : 1), liked: !willLike }));
+   348→        }
+   349→      }
+   350→    } catch (err) {
+   351→      // Network error — revert optimistic update
+   352→      console.warn('[like] Network error:', err);
+   353→      setData(prev => ({ count: prev.count + (willLike ? -1 : 1), liked: !willLike }));
+   354→    }
+   355→    setTimeout(() => { setAnimating(false); setJustLiked(false); setIsToggling(false); }, 600);
+   356→  };
+   357→
+   358→  // Expose toggleLike via ref so parent (double-tap) can trigger it
+   359→  useEffect(() => {
+   360→    if (likeTriggerRef) likeTriggerRef.current = toggleLike;
+   361→  }); // update every render to keep ref fresh
+   362→
+   363→  return (
+   364→    <button onClick={toggleLike} className="flex flex-col items-center gap-0.5 group active:scale-90 transition-transform">
+   365→      <div className="relative">
+   366→        <Heart
+   367→          className={cn(
+   368→            'w-7 h-7 transition-all duration-300',
+   369→            animating && justLiked && 'scale-125',
+   370→            data.liked
+   371→              ? 'text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]'
+   372→              : 'text-white/80 group-hover:text-white'
+   373→          )}
+   374→          strokeWidth={data.liked ? 0 : 1.5}
+   375→        />
+   376→        {animating && (
+   377→          <div className="absolute inset-0 flex items-center justify-center">
+   378→            <div className={cn(
+   379→              'w-12 h-12 rounded-full animate-ping-once',
+   380→              justLiked ? 'bg-red-500/25' : 'bg-white/10'
+   381→            )} />
+   382→          </div>
+   383→        )}
+   384→      </div>
+   385→      <span className={cn('text-[11px] font-medium transition-colors', data.liked ? 'text-red-400' : 'text-white/40')}>
+   386→        {data.count > 0 ? data.count : 'J\'aime'}
+   387→      </span>
+   388→    </button>
+   389→  );
+   390→}
+   391→
+   392→// ─── Comment Bottom Sheet ───
+   393→function CommentSheet({ mediaId, mediaType, segment, season, onClose }: {
+   394→  mediaId: number; mediaType: string; segment: number; season?: number | null; onClose: () => void;
+   395→}) {
+   396→  const [comments, setComments] = useState<CommentData[]>([]);
+   397→  const [newComment, setNewComment] = useState('');
+   398→  const [submitting, setSubmitting] = useState(false);
+   399→  const [visible, setVisible] = useState(false);
+   400→  const { data: session } = useSession();
+   401→  const normalizedSeason = season || 0;
+   402→
+   403→  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+   404→
+   405→  useEffect(() => {
+   406→    const params = new URLSearchParams({ mediaId: String(mediaId), mediaType, segment: String(segment), season: String(normalizedSeason) });
+   407→    fetch(`/api/shorts/comments?${params}`)
+   408→      .then(r => r?.json())
+   409→      .then(d => { if (d?.comments) setComments(d.comments); })
+   410→      .catch(() => {});
+   411→  }, [mediaId, mediaType, segment, normalizedSeason]);
+   412→
+   413→  const handleClose = () => { setVisible(false); setTimeout(onClose, 250); };
+   414→  const handleBackdropClick = (e: React.MouseEvent) => { if (e.target === e.currentTarget) handleClose(); };
+   415→
+   416→  const submitComment = async () => {
+   417→    if (!session || !newComment.trim() || submitting) return;
+   418→    setSubmitting(true);
+   419→    try {
+   420→      const res = await fetch('/api/shorts/comments', {
+   421→        method: 'POST',
+   422→        headers: { 'Content-Type': 'application/json' },
+   423→        body: JSON.stringify({ mediaId, mediaType, segment, season: normalizedSeason, content: newComment.trim() }),
+   424→      });
+   425→      const d = await res.json();
+   426→      if (d?.comment) { setComments(prev => [d.comment, ...prev]); setNewComment(''); }
+   427→    } catch {}
+   428→    setSubmitting(false);
+   429→  };
+   430→
+   431→  return (
+   432→    <div className="absolute inset-0 z-50 flex flex-col justify-end" onClick={handleBackdropClick}>
+   433→      <div className={cn('absolute inset-0 bg-black/40 transition-opacity duration-250', visible ? 'opacity-100' : 'opacity-0')} />
+   434→      <div className={cn(
+   435→        'relative z-10 flex flex-col rounded-t-2xl transition-transform duration-250 ease-out',
+   436→        'bg-[#1a1a1a]/95 backdrop-blur-xl border-t border-white/[0.06]',
+   437→        visible ? 'translate-y-0' : 'translate-y-full'
+   438→      )} style={{ height: '55vh', maxHeight: '55dvh' }} onClick={e => e.stopPropagation()}>
+   439→        <div className="flex justify-center pt-2.5 pb-1"><div className="w-8 h-1 rounded-full bg-white/15" /></div>
+   440→        <div className="flex items-center justify-between px-4 pb-2.5 border-b border-white/[0.06]">
+   441→          <h3 className="text-[13px] font-bold text-white/90">Commentaires<span className="ml-1.5 text-white/30 font-normal">{comments.length}</span></h3>
+   442→          <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-white/5 transition-colors"><X className="w-4 h-4 text-white/40" /></button>
+   443→        </div>
+   444→        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
+   445→          {comments.length === 0 ? (
+   446→            <div className="flex flex-col items-center justify-center py-8">
+   447→              <MessageCircle className="w-7 h-7 text-white/[0.06] mb-2" />
+   448→              <p className="text-xs text-white/25">Aucun commentaire</p>
+   449→              <p className="text-[10px] text-white/15 mt-0.5">Soyez le premier !</p>
+   450→            </div>
+   451→          ) : comments.map(c => (
+   452→            <div key={c.id} className="flex gap-2.5">
+   453→              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/30 to-amber-500/20 flex items-center justify-center">
+   454→                <span className="text-[9px] font-bold text-primary/80">{(c.user.name || c.user.email)[0].toUpperCase()}</span>
+   455→              </div>
+   456→              <div className="flex-1 min-w-0">
+   457→                <div className="flex items-center gap-2">
+   458→                  <span className="text-[11px] font-semibold text-white/70">{c.user.name || 'Anonyme'}</span>
+   459→                  <span className="text-[9px] text-white/15">{formatRelativeDate(c.createdAt)}</span>
+   460→                </div>
+   461→                <p className="text-[12px] text-white/50 mt-0.5 leading-relaxed">{c.content}</p>
+   462→              </div>
+   463→            </div>
+   464→          ))}
+   465→        </div>
+   466→        {session ? (
+   467→          <div className="px-3 py-2.5 border-t border-white/[0.06] flex gap-2">
+   468→            <input type="text" value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === 'Enter' && submitComment()} placeholder="Ajouter un commentaire..." maxLength={500}
+   469→              className="flex-1 h-9 px-3.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-primary/30 transition-colors" />
+   470→            <button onClick={submitComment} disabled={!newComment.trim() || submitting}
+   471→              className="px-4 h-9 rounded-full bg-primary text-black text-xs font-bold disabled:opacity-20 hover:bg-primary/90 transition-all active:scale-95">Envoyer</button>
+   472→          </div>
+   473→        ) : (
+   474→          <div className="px-4 py-2.5 border-t border-white/[0.06] text-center"><p className="text-[11px] text-white/20">Connectez-vous pour commenter</p></div>
+   475→        )}
+   476→      </div>
+   477→    </div>
+   478→  );
+   479→}
+   480→
+   481→// ─── Single Short Card — 9:16 portrait format ───
+   482→function ShortCard({ item, isActive }: { item: ShortItem; isActive: boolean }) {
+   483→  const [showComments, setShowComments] = useState(false);
+   484→  const [isPlaying, setIsPlaying] = useState(false);
+   485→  const [doubleTapLike, setDoubleTapLike] = useState(false);
+   486→  const [shortServerIndex, setShortServerIndex] = useState(0);
+   487→  const lastTapRef = useRef(0);
+   488→  const likeTriggerRef = useRef<(() => void) | null>(null);
+   489→  const router = useRouter();
+   490→
+   491→  useEffect(() => { setIsPlaying(false); setShowComments(false); setShortServerIndex(0); }, [item.id, item.segmentIndex, item.season, item.episode]);
+   492→
+   493→  const handleTap = () => {
+   494→    const now = Date.now();
+   495→    if (now - lastTapRef.current < 300) {
+   496→      setDoubleTapLike(true);
+   497→      // Persist the like via the LikeButton's toggle function
+   498→      if (likeTriggerRef.current) likeTriggerRef.current();
+   499→      setTimeout(() => setDoubleTapLike(false), 800);
+   500→    } else if (isPlaying) {
+   501→      setIsPlaying(false);
+   502→    }
+   503→    lastTapRef.current = now;
+   504→  };
+   505→
+   506→  const handleOpenFullWatch = () => {
+   507→    let url = `/watch/${item.mediaType}/${item.id}`;
+   508→    if (item.mediaType === 'tv' && item.season && item.episode) {
+   509→      url += `?s=${item.season}&e=${item.episode}`;
+   510→    }
+   511→    router.push(url);
+   512→  };
+   513→
+   514→  return (
+   515→    <div className="relative w-full h-full flex-shrink-0 snap-start snap-always">
+   516→      {/* ─── PREVIEW MODE ─── */}
+   517→      {!isPlaying && (
+   518→        <>
+   519→          {/* 9:16 portrait backdrop — center-cropped */}
+   520→          {item.backdropPath && (
+   521→            <img
+   522→              src={`https://image.tmdb.org/t/p/w780${item.backdropPath}`}
+   523→              alt={item.title}
+   524→              className="absolute inset-0 w-full h-full object-cover object-center"
+   525→              loading="lazy"
+   526→            />
+   527→          )}
+   528→          {/* Fallback: poster in 9:16 crop if no backdrop */}
+   529→          {!item.backdropPath && item.posterPath && (
+   530→            <img
+   531→              src={`https://image.tmdb.org/t/p/w780${item.posterPath}`}
+   532→              alt={item.title}
+   533→              className="absolute inset-0 w-full h-full object-cover object-top"
+   534→              loading="lazy"
+   535→            />
+   536→          )}
+   537→
+   538→          {/* Gradient overlays for 9:16 portrait */}
+   539→          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 z-10" />
+   540→          {/* Side vignettes for portrait immersion */}
+   541→          <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/40 to-transparent z-10" />
+   542→          <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/40 to-transparent z-10" />
+   543→
+   544→          {/* Double-tap heart */}
+   545→          {doubleTapLike && (
+   546→            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+   547→              <Heart className="w-20 h-20 text-red-500 fill-red-500 drop-shadow-[0_0_24px_rgba(239,68,68,0.5)] animate-bounce" />
+   548→            </div>
+   549→          )}
+   550→
+   551→          {/* Content overlay */}
+   552→          <div className="absolute inset-0 z-20 flex" onClick={handleTap}>
+   553→            {/* Left: Info */}
+   554→            <div className="flex-1 flex flex-col justify-end p-4 sm:p-5 pb-20">
+   555→              {/* Badges */}
+   556→              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+   557→                <span className="px-1.5 py-0.5 rounded bg-primary/90 text-[9px] text-black font-black tracking-wide">
+   558→                  {item.mediaType === 'movie' ? 'FILM' : 'SÉRIE'}
+   559→                </span>
+   560→                {item.genreLabel && (
+   561→                  <span className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] text-white/70 font-medium">
+   562→                    {item.genreLabel}
+   563→                  </span>
+   564→                )}
+   565→                {item.mediaType === 'tv' && item.season && item.episode && (
+   566→                  <span className="px-1.5 py-0.5 rounded bg-white/10 text-[9px] text-white/60 font-medium">
+   567→                    S{item.season}E{item.episode}
+   568→                  </span>
+   569→                )}
+   570→              </div>
+   571→
+   572→              <h2 className="text-base sm:text-lg font-black text-white mb-0.5 leading-tight line-clamp-2">{item.title}</h2>
+   573→
+   574→              {item.mediaType === 'tv' && item.episodeName && (
+   575→                <p className="text-[11px] text-white/40 mb-1.5">{item.episodeName}</p>
+   576→              )}
+   577→
+   578→              {item.overview && (
+   579→                <p className="text-[10px] text-white/30 line-clamp-2 max-w-xs leading-relaxed">{item.overview}</p>
+   580→              )}
+   581→
+   582→              {/* Play + Normal mode buttons */}
+   583→              <div className="flex items-center gap-2 mt-3">
+   584→                <button
+   585→                  onClick={(e) => { e.stopPropagation(); setIsPlaying(true); }}
+   586→                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-bold text-sm hover:bg-white/90 transition-all active:scale-95 shadow-lg shadow-black/30"
+   587→                >
+   588→                  <Play className="w-4 h-4 fill-current" />
+   589→                  Lecture
+   590→                </button>
+   591→                <button
+   592→                  onClick={(e) => { e.stopPropagation(); handleOpenFullWatch(); }}
+   593→                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-white/10 text-white/80 text-xs font-medium hover:bg-white/15 transition-colors"
+   594→                >
+   595→                  <Maximize2 className="w-3.5 h-3.5" />
+   596→                  Normal
+   597→                </button>
+   598→              </div>
+   599→            </div>
+   600→
+   601→            {/* Right: Actions */}
+   602→            <div className="flex flex-col items-center justify-end gap-5 pr-3 pb-24">
+   603→              <LikeButton mediaId={item.id} mediaType={item.mediaType} segment={item.segmentIndex || item.episode || 0} season={item.season} likeTriggerRef={likeTriggerRef} />
+   604→              <button onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-0.5 group active:scale-90 transition-transform">
+   605→                <MessageCircle className="w-7 h-7 text-white/80 group-hover:text-white transition-colors" strokeWidth={1.5} />
+   606→                <span className="text-[11px] text-white/40 font-medium">Commenter</span>
+   607→              </button>
+   608→              <button onClick={(e) => { e.stopPropagation(); if (navigator.share) navigator.share({ title: item.title, url: window.location.href }).catch(() => {}); }} className="flex flex-col items-center gap-0.5 group active:scale-90 transition-transform">
+   609→                <Share2 className="w-7 h-7 text-white/80 group-hover:text-white transition-colors" strokeWidth={1.5} />
+   610→                <span className="text-[11px] text-white/40 font-medium">Partager</span>
+   611→              </button>
+   612→              {item.posterPath && (
+   613→                <div className="w-9 h-[52px] rounded-md overflow-hidden ring-1 ring-white/10">
+   614→                  <img src={`https://image.tmdb.org/t/p/w92${item.posterPath}`} alt="" className="w-full h-full object-cover" loading="lazy" />
+   615→                </div>
+   616→              )}
+   617→            </div>
+   618→          </div>
+   619→        </>
+   620→      )}
+   621→
+   622→      {/* ─── PLAYER MODE — 9:16 vertical crop ─── */}
+   623→      {isPlaying && (
+   624→        <div className="absolute inset-0 z-40 bg-black flex flex-col">
+   625→          {/* Video — Smart player with server health detection */}
+   626→          <div className="relative flex-1 overflow-hidden">
+   627→            <SmartShortPlayer
+   628→              src={getShortVideoUrl(item, shortServerIndex)}
+   629→              title={`${item.title} - Short`}
+   630→              onSwitchServer={() => {
+   631→                const servers = Object.values(API_CONFIG.videoServers);
+   632→                setShortServerIndex((currentIdx) => (currentIdx + 1) % servers.length);
+   633→              }}
+   634→              serverIndex={shortServerIndex}
+   635→              totalServers={Object.values(API_CONFIG.videoServers).length}
+   636→            />
+   637→          </div>
+   638→
+   639→          {/* Bottom controls */}
+   640→          <div className="flex-shrink-0 px-3 pb-4 pt-2 bg-gradient-to-t from-black/90 to-transparent">
+   641→            <div className="flex items-center gap-2 mb-2">
+   642→              <span className="px-1.5 py-0.5 rounded bg-primary/90 text-[8px] text-black font-black">
+   643→                {item.mediaType === 'movie' ? 'FILM' : 'SÉRIE'}
+   644→              </span>
+   645→              {item.mediaType === 'tv' && item.season && item.episode && (
+   646→                <span className="text-[10px] text-white/40">S{item.season}E{item.episode}</span>
+   647→              )}
+   648→              <span className="text-[11px] text-white/80 font-semibold truncate">{item.title}</span>
+   649→            </div>
+   650→            <div className="flex items-center gap-3">
+   651→              <button onClick={() => setIsPlaying(false)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 transition-colors text-white/70 text-[11px] font-medium">
+   652→                <Minimize2 className="w-3.5 h-3.5" /> Fermer
+   653→              </button>
+   654→              <button onClick={handleOpenFullWatch} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 transition-colors text-white/70 text-[11px] font-medium">
+   655→                <Maximize2 className="w-3.5 h-3.5" /> Mode normal
+   656→              </button>
+   657→              <div className="flex-1" />
+   658→              <LikeButton mediaId={item.id} mediaType={item.mediaType} segment={item.segmentIndex || item.episode || 0} season={item.season} likeTriggerRef={likeTriggerRef} />
+   659→              <button onClick={() => setShowComments(true)} className="flex items-center gap-1 text-white/70 hover:text-white transition-colors active:scale-90">
+   660→                <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+   661→              </button>
+   662→            </div>
+   663→          </div>
+   664→        </div>
+   665→      )}
+   666→
+   667→      {/* Comments bottom sheet */}
+   668→      {showComments && (
+   669→        <CommentSheet mediaId={item.id} mediaType={item.mediaType} segment={item.segmentIndex || item.episode || 0} season={item.season} onClose={() => setShowComments(false)} />
+   670→      )}
+   671→    </div>
+   672→  );
+   673→}
+   674→
+   675→// ─── Search Overlay for Shorts ───
+   676→function ShortsSearch({ onClose, onResultClick }: { onClose: () => void; onResultClick: (item: ShortItem) => void }) {
+   677→  const [query, setQuery] = useState('');
+   678→  const [results, setResults] = useState<ShortItem[]>([]);
+   679→  const [loading, setLoading] = useState(false);
+   680→  const [visible, setVisible] = useState(false);
+   681→
+   682→  useEffect(() => { requestAnimationFrame(() => setVisible(true)); }, []);
+   683→
+   684→  useEffect(() => {
+   685→    if (!query.trim()) { setResults([]); return; }
+   686→    const timer = setTimeout(async () => {
+   687→      setLoading(true);
+   688→      const data = await fetchTMDB<TMDBResponse<Media>>(`/search/multi?query=${encodeURIComponent(query)}`);
+   689→      if (data?.results) {
+   690→        const items = data.results
+   691→          .filter((r: any) => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path)
+   692→          .slice(0, 12)
+   693→          .map((r: any): ShortItem => ({
+   694→            id: r.id,
+   695→            mediaType: r.media_type,
+   696→            title: r.title || r.name || '',
+   697→            overview: r.overview || '',
+   698→            posterPath: r.poster_path,
+   699→            backdropPath: r.backdrop_path,
+   700→            voteAverage: r.vote_average,
+   701→          }));
+   702→        setResults(items);
+   703→      }
+   704→      setLoading(false);
+   705→    }, 400);
+   706→    return () => clearTimeout(timer);
+   707→  }, [query]);
+   708→
+   709→  const handleClose = () => { setVisible(false); setTimeout(onClose, 250); };
+   710→
+   711→  return (
+   712→    <div className="absolute inset-0 z-50 flex flex-col" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+   713→      <div className={cn('absolute inset-0 bg-black/60 transition-opacity duration-250', visible ? 'opacity-100' : 'opacity-0')} />
+   714→      <div className={cn(
+   715→        'relative z-10 flex flex-col h-full bg-[#0a0a0a]/95 backdrop-blur-xl transition-transform duration-250 ease-out',
+   716→        visible ? 'translate-y-0' : 'translate-y-full'
+   717→      )}>
+   718→        {/* Search header */}
+   719→        <div className="flex items-center gap-3 px-4 pt-[env(safe-area-inset-top,12px)] pb-3 border-b border-white/[0.06]">
+   720→          <div className="relative flex-1">
+   721→            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+   722→            <input
+   723→              type="text"
+   724→              value={query}
+   725→              onChange={e => setQuery(e.target.value)}
+   726→              placeholder="Rechercher un film, série, anime..."
+   727→              autoFocus
+   728→              className="w-full h-10 pl-10 pr-4 rounded-full bg-white/[0.06] border border-white/[0.08] text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-primary/40 transition-colors"
+   729→            />
+   730→          </div>
+   731→          <button onClick={handleClose} className="p-2 rounded-full hover:bg-white/5 transition-colors">
+   732→            <X className="w-5 h-5 text-white/50" />
+   733→          </button>
+   734→        </div>
+   735→
+   736→        {/* Results */}
+   737→        <div className="flex-1 overflow-y-auto p-4">
+   738→          {loading && (
+   739→            <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+   740→          )}
+   741→          {!loading && results.length === 0 && query.trim() && (
+   742→            <p className="text-center text-xs text-white/20 py-8">Aucun résultat</p>
+   743→          )}
+   744→          {!loading && results.length === 0 && !query.trim() && (
+   745→            <div className="flex flex-col items-center py-12">
+   746→              <Search className="w-10 h-10 text-white/[0.06] mb-3" />
+   747→              <p className="text-xs text-white/20">Tapez pour rechercher</p>
+   748→            </div>
+   749→          )}
+   750→          <div className="grid grid-cols-3 gap-3">
+   751→            {results.map(item => (
+   752→              <button
+   753→                key={`${item.id}-${item.mediaType}`}
+   754→                onClick={() => { handleClose(); onResultClick(item); }}
+   755→                className="rounded-lg overflow-hidden bg-white/[0.03] hover:bg-white/[0.06] transition-colors text-left"
+   756→              >
+   757→                <div className="aspect-[2/3] bg-muted">
+   758→                  {item.posterPath && (
+   759→                    <img src={`https://image.tmdb.org/t/p/w342${item.posterPath}`} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+   760→                  )}
+   761→                </div>
+   762→                <div className="p-2">
+   763→                  <p className="text-[11px] font-semibold text-white/80 truncate">{item.title}</p>
+   764→                  <span className="text-[9px] text-white/30">{item.mediaType === 'movie' ? 'Film' : 'Série'}</span>
+   765→                </div>
+   766→              </button>
+   767→            ))}
+   768→          </div>
+   769→        </div>
+   770→      </div>
+   771→    </div>
+   772→  );
+   773→}
+   774→
+   775→// ─── Profile-aware query builder for shorts ───
+   776→// Pipe | = OR logic (any genre), comma = AND logic (ALL genres required)
+   777→function getProfileGenreParams(profileType: string | undefined): string {
+   778→  switch (profileType) {
+   779→    case 'JEUNESSE':
+   780→      return 'with_genres=16|10751|14&without_genres=27|53|80';
+   781→    case 'FRENESIE':
+   782→      return 'with_genres=28|18|27|14|878';
+   783→    case 'NOCTURNE':
+   784→    default:
+   785→      return ''; // No filter — show everything
+   786→  }
+   787→}
+   788→
+   789→// ─── Helper: add page param to endpoint ───
+   790→function withPage(endpoint: string, page: number): string {
+   791→  return endpoint.includes('?')
+   792→    ? `${endpoint}&page=${page}`
+   793→    : `${endpoint}?page=${page}`;
+   794→}
+   795→
+   796→// ─── Main Shorts Page with Infinite Scroll ───
+   797→export default function ShortsPage() {
+   798→  const router = useRouter();
+   799→  const { status } = useSession();
+   800→  const { profile, getDiscoverEndpoint } = useProfile();
+   801→  const { isGuest, enterGuestMode } = useGuest();
+   802→  const [shorts, setShorts] = useState<ShortItem[]>([]);
+   803→  const [loading, setLoading] = useState(true);
+   804→  const [loadingMore, setLoadingMore] = useState(false);
+   805→  const [activeIndex, setActiveIndex] = useState(0);
+   806→  const [activeTab, setActiveTab] = useState<ContentType>('all');
+   807→  const [showSearch, setShowSearch] = useState(false);
+   808→  const scrollRef = useRef<HTMLDivElement>(null);
+   809→  const pageRef = useRef(1);
+   810→  const seenIdsRef = useRef<Set<string>>(new Set());
+   811→  const loadingMoreRef = useRef(false);
+   812→
+   813→  // Auth guard
+   814→  useEffect(() => {
+   815→    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
+   816→  }, [status, isGuest, enterGuestMode]);
+   817→
+   818→  // Load initial shorts — profile-aware, same content as main page but in short format
+   819→  const loadShorts = useCallback(async (tab: ContentType, page: number = 1, append: boolean = false) => {
+   820→    if (loadingMoreRef.current) return;
+   821→    loadingMoreRef.current = true;
+   822→    if (!append) setLoading(true); else setLoadingMore(true);
+   823→
+   824→    let items: ShortItem[] = [];
+   825→    const seen = append ? seenIdsRef.current : new Set<string>();
+   826→    if (!append) seenIdsRef.current = seen;
+   827→
+   828→    const profileGenreParams = getProfileGenreParams(profile?.type);
+   829→
+   830→    try {
+   831→      if (tab === 'all') {
+   832→        // Mixed content from same sources as main page — movies + TV + anime, profile-filtered
+   833→        const profileMoviesEndpoint = profileGenreParams
+   834→          ? `/discover/movie?sort_by=popularity.desc&${profileGenreParams}`
+   835→          : `/trending/movie/week`;
+   836→        const profileTvEndpoint = profileGenreParams
+   837→          ? `/discover/tv?sort_by=popularity.desc&${profileGenreParams}`
+   838→          : `/trending/tv/week`;
+   839→
+   840→        const [movies, tvs, animeTv] = await Promise.all([
+   841→          fetchTMDB<TMDBResponse<Media>>(withPage(profileMoviesEndpoint, page)),
+   842→          fetchTMDB<TMDBResponse<Media>>(withPage(profileTvEndpoint, page)),
+   843→          fetchTMDB<TMDBResponse<Media>>(withPage(`/discover/tv?with_genres=16&with_keywords=210024&sort_by=popularity.desc`, page)),
+   844→        ]);
+   845→
+   846→        // Add movies (1 per movie, no segments = no duplication)
+   847→        if (movies?.results) {
+   848→          for (const m of movies.results.slice(0, 8)) {
+   849→            const key = `${m.id}-movie`;
+   850→            if (seen.has(key)) continue;
+   851→            seen.add(key);
+   852→            items.push({
+   853→              id: m.id, mediaType: 'movie',
+   854→              title: m.title || m.original_title || '',
+   855→              overview: m.overview || '', posterPath: m.poster_path,
+   856→              backdropPath: m.backdrop_path, voteAverage: m.vote_average,
+   857→            });
+   858→          }
+   859→        }
+   860→
+   861→        // Add TV shows (first episode only)
+   862→        if (tvs?.results) {
+   863→          for (const show of tvs.results.slice(0, 6)) {
+   864→            const key = `${show.id}-tv`;
+   865→            if (seen.has(key)) continue;
+   866→            seen.add(key);
+   867→            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
+   868→            if (detail?.seasons) {
+   869→              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
+   870→              if (firstSeason) {
+   871→                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
+   872→                if (seasonData?.episodes?.[0]) {
+   873→                  const ep = seasonData.episodes[0];
+   874→                  items.push({
+   875→                    id: show.id, mediaType: 'tv',
+   876→                    title: show.name || show.original_name || '',
+   877→                    overview: ep.overview || show.overview || '',
+   878→                    posterPath: show.poster_path,
+   879→                    backdropPath: ep.still_path || show.backdrop_path,
+   880→                    voteAverage: show.vote_average,
+   881→                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
+   882→                  });
+   883→                }
+   884→              }
+   885→            }
+   886→          }
+   887→        }
+   888→
+   889→        // Add anime
+   890→        if (animeTv?.results) {
+   891→          for (const show of animeTv.results.slice(0, 5)) {
+   892→            const key = `${show.id}-tv`;
+   893→            if (seen.has(key)) continue;
+   894→            seen.add(key);
+   895→            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
+   896→            if (detail?.seasons) {
+   897→              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
+   898→              if (firstSeason) {
+   899→                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
+   900→                if (seasonData?.episodes?.[0]) {
+   901→                  const ep = seasonData.episodes[0];
+   902→                  items.push({
+   903→                    id: show.id, mediaType: 'tv',
+   904→                    title: show.name || show.original_name || '',
+   905→                    overview: ep.overview || show.overview || '',
+   906→                    posterPath: show.poster_path,
+   907→                    backdropPath: ep.still_path || show.backdrop_path,
+   908→                    voteAverage: show.vote_average,
+   909→                    genreLabel: 'Anime',
+   910→                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
+   911→                  });
+   912→                }
+   913→              }
+   914→            }
+   915→          }
+   916→        }
+   917→
+   918→        // Shuffle for variety
+   919→        items.sort(() => Math.random() - 0.5);
+   920→
+   921→      } else if (tab === 'series') {
+   922→        // Series tab — profile-filtered TV shows
+   923→        const seriesEndpoint = profileGenreParams
+   924→          ? `/discover/tv?sort_by=popularity.desc&${profileGenreParams}`
+   925→          : `/tv/popular`;
+   926→        const data = await fetchTMDB<TMDBResponse<Media>>(withPage(seriesEndpoint, page));
+   927→        if (data?.results) {
+   928→          for (const show of data.results) {
+   929→            const key = `${show.id}-tv`;
+   930→            if (seen.has(key)) continue;
+   931→            seen.add(key);
+   932→            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
+   933→            if (detail?.seasons) {
+   934→              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
+   935→              if (firstSeason) {
+   936→                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
+   937→                if (seasonData?.episodes?.[0]) {
+   938→                  const ep = seasonData.episodes[0];
+   939→                  items.push({
+   940→                    id: show.id, mediaType: 'tv',
+   941→                    title: show.name || show.original_name || '',
+   942→                    overview: ep.overview || show.overview || '',
+   943→                    posterPath: show.poster_path,
+   944→                    backdropPath: ep.still_path || show.backdrop_path,
+   945→                    voteAverage: show.vote_average,
+   946→                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
+   947→                  });
+   948→                }
+   949→              }
+   950→            }
+   951→          }
+   952→        }
+   953→
+   954→      } else if (tab === 'films') {
+   955→        // Films tab — profile-filtered movies
+   956→        const filmsEndpoint = profileGenreParams
+   957→          ? `/discover/movie?sort_by=popularity.desc&${profileGenreParams}`
+   958→          : `/movie/popular`;
+   959→        const data = await fetchTMDB<TMDBResponse<Media>>(withPage(filmsEndpoint, page));
+   960→        if (data?.results) {
+   961→          for (const movie of data.results) {
+   962→            const key = `${movie.id}-movie`;
+   963→            if (seen.has(key)) continue;
+   964→            seen.add(key);
+   965→            items.push({
+   966→              id: movie.id, mediaType: 'movie',
+   967→              title: movie.title || movie.original_title || '',
+   968→              overview: movie.overview || '', posterPath: movie.poster_path,
+   969→              backdropPath: movie.backdrop_path, voteAverage: movie.vote_average,
+   970→            });
+   971→          }
+   972→        }
+   973→
+   974→      } else if (tab === 'anime') {
+   975→        // Anime: both TV and movies with animation genre + anime keyword
+   976→        const [animeTv, animeMovies] = await Promise.all([
+   977→          fetchTMDB<TMDBResponse<Media>>(withPage(`/discover/tv?with_genres=16&with_keywords=210024&sort_by=popularity.desc`, page)),
+   978→          fetchTMDB<TMDBResponse<Media>>(withPage(`/discover/movie?with_genres=16&with_keywords=210024&sort_by=popularity.desc`, page)),
+   979→        ]);
+   980→
+   981→        if (animeTv?.results) {
+   982→          for (const show of animeTv.results) {
+   983→            const key = `${show.id}-tv`;
+   984→            if (seen.has(key)) continue;
+   985→            seen.add(key);
+   986→            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
+   987→            if (detail?.seasons) {
+   988→              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
+   989→              if (firstSeason) {
+   990→                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
+   991→                if (seasonData?.episodes?.[0]) {
+   992→                  const ep = seasonData.episodes[0];
+   993→                  items.push({
+   994→                    id: show.id, mediaType: 'tv',
+   995→                    title: show.name || show.original_name || '',
+   996→                    overview: ep.overview || show.overview || '',
+   997→                    posterPath: show.poster_path,
+   998→                    backdropPath: ep.still_path || show.backdrop_path,
+   999→                    voteAverage: show.vote_average,
+  1000→                    genreLabel: 'Anime',
+  1001→                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
+  1002→                  });
+  1003→                }
+  1004→              }
+  1005→            }
+  1006→          }
+  1007→        }
+  1008→
+  1009→        if (animeMovies?.results) {
+  1010→          for (const movie of animeMovies.results) {
+  1011→            const key = `${movie.id}-movie`;
+  1012→            if (seen.has(key)) continue;
+  1013→            seen.add(key);
+  1014→            items.push({
+  1015→              id: movie.id, mediaType: 'movie',
+  1016→              title: movie.title || movie.original_title || '',
+  1017→              overview: movie.overview || '', posterPath: movie.poster_path,
+  1018→              backdropPath: movie.backdrop_path, voteAverage: movie.vote_average,
+  1019→              genreLabel: 'Anime',
+  1020→            });
+  1021→          }
+  1022→        }
+  1023→
+  1024→        items.sort(() => Math.random() - 0.5);
+  1025→      }
+  1026→    } catch {}
+  1027→
+  1028→    if (append) {
+  1029→      setShorts(prev => [...prev, ...items]);
+  1030→    } else {
+  1031→      setShorts(items);
+  1032→      setActiveIndex(0);
+  1033→    }
+  1034→
+  1035→    setLoading(false);
+  1036→    setLoadingMore(false);
+  1037→    loadingMoreRef.current = false;
+  1038→  }, [profile?.type, getDiscoverEndpoint]);
+  1039→
+  1040→  // Load on auth/tab change
+  1041→  useEffect(() => {
+  1042→    if (status === 'authenticated' && profile) {
+  1043→      pageRef.current = 1;
+  1044→      seenIdsRef.current = new Set();
+  1045→      loadShorts(activeTab, 1, false);
+  1046→    }
+  1047→  }, [status, profile, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  1048→
+  1049→  // Infinite scroll — load more when near bottom
+  1050→  useEffect(() => {
+  1051→    const el = scrollRef.current;
+  1052→    if (!el) return;
+  1053→
+  1054→    const handleScroll = () => {
+  1055→      const { scrollTop, scrollHeight, clientHeight } = el;
+  1056→      if (scrollHeight - scrollTop - clientHeight < 800 && !loadingMoreRef.current) {
+  1057→        pageRef.current += 1;
+  1058→        loadShorts(activeTab, pageRef.current, true);
+  1059→      }
+  1060→    };
+  1061→
+  1062→    el.addEventListener('scroll', handleScroll, { passive: true });
+  1063→    return () => el.removeEventListener('scroll', handleScroll);
+  1064→  }, [activeTab, loadShorts]);
+  1065→
+  1066→  // Track active card on scroll
+  1067→  useEffect(() => {
+  1068→    const el = scrollRef.current;
+  1069→    if (!el) return;
+  1070→    const observer = new IntersectionObserver(
+  1071→      (entries) => {
+  1072→        entries.forEach(entry => {
+  1073→          if (entry.isIntersecting) {
+  1074→            const idx = Number(entry.target.getAttribute('data-index'));
+  1075→            if (!isNaN(idx)) setActiveIndex(idx);
+  1076→          }
+  1077→        });
+  1078→      },
+  1079→      { root: el, threshold: 0.6 }
+  1080→    );
+  1081→    el.querySelectorAll('[data-index]').forEach(card => observer.observe(card));
+  1082→    return () => observer.disconnect();
+  1083→  }, [shorts]);
+  1084→
+  1085→  // Handle search result click — insert at current position
+  1086→  const handleSearchResult = (item: ShortItem) => {
+  1087→    setShorts(prev => {
+  1088→      const newShorts = [...prev];
+  1089→      newShorts.splice(activeIndex + 1, 0, item);
+  1090→      return newShorts;
+  1091→    });
+  1092→  };
+  1093→
+  1094→  if (status === 'loading') {
+  1095→    return (
+  1096→      <div className="h-screen bg-background flex items-center justify-center">
+  1097→        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+  1098→      </div>
+  1099→    );
+  1100→  }
+  1101→
+  1102→  return (
+  1103→    <div className="h-screen bg-black relative overflow-hidden">
+  1104→      {/* Top Bar */}
+  1105→      <div className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-4 pt-[env(safe-area-inset-top,12px)] pb-2">
+  1106→        <button onClick={() => router.push('/')} className="p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-colors">
+  1107→          <ArrowLeft className="w-5 h-5 text-white/80" />
+  1108→        </button>
+  1109→
+  1110→        {/* Tab selector */}
+  1111→        <div className="flex items-center gap-0.5 bg-black/30 backdrop-blur-sm rounded-full p-0.5">
+  1112→          {CONTENT_TABS.map(tab => (
+  1113→            <button
+  1114→              key={tab.key}
+  1115→              onClick={() => setActiveTab(tab.key)}
+  1116→              className={cn(
+  1117→                'px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all whitespace-nowrap',
+  1118→                activeTab === tab.key
+  1119→                  ? 'bg-primary text-black'
+  1120→                  : 'text-white/50 hover:text-white/70'
+  1121→              )}
+  1122→            >
+  1123→              {tab.label}
+  1124→            </button>
+  1125→          ))}
+  1126→        </div>
+  1127→
+  1128→        {/* Search toggle */}
+  1129→        <button
+  1130→          onClick={() => setShowSearch(!showSearch)}
+  1131→          className={cn(
+  1132→            'p-2 rounded-full backdrop-blur-sm transition-colors',
+  1133→            showSearch ? 'bg-primary/30 text-primary' : 'bg-black/30 text-white/70 hover:bg-black/50'
+  1134→          )}
+  1135→        >
+  1136→          <Search className="w-5 h-5" />
+  1137→        </button>
+  1138→      </div>
+  1139→
+  1140→      {/* Shorts Feed — Vertical Snap Scroll with Infinite Loading */}
+  1141→      {loading ? (
+  1142→        <div className="h-full flex items-center justify-center">
+  1143→          <div className="flex flex-col items-center gap-3">
+  1144→            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  1145→            <span className="text-xs text-white/30">Chargement des shorts...</span>
+  1146→          </div>
+  1147→        </div>
+  1148→      ) : shorts.length === 0 ? (
+  1149→        <div className="h-full flex items-center justify-center">
+  1150→          <div className="flex flex-col items-center gap-3">
+  1151→            <Zap className="w-10 h-10 text-white/10" />
+  1152→            <p className="text-sm text-white/30">Aucun short disponible</p>
+  1153→            <p className="text-[11px] text-white/20">Essayez un autre onglet</p>
+  1154→          </div>
+  1155→        </div>
+  1156→      ) : (
+  1157→        <div
+  1158→          ref={scrollRef}
+  1159→          className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+  1160→          style={{ WebkitOverflowScrolling: 'touch' }}
+  1161→        >
+  1162→          {shorts.map((item, i) => (
+  1163→            <div key={`${item.id}-${item.mediaType}-${item.segmentIndex ?? ''}-${item.season ?? ''}-${item.episode ?? ''}-${i}`} data-index={i} className="h-full">
+  1164→              <ShortCard item={item} isActive={i === activeIndex} />
+  1165→            </div>
+  1166→          ))}
+  1167→          {/* Loading more indicator */}
+  1168→          {loadingMore && (
+  1169→            <div className="h-20 flex items-center justify-center">
+  1170→              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  1171→            </div>
+  1172→          )}
+  1173→        </div>
+  1174→      )}
+  1175→
+  1176→      {/* Search overlay */}
+  1177→      {showSearch && (
+  1178→        <ShortsSearch onClose={() => setShowSearch(false)} onResultClick={handleSearchResult} />
+  1179→      )}
+  1180→    </div>
+  1181→  );
+  1182→}
+  1183→

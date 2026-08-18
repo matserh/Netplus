@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Logo } from '@/components/ui/Logo';
 import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
-import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost } from 'lucide-react';
+import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles } from 'lucide-react';
 import { useGuest } from '@/contexts/GuestContext';
 import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
 
@@ -17,6 +17,30 @@ const PROFILE_IMAGES: Record<ProfileType, string> = {
   FRENESIE: '/profiles/frenesie.png',
   NOCTURNE: '/profiles/nocturne.png',
 };
+
+// 20 Official NetPlus logos — free, styled, matching platform identity
+const OFFICIAL_LOGOS = [
+  { id: 'netplus-gold', name: 'Or Classic', src: '/logos/gold.png', color: '#D4A843' },
+  { id: 'netplus-fire', name: 'Flamme', src: '/logos/fire.png', color: '#E25822' },
+  { id: 'netplus-ocean', name: 'Oc\u00e9an', src: '/logos/ocean.png', color: '#1E90FF' },
+  { id: 'netplus-forest', name: 'For\u00eat', src: '/logos/forest.png', color: '#228B22' },
+  { id: 'netplus-night', name: 'Nuit', src: '/logos/night.png', color: '#191970' },
+  { id: 'netplus-sunset', name: 'Coucher', src: '/logos/sunset.png', color: '#FF6347' },
+  { id: 'netplus-ice', name: 'Glace', src: '/logos/ice.png', color: '#ADD8E6' },
+  { id: 'netplus-royal', name: 'Royal', src: '/logos/royal.png', color: '#4169E1' },
+  { id: 'netplus-emerald', name: '\u00c9meraude', src: '/logos/emerald.png', color: '#50C878' },
+  { id: 'netplus-ruby', name: 'Rubis', src: '/logos/ruby.png', color: '#E0115F' },
+  { id: 'netplus-amber', name: 'Ambre', src: '/logos/amber.png', color: '#FFBF00' },
+  { id: 'netplus-violet', name: 'Violet', src: '/logos/violet.png', color: '#8B00FF' },
+  { id: 'netplus-copper', name: 'Cuivre', src: '/logos/copper.png', color: '#B87333' },
+  { id: 'netplus-silver', name: 'Argent', src: '/logos/silver.png', color: '#C0C0C0' },
+  { id: 'netplus-platinum', name: 'Platine', src: '/logos/platinum.png', color: '#E5E4E2' },
+  { id: 'netplus-crimson', name: 'Cramoisi', src: '/logos/crimson.png', color: '#DC143C' },
+  { id: 'netplus-teal', name: 'Turquoise', src: '/logos/teal.png', color: '#008080' },
+  { id: 'netplus-rose', name: 'Rose', src: '/logos/rose.png', color: '#FF007F' },
+  { id: 'netplus-indigo', name: 'Indigo', src: '/logos/indigo.png', color: '#4B0082' },
+  { id: 'netplus-graphite', name: 'Graphite', src: '/logos/graphite.png', color: '#383838' },
+];
 
 const PROFILE_DESCRIPTIONS: Record<ProfileType, string> = {
   JEUNESSE: 'Contenu familial et éducatif',
@@ -108,9 +132,13 @@ export default function ProfilesPage() {
   const { isGuest, enterGuestMode } = useGuest();
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showCustomLogoModal, setShowCustomLogoModal] = useState(false);
+  const [showOfficialLogosModal, setShowOfficialLogosModal] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+  const [customLogoPreview, setCustomLogoPreview] = useState<string | null>(null);
+  const [selectedOfficialLogo, setSelectedOfficialLogo] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Instead of redirecting to /login, enter guest mode
   useEffect(() => {
@@ -147,7 +175,19 @@ export default function ProfilesPage() {
 
   const userName = session?.user?.name || (isGuest ? 'Invité' : 'Utilisateur');
   const userEmail = session?.user?.email || (isGuest ? '' : '');
-  const currentImg = currentProfile ? PROFILE_IMAGES[currentProfile.type] : '/profiles/nocturne.png';
+  // Priority: custom logo > official logo > profile default
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [officialLogo, setOfficialLogo] = useState<string | null>(null);
+  useEffect(() => {
+    setCustomLogo(localStorage.getItem('netplus-custom-logo'));
+    const officialId = localStorage.getItem('netplus-official-logo');
+    if (officialId) {
+      const found = OFFICIAL_LOGOS.find(l => l.id === officialId);
+      setOfficialLogo(found ? found.id : null);
+    }
+  }, [showCustomLogoModal, showOfficialLogosModal]);
+  const currentImg = customLogo || (officialLogo ? null : (currentProfile ? PROFILE_IMAGES[currentProfile.type] : '/profiles/nocturne.png'));
+  const officialLogoData = officialLogo ? OFFICIAL_LOGOS.find(l => l.id === officialLogo) : null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -163,7 +203,13 @@ export default function ProfilesPage() {
               className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-muted/50 transition-colors group"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/30 group-hover:ring-primary/60 transition-all">
-                <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+                {officialLogoData ? (
+                  <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm" style={{ background: `linear-gradient(135deg, ${officialLogoData.color}, ${officialLogoData.color}cc)` }}>
+                    N
+                  </div>
+                ) : (
+                  <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+                )}
               </div>
               <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors hidden sm:block">
                 {currentProfile?.name || 'Profil'}
@@ -178,7 +224,13 @@ export default function ProfilesPage() {
                 <div className="p-4 border-b border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30">
-                      <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+                      {officialLogoData ? (
+                        <div className="w-full h-full flex items-center justify-center text-white font-bold text-base" style={{ background: `linear-gradient(135deg, ${officialLogoData.color}, ${officialLogoData.color}cc)` }}>
+                          N
+                        </div>
+                      ) : (
+                        <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{userName}</p>
@@ -192,23 +244,23 @@ export default function ProfilesPage() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      setShowAvatarPicker(true);
+                      setShowCustomLogoModal(true);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
                   >
-                    <Camera className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                     Changer le logo
                   </button>
 
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      setManaging(true);
+                      setShowOfficialLogosModal(true);
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
                   >
-                    <Pencil className="w-4 h-4" />
-                    Gérer les profils
+                    <Sparkles className="w-4 h-4" />
+                    Gérer le profil
                   </button>
 
                   <div className="my-1.5 h-px bg-border/50" />
@@ -230,45 +282,136 @@ export default function ProfilesPage() {
         </div>
       </header>
 
-      {/* Avatar picker modal */}
-      {showAvatarPicker && (
+      {/* Custom logo import modal — "Changer le logo" = import your own */}
+      {showCustomLogoModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAvatarPicker(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCustomLogoModal(false)} />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Changer le logo</h3>
-              <button onClick={() => setShowAvatarPicker(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
+              <button onClick={() => setShowCustomLogoModal(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">Importez votre propre logo personnalisé pour votre profil.</p>
+
+            {/* Preview area */}
+            <div className="w-32 h-32 mx-auto rounded-xl border-2 border-dashed border-border mb-4 flex items-center justify-center overflow-hidden bg-muted/30">
+              {customLogoPreview ? (
+                <img src={customLogoPreview} alt="Aperçu" className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+                  <Upload className="w-8 h-8" />
+                  <span className="text-xs">Aucun fichier</span>
+                </div>
+              )}
+            </div>
+
+            {/* File input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    setCustomLogoPreview(ev.target?.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+              >
+                <Upload className="w-4 h-4" />
+                Parcourir
+              </button>
+              <button
+                onClick={() => {
+                  if (customLogoPreview) {
+                    // Save custom logo to localStorage
+                    localStorage.setItem('netplus-custom-logo', customLogoPreview);
+                    setShowCustomLogoModal(false);
+                  }
+                }}
+                disabled={!customLogoPreview}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm disabled:opacity-40"
+              >
+                Appliquer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Official logos modal — "Gérer le profil" = choose from 20 official NetPlus logos */}
+      {showOfficialLogosModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowOfficialLogosModal(false)} />
+          <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-lg w-full animate-scale-in max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h3 className="text-lg font-bold">Logos officiels Netplus</h3>
+                <p className="text-xs text-primary/70">20 logos gratuits, stylés et exclusifs</p>
+              </div>
+              <button onClick={() => setShowOfficialLogosModal(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              {profiles.map((profile) => (
-                <button
-                  key={profile.type}
-                  onClick={() => {
-                    setProfile(profile);
-                    setShowAvatarPicker(false);
-                  }}
-                  className="flex flex-col items-center gap-2 group"
-                >
-                  <div className={`relative w-20 h-20 rounded-xl overflow-hidden ring-2 transition-all ${
-                    currentProfile?.type === profile.type ? 'ring-primary ring-offset-2 ring-offset-card' : 'ring-transparent group-hover:ring-white/40'
-                  }`}>
-                    <img
-                      src={PROFILE_IMAGES[profile.type]}
-                      alt={profile.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                    />
-                    {currentProfile?.type === profile.type && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                        <Check className="w-6 h-6 text-primary" />
-                      </div>
-                    )}
-                  </div>
-                  <span className="text-xs font-medium text-foreground/60 group-hover:text-foreground transition-colors">{profile.name}</span>
-                </button>
-              ))}
+            <div className="grid grid-cols-4 gap-3 mt-4">
+              {OFFICIAL_LOGOS.map((logo) => {
+                const isSelected = selectedOfficialLogo === logo.id || localStorage.getItem('netplus-official-logo') === logo.id;
+                return (
+                  <button
+                    key={logo.id}
+                    onClick={() => setSelectedOfficialLogo(logo.id)}
+                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all group ${
+                      isSelected ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted/50'
+                    }`}
+                  >
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
+                      style={{ background: `linear-gradient(135deg, ${logo.color}, ${logo.color}cc)` }}
+                    >
+                      N
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground/60 group-hover:text-foreground transition-colors truncate w-full text-center">
+                      {logo.name}
+                    </span>
+                    {isSelected && <Check className="w-3 h-3 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setShowOfficialLogosModal(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedOfficialLogo) {
+                    localStorage.setItem('netplus-official-logo', selectedOfficialLogo);
+                    localStorage.removeItem('netplus-custom-logo');
+                    setShowOfficialLogosModal(false);
+                  }
+                }}
+                disabled={!selectedOfficialLogo}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm disabled:opacity-40"
+              >
+                Appliquer
+              </button>
             </div>
           </div>
         </div>

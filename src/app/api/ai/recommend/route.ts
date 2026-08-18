@@ -258,15 +258,17 @@ export async function POST(request: NextRequest) {
     // Add current message
     messagesForAI.push({ role: 'user', content: message });
 
-    // Use AI for more complex understanding
+    // Use AI for more complex understanding (with 8s timeout)
     try {
       const zai = await ZAI.create();
-      const completion = await zai.chat.completions.create({
+      const aiPromise = zai.chat.completions.create({
         messages: messagesForAI,
         temperature: 0.3
       });
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
+      const completion = await Promise.race([aiPromise, timeoutPromise]);
 
-      const content = completion.choices[0]?.message?.content;
+      const content = completion ? completion.choices[0]?.message?.content : null;
       if (content) {
         try {
           // Clean the response - remove markdown code blocks if present

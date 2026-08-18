@@ -61,36 +61,56 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
     setIsLoading(true);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch('/api/ai-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
           memory: memory
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
 
       const data = await response.json();
 
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.response,
-        mediaResults: data.results
-      }]);
+      if (data.response) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.response,
+          mediaResults: data.results
+        }]);
 
-      // Update memory
-      setMemory(prev => ({
-        ...prev,
-        lastTopic: data.topic,
-        lastResults: data.results,
-        preferences: data.preferences || prev.preferences
-      }));
+        // Update memory
+        setMemory(prev => ({
+          ...prev,
+          lastTopic: data.topic,
+          lastResults: data.results,
+          preferences: data.preferences || prev.preferences
+        }));
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: "Je n'ai pas pu traiter votre demande. Réessayez !"
+        }]);
+      }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI Error:', error);
+      const errMsg = error?.name === 'AbortError'
+        ? "La recherche prend trop longtemps. Réessayez !"
+        : "Je rencontre un problème technique. Essayez de reformuler votre recherche.";
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "Je rencontre un problème technique. Essayez de reformuler votre recherche ou réessayez dans un instant."
+        content: errMsg
       }]);
     } finally {
       setIsLoading(false);

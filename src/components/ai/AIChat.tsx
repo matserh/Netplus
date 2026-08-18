@@ -282,16 +282,22 @@ export function AIChat({ open, onOpenChange, onMediaSelect }: AIChatProps) {
         content: m.content
       }));
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch('/api/ai/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text.trim(),
           history: conversationHistory
-        })
+        }),
+        signal: controller.signal
       });
 
-      if (!response.ok) throw new Error('API Error');
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
       const data = await response.json();
 

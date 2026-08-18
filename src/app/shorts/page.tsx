@@ -17,14 +17,50 @@ import { useGuest } from '@/contexts/GuestContext';
 // api-url removed - using native fetch for PWA
 
 // ─── Fetch helper ───
-const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
+const fetchTMDB = async <T,>(endpoint: string, timeoutMs: number = 10000): Promise<T | null> => {
   try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
     const res = await fetch(
-      `${API_CONFIG.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`
+      `${API_CONFIG.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`,
+      { signal: controller.signal }
     );
+    clearTimeout(tid);
     return res.ok ? await res.json() : null;
   } catch { return null; }
 };
+
+// Fetch TV show first-episode info in parallel
+async function fetchTvEpisode(show: Media, seen: Set<string>): Promise<ShortItem | null> {
+  const detail = await fetchTMDB<any>(`/tv/${show.id}`, 6000);
+  if (detail?.seasons) {
+    const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
+    if (firstSeason) {
+      const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`, 6000);
+      if (seasonData?.episodes?.[0]) {
+        const ep = seasonData.episodes[0];
+        return {
+          id: show.id, mediaType: 'tv',
+          title: show.name || show.original_name || '',
+          overview: ep.overview || show.overview || '',
+          posterPath: show.poster_path,
+          backdropPath: ep.still_path || show.backdrop_path,
+          voteAverage: show.vote_average,
+          season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
+        };
+      }
+    }
+  }
+  // Fallback: add show without episode details
+  return {
+    id: show.id, mediaType: 'tv',
+    title: show.name || show.original_name || '',
+    overview: show.overview || '',
+    posterPath: show.poster_path,
+    backdropPath: show.backdrop_path,
+    voteAverage: show.vote_average,
+  };
+}
 
 // ─── Types ───
 interface ShortItem {
@@ -858,59 +894,33 @@ export default function ShortsPage() {
           }
         }
 
-        // Add TV shows (first episode only)
+        // Add TV shows (first episode only — parallel fetching)
         if (tvs?.results) {
-          for (const show of tvs.results.slice(0, 6)) {
+          const tvShows = tvs.results.slice(0, 6).filter((show: Media) => {
             const key = `${show.id}-tv`;
-            if (seen.has(key)) continue;
+            if (seen.has(key)) return false;
             seen.add(key);
-            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
-            if (detail?.seasons) {
-              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
-              if (firstSeason) {
-                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
-                if (seasonData?.episodes?.[0]) {
-                  const ep = seasonData.episodes[0];
-                  items.push({
-                    id: show.id, mediaType: 'tv',
-                    title: show.name || show.original_name || '',
-                    overview: ep.overview || show.overview || '',
-                    posterPath: show.poster_path,
-                    backdropPath: ep.still_path || show.backdrop_path,
-                    voteAverage: show.vote_average,
-                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
-                  });
-                }
-              }
-            }
+            return true;
+          });
+          const tvResults = await Promise.allSettled(tvShows.map((show: Media) => fetchTvEpisode(show, seen)));
+          for (const r of tvResults) {
+            if (r.status === 'fulfilled' && r.value) items.push(r.value);
           }
         }
 
-        // Add anime
+        // Add anime (parallel fetching)
         if (animeTv?.results) {
-          for (const show of animeTv.results.slice(0, 5)) {
+          const animeShows = animeTv.results.slice(0, 5).filter((show: Media) => {
             const key = `${show.id}-tv`;
-            if (seen.has(key)) continue;
+            if (seen.has(key)) return false;
             seen.add(key);
-            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
-            if (detail?.seasons) {
-              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
-              if (firstSeason) {
-                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
-                if (seasonData?.episodes?.[0]) {
-                  const ep = seasonData.episodes[0];
-                  items.push({
-                    id: show.id, mediaType: 'tv',
-                    title: show.name || show.original_name || '',
-                    overview: ep.overview || show.overview || '',
-                    posterPath: show.poster_path,
-                    backdropPath: ep.still_path || show.backdrop_path,
-                    voteAverage: show.vote_average,
-                    genreLabel: 'Anime',
-                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
-                  });
-                }
-              }
+            return true;
+          });
+          const animeResults = await Promise.allSettled(animeShows.map((show: Media) => fetchTvEpisode(show, seen)));
+          for (const r of animeResults) {
+            if (r.status === 'fulfilled' && r.value) {
+              r.value.genreLabel = 'Anime';
+              items.push(r.value);
             }
           }
         }
@@ -919,35 +929,21 @@ export default function ShortsPage() {
         items.sort(() => Math.random() - 0.5);
 
       } else if (tab === 'series') {
-        // Series tab — profile-filtered TV shows
+        // Series tab — profile-filtered TV shows (parallel fetching)
         const seriesEndpoint = profileGenreParams
           ? `/discover/tv?sort_by=popularity.desc&${profileGenreParams}`
           : `/tv/popular`;
         const data = await fetchTMDB<TMDBResponse<Media>>(withPage(seriesEndpoint, page));
         if (data?.results) {
-          for (const show of data.results) {
+          const shows = data.results.filter((show: Media) => {
             const key = `${show.id}-tv`;
-            if (seen.has(key)) continue;
+            if (seen.has(key)) return false;
             seen.add(key);
-            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
-            if (detail?.seasons) {
-              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
-              if (firstSeason) {
-                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
-                if (seasonData?.episodes?.[0]) {
-                  const ep = seasonData.episodes[0];
-                  items.push({
-                    id: show.id, mediaType: 'tv',
-                    title: show.name || show.original_name || '',
-                    overview: ep.overview || show.overview || '',
-                    posterPath: show.poster_path,
-                    backdropPath: ep.still_path || show.backdrop_path,
-                    voteAverage: show.vote_average,
-                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
-                  });
-                }
-              }
-            }
+            return true;
+          });
+          const results = await Promise.allSettled(shows.map((show: Media) => fetchTvEpisode(show, seen)));
+          for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) items.push(r.value);
           }
         }
 
@@ -979,29 +975,17 @@ export default function ShortsPage() {
         ]);
 
         if (animeTv?.results) {
-          for (const show of animeTv.results) {
+          const shows = animeTv.results.filter((show: Media) => {
             const key = `${show.id}-tv`;
-            if (seen.has(key)) continue;
+            if (seen.has(key)) return false;
             seen.add(key);
-            const detail = await fetchTMDB<any>(`/tv/${show.id}`);
-            if (detail?.seasons) {
-              const firstSeason = detail.seasons.find((s: any) => s.season_number > 0);
-              if (firstSeason) {
-                const seasonData = await fetchTMDB<any>(`/tv/${show.id}/season/${firstSeason.season_number}`);
-                if (seasonData?.episodes?.[0]) {
-                  const ep = seasonData.episodes[0];
-                  items.push({
-                    id: show.id, mediaType: 'tv',
-                    title: show.name || show.original_name || '',
-                    overview: ep.overview || show.overview || '',
-                    posterPath: show.poster_path,
-                    backdropPath: ep.still_path || show.backdrop_path,
-                    voteAverage: show.vote_average,
-                    genreLabel: 'Anime',
-                    season: firstSeason.season_number, episode: ep.episode_number, episodeName: ep.name,
-                  });
-                }
-              }
+            return true;
+          });
+          const results = await Promise.allSettled(shows.map((show: Media) => fetchTvEpisode(show, seen)));
+          for (const r of results) {
+            if (r.status === 'fulfilled' && r.value) {
+              r.value.genreLabel = 'Anime';
+              items.push(r.value);
             }
           }
         }
@@ -1023,7 +1007,9 @@ export default function ShortsPage() {
 
         items.sort(() => Math.random() - 0.5);
       }
-    } catch {}
+    } catch (error) {
+      console.error('[shorts] Load error:', error);
+    }
 
     if (append) {
       setShorts(prev => [...prev, ...items]);
@@ -1037,14 +1023,15 @@ export default function ShortsPage() {
     loadingMoreRef.current = false;
   }, [profile?.type, getDiscoverEndpoint]);
 
-  // Load on auth/tab change
+  // Load on auth/tab change — supports both authenticated and guest users
   useEffect(() => {
-    if (status === 'authenticated' && profile) {
+    const isReady = status === 'authenticated' || (status === 'unauthenticated' && isGuest);
+    if (isReady) {
       pageRef.current = 1;
       seenIdsRef.current = new Set();
       loadShorts(activeTab, 1, false);
     }
-  }, [status, profile, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [status, isGuest, profile, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Infinite scroll — load more when near bottom
   useEffect(() => {

@@ -5,7 +5,7 @@
  * Fallback providers (set via LLM_PROVIDER env var):
  *   - "groq"   : Groq API (free tier, ultra-fast LPU inference)
  *   - "openai" : OpenAI API (best quality, paid)
- *   - "zai"    : Z.ai SDK (original platform)
+ *   - "zai"    : NetPlus AI SDK
  */
 
 import type { ChatCompletionMessage } from './llm-types';
@@ -117,7 +117,7 @@ async function callOpenAI(params: ChatCompletionParams, config: LLMConfig): Prom
   return { content: data.choices?.[0]?.message?.content || '', provider: 'openai', model: config.model, tokensUsed: data.usage?.total_tokens };
 }
 
-// ─── Z.ai SDK ───
+// ─── NetPlus AI SDK ───
 
 async function callZAI(params: ChatCompletionParams): Promise<ChatCompletionResult> {
   const ZAI = (await import('z-ai-web-dev-sdk')).default;
