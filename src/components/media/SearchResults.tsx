@@ -106,7 +106,8 @@ function SearchResultCard({ media, onClick }: { media: Media; onClick: () => voi
   const posterUrl = getPosterUrl(media.poster_path, 'medium');
   const title = getMediaTitle(media);
   const year = getMediaYear(media);
-  const rating = media.vote_average?.toFixed(1);
+  const voteAvg = media.vote_average ?? 0;
+  const rating = voteAvg > 0 ? voteAvg.toFixed(1) : null;
   const isMovie = media.media_type === 'movie' || !!media.title;
 
   return (
@@ -145,11 +146,13 @@ function SearchResultCard({ media, onClick }: { media: Media; onClick: () => voi
           </Badge>
         </div>
 
-        {/* Rating */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
-          <Star className="w-3 h-3 fill-primary text-primary" />
-          <span className="text-[10px] font-semibold text-white">{rating}</span>
-        </div>
+        {/* Rating — only show when > 0 */}
+        {rating && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 rounded-full px-1.5 py-0.5">
+            <Star className="w-3 h-3 fill-primary text-primary" />
+            <span className="text-[10px] font-semibold text-white">{rating}</span>
+          </div>
+        )}
       </div>
 
       {/* Info */}

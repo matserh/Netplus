@@ -1,5 +1,7 @@
 'use client';
 
+import { Logo } from '@/components/ui/Logo';
+
 export default function Error({
   error,
   reset,
@@ -13,26 +15,74 @@ export default function Error({
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '50vh',
+      minHeight: '100vh',
       backgroundColor: '#0f0f23',
       color: 'white',
       fontFamily: 'system-ui, sans-serif',
+      padding: '2rem',
     }}>
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Erreur de chargement</h2>
-      <button
-        onClick={reset}
-        style={{
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          backgroundColor: '#e5a00d',
-          color: 'black',
-          fontWeight: 'bold',
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        Réessayer
-      </button>
+      {/* NetPlus Logo */}
+      <div style={{ marginBottom: '2rem' }}>
+        <Logo size="sm" />
+      </div>
+
+      {/* Error icon */}
+      <div style={{
+        width: '64px',
+        height: '64px',
+        borderRadius: '50%',
+        background: 'rgba(229, 160, 13, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '1.5rem',
+      }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e5a00d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        </svg>
+      </div>
+
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+        Oups, une erreur
+      </h2>
+      <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', marginBottom: '2rem', textAlign: 'center', maxWidth: '320px' }}>
+        Quelque chose s&apos;est mal passé. Réessayez ou revenez à l&apos;accueil.
+      </p>
+
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <button
+          onClick={reset}
+          style={{
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.75rem',
+            backgroundColor: '#e5a00d',
+            color: 'black',
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+          }}
+        >
+          Réessayer
+        </button>
+        <button
+          onClick={() => window.location.href = '/'}
+          style={{
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.75rem',
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            color: 'white',
+            fontWeight: 500,
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+          }}
+        >
+          Accueil
+        </button>
+      </div>
     </div>
   );
 }

@@ -131,11 +131,18 @@ export function MediaSection({
   );
 }
 
+// Genre hue for visual fallbacks
+function genreHue(genreIds: number[]): number {
+  if (genreIds.length === 0) return 220;
+  return (genreIds[0] * 37) % 360;
+}
+
 // Simple card component
 function MediaCard({ media, onClick }: { media: Media; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
   const title = getMediaTitle(media);
   const posterUrl = getPosterUrl(media.poster_path, 'medium');
+  const hue = genreHue(media.genre_ids || []);
 
   return (
     <div
@@ -143,7 +150,7 @@ function MediaCard({ media, onClick }: { media: Media; onClick: () => void }) {
       onClick={onClick}
     >
       <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-card">
-        {!loaded && (
+        {!loaded && posterUrl && (
           <div className="absolute inset-0 bg-muted animate-pulse" />
         )}
         
@@ -156,8 +163,16 @@ function MediaCard({ media, onClick }: { media: Media; onClick: () => void }) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted">
-            <span className="text-3xl">🎬</span>
+          /* Genre-colored cinematic gradient — NOT an emoji */
+          <div className="w-full h-full flex flex-col items-center justify-center" style={{
+            background: `linear-gradient(160deg, hsl(${hue}, 55%, 18%), hsl(${(hue + 50) % 360}, 45%, 12%))`,
+          }}>
+            <span className="text-3xl font-black text-white/10 select-none leading-none mb-1">
+              {title.charAt(0).toUpperCase()}
+            </span>
+            <p className="text-[9px] font-semibold text-white/40 text-center leading-tight line-clamp-2 px-2 max-w-[90%]">
+              {title}
+            </p>
           </div>
         )}
 

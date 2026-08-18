@@ -13,7 +13,7 @@ import { Media, Genre, TMDBResponse } from '@/types/media';
 import { API_CONFIG } from '@/types/media';
 import { cn } from '@/lib/utils';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
-import { Search, UserCircle, Bell, Play, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, UserCircle, Bell, Play, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -28,23 +28,52 @@ const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
   }
 };
 
+// Genre color derivation for no-poster fallback
+function genreHue(genreIds: number[]): number {
+  if (genreIds.length === 0) return 220; // default blue
+  return (genreIds[0] * 37) % 360;
+}
+
 // Netflix-style poster — compact, with smooth hover scale
+// Rich fallback for items without poster: genre-colored gradient + title
 function Poster({ media, onClick }: { media: Media; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
   const title = media.title || media.name || '';
+  const hasPoster = !!media.poster_path;
+  const hue = genreHue(media.genre_ids || []);
   
   return (
     <div className="group cursor-pointer" onClick={onClick}>
       <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-card/50 ring-1 ring-white/[0.04]">
-        {!loaded && <div className="absolute inset-0 bg-muted/30 animate-pulse" />}
-        {media.poster_path && (
-          <img
-            src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-            alt={title}
-            className={`w-full h-full object-cover transition-all duration-300 ease-out ${loaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-110`}
-            onLoad={() => setLoaded(true)}
-            loading="lazy"
-          />
+        {hasPoster ? (
+          <>
+            {!loaded && <div className="absolute inset-0 bg-muted/30 animate-pulse" />}
+            <img
+              src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
+              alt={title}
+              className={`w-full h-full object-cover transition-all duration-300 ease-out ${loaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-110`}
+              onLoad={() => setLoaded(true)}
+              loading="lazy"
+            />
+          </>
+        ) : (
+          /* Genre-colored cinematic gradient — NOT a blank card */
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-2" style={{
+            background: `linear-gradient(160deg, hsl(${hue}, 55%, 18%), hsl(${(hue + 50) % 360}, 45%, 12%))`,
+          }}>
+            <span className="text-3xl sm:text-4xl font-black text-white/15 select-none leading-none mb-1">
+              {title.charAt(0).toUpperCase()}
+            </span>
+            <p className="text-[8px] sm:text-[9px] font-semibold text-white/50 text-center leading-tight line-clamp-3 max-w-[90%]">
+              {title}
+            </p>
+            {media.vote_average > 0 && (
+              <div className="flex items-center gap-0.5 mt-1.5">
+                <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                <span className="text-[8px] font-bold text-amber-400/70">{media.vote_average.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
         )}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">

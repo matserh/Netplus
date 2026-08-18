@@ -4,8 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Info, Star, Volume2, VolumeX } from 'lucide-react';
-import { Media, getBackdropUrl, getMediaTitle, getMediaYear } from '@/types/media';
+import { Play, Info, Star, Volume2, VolumeX, TrendingUp, Film, Tv } from 'lucide-react';
+import { Media, getBackdropUrl, getPosterUrl, getMediaTitle, getMediaYear, API_CONFIG } from '@/types/media';
+
+// Genre name map (French)
+const GENRE_NAMES_FR: Record<number, string> = {
+  28: 'Action', 12: 'Aventure', 16: 'Animation', 35: 'Comédie', 80: 'Crime',
+  99: 'Documentaire', 18: 'Drame', 10751: 'Famille', 14: 'Fantastique',
+  36: 'Histoire', 27: 'Horreur', 10402: 'Musique', 9648: 'Mystère',
+  10749: 'Romance', 878: 'Science-Fiction', 10770: 'Téléfilm', 53: 'Thriller',
+  10752: 'Guerre', 37: 'Western',
+};
 
 interface BannerProps {
   items: Media[];
@@ -52,11 +61,19 @@ export function Banner({ items, onItemClick }: BannerProps) {
   }
 
   const backdropUrl = getBackdropUrl(current.backdrop_path, 'large');
+  const posterUrl = getPosterUrl(current.poster_path, 'large');
   const title = getMediaTitle(current);
   const year = getMediaYear(current);
-  const rating = current.vote_average?.toFixed(1) || 'N/A';
+  const voteAvg = current.vote_average;
+  const rating = voteAvg > 0 ? voteAvg.toFixed(1) : null;
   const isMovie = current.media_type === 'movie' || !!current.title;
-  const overview = current.overview || 'Aucune description disponible.';
+  const rawOverview = current.overview || '';
+  const hasOverview = rawOverview.trim().length > 10;
+  
+  // Derive genre labels from IDs
+  const genreLabels = (current.genre_ids || [])
+    .map(id => GENRE_NAMES_FR[id])
+    .filter(Boolean) as string[];
 
   return (
     <section 
@@ -64,9 +81,9 @@ export function Banner({ items, onItemClick }: BannerProps) {
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      {/* Background Image */}
+      {/* Background Image — with poster fallback & genre gradient */}
       <div className="absolute inset-0 overflow-hidden">
-        {backdropUrl && (
+        {backdropUrl ? (
           <Image
             src={backdropUrl}
             alt={title}
@@ -77,6 +94,24 @@ export function Banner({ items, onItemClick }: BannerProps) {
               isTransitioning ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
             }`}
           />
+        ) : posterUrl ? (
+          <Image
+            src={posterUrl}
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            className={`object-cover object-center transition-all duration-700 ease-out ${
+              isTransitioning ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+            }`}
+          />
+        ) : (
+          /* Genre-colored cinematic gradient for items without any image */
+          <div className="absolute inset-0" style={{
+            background: (current.genre_ids?.length || 0) > 0
+              ? `linear-gradient(135deg, hsl(${(current.genre_ids![0] * 37) % 360}, 50%, 12%), hsl(${(current.genre_ids![0] * 37 + 90) % 360}, 40%, 8%))`
+              : 'linear-gradient(135deg, #1a1a2e, #16213e)',
+          }} />
         )}
         
         {/* Cinematic Gradients */}
@@ -92,18 +127,31 @@ export function Banner({ items, onItemClick }: BannerProps) {
         <div className="w-full pb-16 px-6 sm:px-10 lg:px-16">
           <div className="max-w-2xl">
             {/* Meta Tags */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <Badge className="bg-primary text-black font-bold text-xs px-3 py-1">
                 {isMovie ? 'FILM' : 'SÉRIE'}
               </Badge>
               
-              <div className="flex items-center gap-1.5 text-sm">
-                <Star className="w-4 h-4 fill-primary text-primary" />
-                <span className="font-semibold text-foreground">{rating}</span>
-              </div>
+              {rating && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Star className="w-4 h-4 fill-primary text-primary" />
+                  <span className="font-semibold text-foreground">{rating}</span>
+                </div>
+              )}
               
               {year && (
                 <span className="text-sm text-foreground/60">{year}</span>
+              )}
+
+              {/* Show genre pills when no overview — gives visual richness */}
+              {!hasOverview && genreLabels.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  {genreLabels.slice(0, 3).map((g, i) => (
+                    <Badge key={i} variant="secondary" className="text-[10px] px-2 py-0.5 bg-white/10 text-white/70 border-0">
+                      {g}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -112,10 +160,38 @@ export function Banner({ items, onItemClick }: BannerProps) {
               {title}
             </h1>
 
-            {/* Overview */}
-            <p className="text-base text-foreground/70 mb-8 line-clamp-2 md:line-clamp-3 max-w-xl leading-relaxed">
-              {overview}
-            </p>
+            {/* Overview — or smart contextual fallback */}
+            {hasOverview ? (
+              <p className="text-base text-foreground/70 mb-8 line-clamp-2 md:line-clamp-3 max-w-xl leading-relaxed">
+                {rawOverview}
+              </p>
+            ) : (
+              /* Show meaningful context instead of "Aucune description disponible" */
+              <div className="flex items-center gap-3 mb-8">
+                <div className="flex items-center gap-1.5 text-foreground/40">
+                  {isMovie ? <Film className="w-4 h-4" /> : <Tv className="w-4 h-4" />}
+                  <span className="text-sm font-medium">{isMovie ? 'Film' : 'Série'}</span>
+                </div>
+                {genreLabels.length > 0 && (
+                  <span className="text-sm text-foreground/30">·</span>
+                )}
+                {genreLabels.length > 0 && (
+                  <span className="text-sm text-foreground/40">{genreLabels.slice(0, 3).join(', ')}</span>
+                )}
+                {year && (
+                  <>
+                    <span className="text-sm text-foreground/30">·</span>
+                    <span className="text-sm text-foreground/40">{year}</span>
+                  </>
+                )}
+                {rating && (
+                  <>
+                    <span className="text-sm text-foreground/30">·</span>
+                    <span className="text-sm text-foreground/40">{rating}/10</span>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">

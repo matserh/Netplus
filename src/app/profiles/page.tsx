@@ -128,7 +128,7 @@ function PromoBanner() {
 export default function ProfilesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { profiles, setProfile, profile: currentProfile } = useProfile();
+  const { profiles, setProfile, profile: currentProfile, hydrated } = useProfile();
   const { isGuest, enterGuestMode } = useGuest();
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -156,7 +156,9 @@ export default function ProfilesPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  if (status === 'loading' && !isGuest) {
+  // Wait for both session check AND profile hydration from localStorage
+  // This prevents the error boundary from catching null-profile errors on first load
+  if ((status === 'loading' && !isGuest) || !hydrated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

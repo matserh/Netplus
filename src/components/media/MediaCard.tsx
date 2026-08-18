@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Play, Star } from 'lucide-react';
 import { Media, getPosterUrl, getMediaTitle, getMediaYear } from '@/types/media';
 
+// Genre hue derivation for visual fallbacks
+function genreHue(genreIds: number[]): number {
+  if (genreIds.length === 0) return 220;
+  return (genreIds[0] * 37) % 360;
+}
+
 interface MediaCardProps {
   media: Media;
   onClick: () => void;
@@ -19,7 +25,9 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
   const year = getMediaYear(media);
   const posterUrl = getPosterUrl(media.poster_path, 'medium');
   const isMovie = media.media_type === 'movie' || !!media.title;
-  const rating = media.vote_average?.toFixed(1) || 'N/A';
+  const voteAvg = media.vote_average ?? 0;
+  const rating = voteAvg > 0 ? voteAvg.toFixed(1) : null;
+  const hue = genreHue(media.genre_ids || []);
 
   return (
     <div
@@ -31,11 +39,11 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
       {/* Poster Container */}
       <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-card">
         {/* Loading Skeleton */}
-        {!isLoaded && (
+        {!isLoaded && posterUrl && (
           <div className="absolute inset-0 bg-gradient-to-br from-card to-muted animate-pulse" />
         )}
         
-        {/* Poster Image */}
+        {/* Poster Image or genre-colored fallback */}
         {posterUrl ? (
           <Image
             src={posterUrl}
@@ -48,8 +56,16 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
             onLoad={() => setIsLoaded(true)}
           />
         ) : (
-          <div className="absolute inset-0 bg-card flex items-center justify-center">
-            <Play className="w-10 h-10 text-muted-foreground/20" />
+          /* Genre-colored cinematic gradient fallback */
+          <div className="absolute inset-0 flex flex-col items-center justify-center" style={{
+            background: `linear-gradient(160deg, hsl(${hue}, 55%, 18%), hsl(${(hue + 50) % 360}, 45%, 12%))`,
+          }}>
+            <span className="text-4xl font-black text-white/10 select-none leading-none mb-1">
+              {title.charAt(0).toUpperCase()}
+            </span>
+            <p className="text-[9px] font-semibold text-white/40 text-center leading-tight line-clamp-2 px-2 max-w-[90%]">
+              {title}
+            </p>
           </div>
         )}
 
@@ -74,13 +90,15 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
           </Badge>
         </div>
 
-        {/* Bottom Right - Rating */}
-        <div className="absolute bottom-2 right-2">
-          <Badge className="text-[10px] font-bold bg-black/80 text-white border-0 gap-1 backdrop-blur-sm">
-            <Star className="w-3 h-3 fill-primary text-primary" />
-            {rating}
-          </Badge>
-        </div>
+        {/* Bottom Right - Rating (only when > 0) */}
+        {rating && (
+          <div className="absolute bottom-2 right-2">
+            <Badge className="text-[10px] font-bold bg-black/80 text-white border-0 gap-1 backdrop-blur-sm">
+              <Star className="w-3 h-3 fill-primary text-primary" />
+              {rating}
+            </Badge>
+          </div>
+        )}
 
         {/* Bottom Left - Title (on hover) */}
         <div className={`absolute bottom-2 left-2 right-12 transition-all duration-300 ${
@@ -105,10 +123,12 @@ export function MediaCard({ media, onClick }: MediaCardProps) {
         <p className="text-sm font-medium text-foreground line-clamp-1">{title}</p>
         <div className="flex items-center justify-between mt-0.5">
           {year && <span className="text-xs text-muted-foreground">{year}</span>}
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Star className="w-3 h-3 fill-primary text-primary" />
-            {rating}
-          </span>
+          {rating && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Star className="w-3 h-3 fill-primary text-primary" />
+              {rating}
+            </span>
+          )}
         </div>
       </div>
     </div>

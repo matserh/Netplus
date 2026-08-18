@@ -23,6 +23,7 @@ function buildQuery(params: Record<string, string>): string {
 
 interface ProfileContextType {
   profile: UserProfile | null;
+  hydrated: boolean; // true once localStorage has been checked (avoids flash/error)
   setProfile: (profile: UserProfile) => void;
   clearProfile: () => void;
   profiles: UserProfile[];
@@ -36,6 +37,7 @@ const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('netplus-profile');
@@ -51,6 +53,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('netplus-profile');
       }
     }
+    // Mark as hydrated regardless — even if no saved profile, we've checked
+    setHydrated(true);
   }, []);
 
   const setProfile = (p: UserProfile) => {
@@ -111,7 +115,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProfileContext.Provider value={{
-      profile, setProfile, clearProfile, profiles: PROFILES,
+      profile, hydrated, setProfile, clearProfile, profiles: PROFILES,
       getNowPlayingEndpoint, getUpcomingEndpoint, getBannerEndpoint, getDiscoverEndpoint,
     }}>
       {children}
