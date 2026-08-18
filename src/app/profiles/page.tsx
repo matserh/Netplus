@@ -112,11 +112,6 @@ export default function ProfilesPage() {
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Guest mode: auto-redirect guests to home
-  useEffect(() => {
-    if (isGuest && currentProfile) { router.push('/'); return; }
-  }, [isGuest, currentProfile]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Instead of redirecting to /login, enter guest mode
   useEffect(() => {
     if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
@@ -147,7 +142,7 @@ export default function ProfilesPage() {
   const handleSelect = (profile: UserProfile) => {
     if (managing) return;
     setProfile(profile);
-    // Stay on the page — don't navigate away
+    router.push('/');
   };
 
   const userName = session?.user?.name || (isGuest ? 'Invité' : 'Utilisateur');

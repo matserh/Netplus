@@ -97,10 +97,16 @@ export async function POST(request: NextRequest) {
   try {
     const { message, memory } = await request.json();
     
-    const zai = await ZAI.create();
-    
-    // Analyze the message and determine intent
-    const systemPrompt = `Tu es Maître Netplus, un assistant cinématographique expert et passionné. Tu aides les utilisateurs à découvrir des films et séries.
+    let aiResponse = '';
+    let results: Media[] = [];
+    let responseText = '';
+    let topic = message;
+    let preferences = memory?.preferences || [];
+
+    // Try AI first, fallback to direct TMDB search
+    try {
+      const zai = await ZAI.create();
+      const systemPrompt = `Tu es Maître Netplus, un assistant cinématographique expert et passionné. Tu aides les utilisateurs à découvrir des films et séries.
     
 Règles:
 - Réponds de manière naturelle, conversationnelle et DÉTAILLÉE
@@ -115,55 +121,58 @@ Règles:
 Contexte précédent: ${memory?.lastTopic || 'Nouvelle conversation'}
 ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.join(', ')}` : ''}`;
 
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ],
-      temperature: 0.7,
-      max_tokens: 2048
-    });
+      const completion = await zai.chat.completions.create({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048
+      });
 
-    const aiResponse = completion.choices[0]?.message?.content || "Je ne comprends pas votre demande.";
-    
-    let results: Media[] = [];
-    let responseText = aiResponse;
-    let topic = message;
-    let preferences = memory?.preferences || [];
-
-    // Check if AI wants to search
-    try {
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        
-        if (parsed.action === 'search') {
-          results = await searchTMDB(parsed.query, parsed.type || 'multi');
-          responseText = `Voici ce que j'ai trouvé pour "${parsed.query}" :`;
-          topic = parsed.query;
-        } else if (parsed.action === 'popular') {
-          results = await getPopular(parsed.type || 'movie');
-          responseText = `Voici les ${parsed.type === 'tv' ? 'séries' : 'films'} les plus populaires du moment :`;
-          topic = `populaire ${parsed.type}`;
-        } else if (parsed.action === 'top_rated') {
-          results = await getTopRated(parsed.type || 'movie');
-          responseText = `Voici les ${parsed.type === 'tv' ? 'séries' : 'films'} les mieux notés :`;
-          topic = `top rated ${parsed.type}`;
-        } else if (parsed.action === 'genre' && genreMap[parsed.genre.toLowerCase()]) {
-          const genreId = genreMap[parsed.genre.toLowerCase()];
-          results = await getByGenre(genreId, parsed.type || 'movie');
-          responseText = `Voici les meilleurs ${parsed.type === 'tv' ? 'séries' : 'films'} ${parsed.genre} :`;
-          topic = parsed.genre;
-          if (!preferences.includes(parsed.genre)) {
-            preferences.push(parsed.genre);
-          }
-        }
-      }
-    } catch (parseError) {
-      // Not a JSON response, use as plain text
+      aiResponse = completion.choices[0]?.message?.content || '';
+    } catch (aiError) {
+      console.error('[ai-search] AI unavailable, using direct search:', aiError);
+      aiResponse = ''; // Will fallback to direct TMDB search below
     }
 
-    // If no results found but the query seems like a search, also try TMDB search
+    // Process AI response if available
+    if (aiResponse) {
+      responseText = aiResponse;
+      
+      try {
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          
+          if (parsed.action === 'search') {
+            results = await searchTMDB(parsed.query, parsed.type || 'multi');
+            responseText = `Voici ce que j'ai trouvé pour "${parsed.query}" :`;
+            topic = parsed.query;
+          } else if (parsed.action === 'popular') {
+            results = await getPopular(parsed.type || 'movie');
+            responseText = `Voici les ${parsed.type === 'tv' ? 'séries' : 'films'} les plus populaires du moment :`;
+            topic = `populaire ${parsed.type}`;
+          } else if (parsed.action === 'top_rated') {
+            results = await getTopRated(parsed.type || 'movie');
+            responseText = `Voici les ${parsed.type === 'tv' ? 'séries' : 'films'} les mieux notés :`;
+            topic = `top rated ${parsed.type}`;
+          } else if (parsed.action === 'genre' && genreMap[parsed.genre.toLowerCase()]) {
+            const genreId = genreMap[parsed.genre.toLowerCase()];
+            results = await getByGenre(genreId, parsed.type || 'movie');
+            responseText = `Voici les meilleurs ${parsed.type === 'tv' ? 'séries' : 'films'} ${parsed.genre} :`;
+            topic = parsed.genre;
+            if (!preferences.includes(parsed.genre)) {
+              preferences.push(parsed.genre);
+            }
+          }
+        }
+      } catch (parseError) {
+        // Not a JSON response, use as plain text
+      }
+    }
+
+    // If no results found, try direct TMDB search with user's message
     if (results.length === 0 && message.length > 2) {
       const searchKeywords = message.toLowerCase()
         .replace(/^(cherche|trouve|recommande|montre|quel|quels|quelle|quelles|donne|je veux|je cherche)\s*/i, '')
@@ -174,8 +183,18 @@ ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.
         const tmdbResults = await searchTMDB(searchKeywords, 'multi');
         if (tmdbResults.length > 0) {
           results = tmdbResults;
+          if (!responseText) {
+            responseText = `Voici ce que j'ai trouvé pour "${searchKeywords}" :`;
+          }
         }
       }
+    }
+
+    // If still no response text, provide a default
+    if (!responseText) {
+      responseText = results.length > 0 
+        ? "Voici quelques suggestions :"
+        : "Je n'ai pas trouvé de résultats. Essayez avec un autre terme de recherche !";
     }
 
     return NextResponse.json({
@@ -191,7 +210,7 @@ ${memory?.preferences?.length ? `Préferences détectées: ${memory.preferences.
   } catch (error) {
     console.error('AI Search Error:', error);
     return NextResponse.json({
-      response: "Je suis désolé, une erreur s'est produite. Pouvez-vous reformuler votre demande ?",
+      response: "Je rencontre un problème technique. Essayez de reformuler votre recherche ou réessayez dans un instant.",
       results: [],
       topic: null,
       preferences: []

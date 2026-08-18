@@ -136,7 +136,7 @@ export default function DownloadPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">&#10003;</span>
-                Assistant IA Maître Netplus (z-ai-web-dev-sdk)
+                Assistant IA Maître Netplus
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">&#10003;</span>

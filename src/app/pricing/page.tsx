@@ -309,14 +309,14 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* Comparison Section — 3 Tiers */}
+        {/* Comparison Section 3 Tiers */}
         <div className="mt-8 sm:mt-12">
           <h2 className="text-xl sm:text-2xl font-black text-center text-foreground mb-6 sm:mb-8">
             Comparez les offres
           </h2>
 
           <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
-            {/* Tier 1: Basique — Gratuit */}
+            {/* Tier 1: Basique Gratuit */}
             <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
               <div className="mb-4">
                 <h3 className="text-lg font-bold text-foreground mb-1">Basique</h3>
@@ -367,7 +367,7 @@ export default function PricingPage() {
               )}
             </div>
 
-            {/* Tier 2: Par Tâche — Freemium via défis */}
+            {/* Tier 2: Par Tâche Freemium via défis */}
             <div className="relative rounded-xl sm:rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-transparent p-5 sm:p-6">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs font-bold text-black">
                 Par Tâche
@@ -441,7 +441,7 @@ export default function PricingPage() {
                   <CrownIcon className="w-5 h-5 text-primary" />
                   <h3 className="text-lg font-bold text-primary">Premium</h3>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Accès total — le meilleur de NetPlus</p>
+                <p className="text-xs text-muted-foreground mt-1">Accès total, le meilleur de NetPlus</p>
               </div>
               <div className="text-3xl sm:text-4xl font-black text-primary mb-1">
                 Gratuit
@@ -466,7 +466,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-foreground">Badge VIP + accès exclusif</span>
+                  <span className="text-foreground">Badge VIP et accès exclusif</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />

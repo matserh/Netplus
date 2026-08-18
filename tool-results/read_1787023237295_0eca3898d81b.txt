@@ -1,0 +1,571 @@
+     1→'use client';
+     2→
+     3→export const dynamic = 'force-dynamic';
+     4→
+     5→import { useState, useEffect } from 'react';
+     6→import Link from 'next/link';
+     7→import { useChallenge } from '@/contexts/ChallengeContext';
+     8→import { BottomNavBar } from '@/components/layout/BottomNavBar';
+     9→
+    10→function CheckIcon({ className }: { className?: string }) {
+    11→  return (
+    12→    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    13→      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    14→    </svg>
+    15→  );
+    16→}
+    17→
+    18→function CrownIcon({ className }: { className?: string }) {
+    19→  return (
+    20→    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    21→      <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
+    22→    </svg>
+    23→  );
+    24→}
+    25→
+    26→function SparkleIcon({ className }: { className?: string }) {
+    27→  return (
+    28→    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    29→      <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+    30→    </svg>
+    31→  );
+    32→}
+    33→
+    34→function ConfettiEffect() {
+    35→  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; delay: number; size: number }>>([]);
+    36→
+    37→  useEffect(() => {
+    38→    const colors = ['#FFD700', '#FFA500', '#FF6347', '#FF4500', '#FFD700', '#DAA520'];
+    39→    const p = Array.from({ length: 40 }, (_, i) => ({
+    40→      id: i,
+    41→      x: Math.random() * 100,
+    42→      y: -10 - Math.random() * 20,
+    43→      color: colors[Math.floor(Math.random() * colors.length)],
+    44→      delay: Math.random() * 2,
+    45→      size: 4 + Math.random() * 8,
+    46→    }));
+    47→    setParticles(p);
+    48→  }, []);
+    49→
+    50→  if (particles.length === 0) return null;
+    51→
+    52→  return (
+    53→    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    54→      {particles.map(p => (
+    55→        <div
+    56→          key={p.id}
+    57→          className="absolute animate-confetti-fall"
+    58→          style={{
+    59→            left: `${p.x}%`,
+    60→            top: `${p.y}%`,
+    61→            width: p.size,
+    62→            height: p.size,
+    63→            backgroundColor: p.color,
+    64→            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+    65→            animationDelay: `${p.delay}s`,
+    66→          }}
+    67→        />
+    68→      ))}
+    69→    </div>
+    70→  );
+    71→}
+    72→
+    73→export default function PricingPage() {
+    74→  const {
+    75→    hasChattedWithAI,
+    76→    hasWatchedContent,
+    77→    hasScrolledEnough,
+    78→    chatMessageCount,
+    79→    watchSeconds,
+    80→    scrollCount,
+    81→    isPremium,
+    82→    watchCount,
+    83→    BASIC_LIMIT,
+    84→    getProgress,
+    85→    resetChallenges,
+    86→  } = useChallenge();
+    87→
+    88→  const [showConfetti, setShowConfetti] = useState(false);
+    89→  const progress = getProgress();
+    90→
+    91→  useEffect(() => {
+    92→    if (isPremium && !showConfetti) {
+    93→      setShowConfetti(true);
+    94→      const timer = setTimeout(() => setShowConfetti(false), 5000);
+    95→      return () => clearTimeout(timer);
+    96→    }
+    97→  }, [isPremium, showConfetti]);
+    98→
+    99→  const tasks = [
+   100→    {
+   101→      id: 1,
+   102→      title: 'Parler avec Maître Netplus',
+   103→      description: 'Lancez une conversation avec notre assistant IA cinématographique. Posez-lui une question, demandez une recommandation ou dites simplement bonjour !',
+   104→      icon: '🤖',
+   105→      completed: hasChattedWithAI,
+   106→      progress: chatMessageCount,
+   107→      target: 1,
+   108→      actionText: 'Discuter avec l\'assistant',
+   109→      actionHref: '/',
+   110→      hint: 'Cliquez sur le bouton Assistant IA (étoile) dans la barre latérale ou le menu',
+   111→    },
+   112→    {
+   113→      id: 2,
+   114→      title: 'Regarder un contenu quelques secondes',
+   115→      description: 'Regardez n\'importe quel film ou série pendant au moins 5 secondes. C\'est tout ! Laissez simplement la vidéo se lancer et profitez.',
+   116→      icon: '🎬',
+   117→      completed: hasWatchedContent,
+   118→      progress: Math.min(watchSeconds, 5),
+   119→      target: 5,
+   120→      progressLabel: 'sec',
+   121→      actionText: 'Regarder un contenu',
+   122→      actionHref: '/',
+   123→      hint: 'Cliquez sur n\'importe quel film/série puis appuyez sur "Regarder"',
+   124→    },
+   125→    {
+   126→      id: 3,
+   127→      title: 'Scroller 5 fois sur l\'accueil',
+   128→      description: 'Faites défiler la page d\'accueil 5 fois pour explorer notre catalogue. Découvrez de nouveaux films et séries en scrollant !',
+   129→      icon: '📱',
+   130→      completed: hasScrolledEnough,
+   131→      progress: Math.min(scrollCount, 5),
+   132→      target: 5,
+   133→      actionText: 'Aller à l\'accueil',
+   134→      actionHref: '/',
+   135→      hint: 'Scrollez vers le bas sur la page d\'accueil, chaque scroll compte !',
+   136→    },
+   137→  ];
+   138→
+   139→  return (
+   140→    <div className="min-h-screen bg-background">
+   141→      {showConfetti && <ConfettiEffect />}
+   142→
+   143→      {/* Header */}
+   144→      <div className="relative overflow-hidden">
+   145→        {/* Background decoration */}
+   146→        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent" />
+   147→        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+   148→        <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+   149→
+   150→        <div className="relative max-w-4xl mx-auto px-4 pt-8 pb-6 sm:pt-12 sm:pb-8">
+   151→          {/* Back link */}
+   152→          <Link
+   153→            href="/"
+   154→            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6"
+   155→          >
+   156→            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   157→              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+   158→            </svg>
+   159→            Retour à l&apos;accueil
+   160→          </Link>
+   161→
+   162→          <div className="text-center">
+   163→            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
+   164→              <SparkleIcon className="w-4 h-4 text-primary" />
+   165→              <span className="text-sm font-semibold text-primary">100% Gratuit</span>
+   166→            </div>
+   167→
+   168→            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground mb-3">
+   169→              NetPlus <span className="text-primary">Premium</span>
+   170→            </h1>
+   171→            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+   172→              Tout est absolument gratuit sur NetPlus ! Accomplissez ces 3 tâches simples pour débloquer l&apos;accès illimité. Sans ça, vous êtes limité à {BASIC_LIMIT} contenus.
+   173→            </p>
+   174→          </div>
+   175→        </div>
+   176→      </div>
+   177→
+   178→      {/* Premium Status Banner */}
+   179→      <div className="max-w-4xl mx-auto px-4 mb-6 sm:mb-8">
+   180→        {isPremium ? (
+   181→          <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary/20 via-amber-500/20 to-primary/20 border border-primary/30 p-4 sm:p-6">
+   182→            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+   183→            <div className="relative flex items-center gap-3 sm:gap-4">
+   184→              <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center shadow-lg shadow-primary/20">
+   185→                <CrownIcon className="w-6 h-6 sm:w-7 sm:h-7 text-black" />
+   186→              </div>
+   187→              <div className="flex-1 min-w-0">
+   188→                <h2 className="text-lg sm:text-xl font-black text-primary">Accès Premium Illimité !</h2>
+   189→                <p className="text-xs sm:text-sm text-muted-foreground">
+   190→                  Vous avez accompli tous les défis. Profitez de tout le catalogue sans aucune limite !
+   191→                </p>
+   192→              </div>
+   193→              <div className="flex-shrink-0 hidden sm:flex items-center gap-1 px-4 py-2 rounded-lg bg-primary/20">
+   194→                <SparkleIcon className="w-4 h-4 text-primary" />
+   195→                <span className="text-sm font-bold text-primary">VIP</span>
+   196→              </div>
+   197→            </div>
+   198→          </div>
+   199→        ) : (
+   200→          <div className="rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/10 p-4 sm:p-6">
+   201→            <div className="flex items-center justify-between mb-3">
+   202→              <div className="flex items-center gap-2">
+   203→                <span className="text-sm font-semibold text-foreground">Progression</span>
+   204→                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+   205→                  {progress}/3
+   206→                </span>
+   207→              </div>
+   208→              <span className="text-xs text-muted-foreground">
+   209→                {watchCount}/{BASIC_LIMIT} contenus vus (version basique)
+   210→              </span>
+   211→            </div>
+   212→            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+   213→              <div
+   214→                className="h-full rounded-full bg-gradient-to-r from-primary to-amber-500 transition-all duration-700 ease-out"
+   215→                style={{ width: `${(progress / 3) * 100}%` }}
+   216→              />
+   217→            </div>
+   218→            <p className="text-xs text-muted-foreground mt-2">
+   219→              {progress === 0 && 'Commencez par le premier défi pour débloquer l\'accès illimité !'}
+   220→              {progress === 1 && 'Bien joué ! Encore 2 défis pour l\'accès illimité.'}
+   221→              {progress === 2 && 'Presque ! Plus qu\'un défi et c\'est l\'accès total !'}
+   222→            </p>
+   223→          </div>
+   224→        )}
+   225→      </div>
+   226→
+   227→      {/* Challenge Cards */}
+   228→      <div className="max-w-4xl mx-auto px-4 pb-8 sm:pb-12">
+   229→        <div className="grid gap-4 sm:gap-6">
+   230→          {tasks.map((task, index) => (
+   231→            <div
+   232→              key={task.id}
+   233→              className={`relative overflow-hidden rounded-xl sm:rounded-2xl border transition-all duration-500 ${
+   234→                task.completed
+   235→                  ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/5'
+   236→                  : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+   237→              }`}
+   238→            >
+   239→              {/* Completed shine effect */}
+   240→              {task.completed && (
+   241→                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent" />
+   242→              )}
+   243→
+   244→              <div className="relative p-4 sm:p-6">
+   245→                <div className="flex items-start gap-3 sm:gap-4">
+   246→                  {/* Step number / check */}
+   247→                  <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-lg sm:text-xl transition-all duration-500 ${
+   248→                    task.completed
+   249→                      ? 'bg-gradient-to-br from-primary to-amber-500 shadow-md shadow-primary/20'
+   250→                      : 'bg-white/5 border border-white/10'
+   251→                  }`}>
+   252→                    {task.completed ? (
+   253→                      <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+   254→                    ) : (
+   255→                      <span className="font-bold text-muted-foreground">{index + 1}</span>
+   256→                    )}
+   257→                  </div>
+   258→
+   259→                  {/* Content */}
+   260→                  <div className="flex-1 min-w-0">
+   261→                    <div className="flex items-center gap-2 mb-1">
+   262→                      <span className="text-lg sm:text-xl">{task.icon}</span>
+   263→                      <h3 className={`text-base sm:text-lg font-bold ${task.completed ? 'text-primary' : 'text-foreground'}`}>
+   264→                        {task.title}
+   265→                      </h3>
+   266→                      {task.completed && (
+   267→                        <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] sm:text-xs font-bold">
+   268→                          Complété
+   269→                        </span>
+   270→                      )}
+   271→                    </div>
+   272→                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-3">
+   273→                      {task.description}
+   274→                    </p>
+   275→
+   276→                    {/* Progress bar for incomplete tasks */}
+   277→                    {!task.completed && (
+   278→                      <div className="mb-3">
+   279→                        <div className="flex items-center justify-between mb-1">
+   280→                          <span className="text-[10px] sm:text-xs text-muted-foreground">
+   281→                            Progression
+   282→                          </span>
+   283→                          <span className="text-[10px] sm:text-xs font-semibold text-primary">
+   284→                            {task.progress}/{task.target} {task.progressLabel || ''}
+   285→                          </span>
+   286→                        </div>
+   287→                        <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+   288→                          <div
+   289→                            className="h-full rounded-full bg-gradient-to-r from-primary to-amber-500 transition-all duration-500"
+   290→                            style={{ width: `${Math.min((task.progress / task.target) * 100, 100)}%` }}
+   291→                          />
+   292→                        </div>
+   293→                      </div>
+   294→                    )}
+   295→
+   296→                    {/* Hint */}
+   297→                    {!task.completed && (
+   298→                      <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+   299→                        <svg className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   300→                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+   301→                        </svg>
+   302→                        <span className="text-[10px] sm:text-xs text-primary/80">{task.hint}</span>
+   303→                      </div>
+   304→                    )}
+   305→                  </div>
+   306→                </div>
+   307→              </div>
+   308→            </div>
+   309→          ))}
+   310→        </div>
+   311→
+   312→        {/* Comparison Section — 3 Tiers */}
+   313→        <div className="mt-8 sm:mt-12">
+   314→          <h2 className="text-xl sm:text-2xl font-black text-center text-foreground mb-6 sm:mb-8">
+   315→            Comparez les offres
+   316→          </h2>
+   317→
+   318→          <div className="grid sm:grid-cols-3 gap-4 sm:gap-5">
+   319→            {/* Tier 1: Basique — Gratuit */}
+   320→            <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+   321→              <div className="mb-4">
+   322→                <h3 className="text-lg font-bold text-foreground mb-1">Basique</h3>
+   323→                <p className="text-xs text-muted-foreground">Découverte gratuite du catalogue</p>
+   324→              </div>
+   325→              <div className="text-3xl sm:text-4xl font-black text-foreground mb-1">
+   326→                Gratuit
+   327→              </div>
+   328→              <p className="text-[10px] sm:text-xs text-muted-foreground/60 mb-4">Aucune carte bancaire</p>
+   329→              <ul className="space-y-3 mb-6">
+   330→                <li className="flex items-center gap-2 text-sm">
+   331→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   332→                  <span className="text-muted-foreground">{BASIC_LIMIT} contenus gratuits</span>
+   333→                </li>
+   334→                <li className="flex items-center gap-2 text-sm">
+   335→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   336→                  <span className="text-muted-foreground">Accès au catalogue</span>
+   337→                </li>
+   338→                <li className="flex items-center gap-2 text-sm">
+   339→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   340→                  <span className="text-muted-foreground">Assistant Maître Netplus</span>
+   341→                </li>
+   342→                <li className="flex items-center gap-2 text-sm">
+   343→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   344→                  <span className="text-muted-foreground">1 serveur de streaming</span>
+   345→                </li>
+   346→                <li className="flex items-center gap-2 text-sm">
+   347→                  <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   348→                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+   349→                  </svg>
+   350→                  <span className="text-muted-foreground/50">Accès illimité</span>
+   351→                </li>
+   352→                <li className="flex items-center gap-2 text-sm">
+   353→                  <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   354→                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+   355→                  </svg>
+   356→                  <span className="text-muted-foreground/50">Badge VIP</span>
+   357→                </li>
+   358→              </ul>
+   359→              {!isPremium ? (
+   360→                <div className="px-4 py-2.5 rounded-lg bg-white/5 text-center">
+   361→                  <span className="text-sm text-muted-foreground">Plan actuel</span>
+   362→                </div>
+   363→              ) : (
+   364→                <div className="px-4 py-2.5 rounded-lg bg-white/5 text-center">
+   365→                  <span className="text-sm text-muted-foreground/50">Plan de base</span>
+   366→                </div>
+   367→              )}
+   368→            </div>
+   369→
+   370→            {/* Tier 2: Par Tâche — Freemium via défis */}
+   371→            <div className="relative rounded-xl sm:rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-transparent p-5 sm:p-6">
+   372→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs font-bold text-black">
+   373→                Par Tâche
+   374→              </div>
+   375→
+   376→              <div className="mb-4">
+   377→                <div className="flex items-center gap-2">
+   378→                  <SparkleIcon className="w-5 h-5 text-amber-500" />
+   379→                  <h3 className="text-lg font-bold text-amber-500">Freemium</h3>
+   380→                </div>
+   381→                <p className="text-xs text-muted-foreground mt-1">Débloquez en accomplissant des tâches</p>
+   382→              </div>
+   383→              <div className="text-3xl sm:text-4xl font-black text-amber-500 mb-1">
+   384→                Gratuit
+   385→              </div>
+   386→              <p className="text-[10px] sm:text-xs text-amber-500/60 mb-4">3 tâches rapides = accès total</p>
+   387→              <ul className="space-y-3 mb-6">
+   388→                <li className="flex items-center gap-2 text-sm">
+   389→                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+   390→                  <span className="text-foreground">Contenus illimités</span>
+   391→                </li>
+   392→                <li className="flex items-center gap-2 text-sm">
+   393→                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+   394→                  <span className="text-foreground">Tout le catalogue</span>
+   395→                </li>
+   396→                <li className="flex items-center gap-2 text-sm">
+   397→                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+   398→                  <span className="text-foreground">Assistant Maître Netplus</span>
+   399→                </li>
+   400→                <li className="flex items-center gap-2 text-sm">
+   401→                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+   402→                  <span className="text-foreground">3 serveurs de streaming</span>
+   403→                </li>
+   404→                <li className="flex items-center gap-2 text-sm">
+   405→                  <CheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+   406→                  <span className="text-foreground">Badge VIP</span>
+   407→                </li>
+   408→                <li className="flex items-center gap-2 text-sm">
+   409→                  <svg className="w-4 h-4 text-red-400/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+   410→                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+   411→                  </svg>
+   412→                  <span className="text-muted-foreground/50">5 serveurs de streaming</span>
+   413→                </li>
+   414→              </ul>
+   415→              {isPremium ? (
+   416→                <div className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-center">
+   417→                  <span className="text-sm font-bold text-black">Tâches complétées !</span>
+   418→                </div>
+   419→              ) : (
+   420→                <Link
+   421→                  href="/"
+   422→                  className="block px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-500/90 text-center transition-colors"
+   423→                >
+   424→                  <span className="text-sm font-bold text-black">Accomplir les tâches</span>
+   425→                </Link>
+   426→              )}
+   427→            </div>
+   428→
+   429→            {/* Tier 3: Premium Illimité */}
+   430→            <div className={`relative rounded-xl sm:rounded-2xl border p-5 sm:p-6 transition-all duration-500 ${
+   431→              isPremium
+   432→                ? 'border-primary/50 bg-primary/5 shadow-xl shadow-primary/10'
+   433→                : 'border-primary/30 bg-gradient-to-b from-primary/10 to-transparent'
+   434→            }`}>
+   435→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-amber-500 text-[10px] sm:text-xs font-bold text-black">
+   436→                Recommandé
+   437→              </div>
+   438→
+   439→              <div className="mb-4">
+   440→                <div className="flex items-center gap-2">
+   441→                  <CrownIcon className="w-5 h-5 text-primary" />
+   442→                  <h3 className="text-lg font-bold text-primary">Premium</h3>
+   443→                </div>
+   444→                <p className="text-xs text-muted-foreground mt-1">Accès total — le meilleur de NetPlus</p>
+   445→              </div>
+   446→              <div className="text-3xl sm:text-4xl font-black text-primary mb-1">
+   447→                Gratuit
+   448→              </div>
+   449→              <p className="text-[10px] sm:text-xs text-primary/60 mb-4">Après les 3 défis = premium automatique</p>
+   450→              <ul className="space-y-3 mb-6">
+   451→                <li className="flex items-center gap-2 text-sm">
+   452→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   453→                  <span className="text-foreground">Contenus illimités</span>
+   454→                </li>
+   455→                <li className="flex items-center gap-2 text-sm">
+   456→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   457→                  <span className="text-foreground">Tout le catalogue</span>
+   458→                </li>
+   459→                <li className="flex items-center gap-2 text-sm">
+   460→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   461→                  <span className="text-foreground">Assistant Maître Netplus</span>
+   462→                </li>
+   463→                <li className="flex items-center gap-2 text-sm">
+   464→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   465→                  <span className="text-foreground">5 serveurs de streaming</span>
+   466→                </li>
+   467→                <li className="flex items-center gap-2 text-sm">
+   468→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   469→                  <span className="text-foreground">Badge VIP + accès exclusif</span>
+   470→                </li>
+   471→                <li className="flex items-center gap-2 text-sm">
+   472→                  <CheckIcon className="w-4 h-4 text-primary flex-shrink-0" />
+   473→                  <span className="text-foreground">Sous-titres traduits en FR</span>
+   474→                </li>
+   475→              </ul>
+   476→              {isPremium ? (
+   477→                <div className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-amber-500 text-center">
+   478→                  <span className="text-sm font-bold text-black">Accès débloqué !</span>
+   479→                </div>
+   480→              ) : (
+   481→                <Link
+   482→                  href="/"
+   483→                  className="block px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-center transition-colors"
+   484→                >
+   485→                  <span className="text-sm font-bold text-black">Commencer les défis</span>
+   486→                </Link>
+   487→              )}
+   488→            </div>
+   489→          </div>
+   490→
+   491→          {/* Pricing mode explanation */}
+   492→          <div className="mt-6 sm:mt-8 p-5 rounded-xl sm:rounded-2xl bg-white/[0.02] border border-white/5">
+   493→            <h3 className="text-sm font-bold text-foreground mb-3">Comment ça marche ?</h3>
+   494→            <div className="grid sm:grid-cols-3 gap-4">
+   495→              <div className="flex items-start gap-3">
+   496→                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm font-bold text-muted-foreground">1</div>
+   497→                <div>
+   498→                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Gratuit</p>
+   499→                  <p className="text-[11px] text-muted-foreground">Regardez {BASIC_LIMIT} contenus sans rien faire. Aucun engagement, aucune inscription.</p>
+   500→                </div>
+   501→              </div>
+   502→              <div className="flex items-start gap-3">
+   503→                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm font-bold text-amber-500">2</div>
+   504→                <div>
+   505→                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Par Tâche</p>
+   506→                  <p className="text-[11px] text-muted-foreground">Accomplissez 3 actions simples (chat IA, watch 5s, scroll 5x) pour débloquer l&apos;accès illimité.</p>
+   507→                </div>
+   508→              </div>
+   509→              <div className="flex items-start gap-3">
+   510→                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">3</div>
+   511→                <div>
+   512→                  <p className="text-xs font-semibold text-foreground mb-0.5">Mode Premium</p>
+   513→                  <p className="text-[11px] text-muted-foreground">Les tâches complétées vous donnent automatiquement le statut Premium avec tous les avantages.</p>
+   514→                </div>
+   515→              </div>
+   516→            </div>
+   517→          </div>
+   518→        </div>
+   519→
+   520→        {/* FAQ */}
+   521→        <div className="mt-8 sm:mt-12 max-w-2xl mx-auto">
+   522→          <h2 className="text-xl font-black text-center text-foreground mb-4 sm:mb-6">
+   523→            Questions fréquentes
+   524→          </h2>
+   525→          <div className="space-y-3">
+   526→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   527→              <h4 className="font-semibold text-sm text-foreground mb-1">Est-ce vraiment gratuit ?</h4>
+   528→              <p className="text-xs text-muted-foreground">Oui, à 100% ! NetPlus est entièrement gratuit. Aucune carte bancaire, aucun abonnement, aucun coût caché. Les 3 défis sont juste une façon fun de découvrir la plateforme tout en débloquant l&apos;accès complet.</p>
+   529→            </div>
+   530→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   531→              <h4 className="font-semibold text-sm text-foreground mb-1">Que se passe-t-il après {BASIC_LIMIT} contenus en version basique ?</h4>
+   532→              <p className="text-xs text-muted-foreground">Vous ne pourrez plus lancer de nouveaux contenus. Mais vous pouvez compléter les défis à tout moment pour débloquer l&apos;accès illimité immédiatement. Votre progression n&apos;est pas perdue.</p>
+   533→            </div>
+   534→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   535→              <h4 className="font-semibold text-sm text-foreground mb-1">Les défis sont-ils difficiles ?</h4>
+   536→              <p className="text-xs text-muted-foreground">Pas du tout ! Il suffit de parler à l&apos;assistant, regarder quelques secondes de contenu, et scroller sur l&apos;accueil. Ça prend moins de 2 minutes !</p>
+   537→            </div>
+   538→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   539→              <h4 className="font-semibold text-sm text-foreground mb-1">Quelle est la différence entre Par Tâche et Premium ?</h4>
+   540→              <p className="text-xs text-muted-foreground">Le mode &quot;Par Tâche&quot; correspond à la progression des 3 défis. Une fois tous les défis complétés, vous obtenez automatiquement le statut Premium avec des avantages supplémentaires comme l&apos;accès à 5 serveurs de streaming et les sous-titres traduits.</p>
+   541→            </div>
+   542→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   543→              <h4 className="font-semibold text-sm text-foreground mb-1">Mes profils (Jeunesse, Frénésie, Nocturne) fonctionnent-ils avec tous les modes ?</h4>
+   544→              <p className="text-xs text-muted-foreground">Oui ! Les profils sont disponibles dans tous les modes. Le profil Jeunesse filtre les contenus familiaux, Frénésie les action/horreur, et Nocturne donne accès à tout sans filtre. Le mode Premium vous permet de changer de profil librement.</p>
+   545→            </div>
+   546→            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4">
+   547→              <h4 className="font-semibold text-sm text-foreground mb-1">Perdrai-je mon accès si je change d&apos;appareil ?</h4>
+   548→              <p className="text-xs text-muted-foreground">Votre progression est stockée localement sur votre navigateur. En changeant d&apos;appareil, vous devrez refaire les 3 défis, mais cela prend moins de 2 minutes. Nous travaillons sur une synchronisation cloud pour une future mise à jour.</p>
+   549→            </div>
+   550→          </div>
+   551→        </div>
+   552→
+   553→        {/* Debug Reset */}
+   554→        <div className="mt-8 text-center">
+   555→          <button
+   556→            onClick={resetChallenges}
+   557→            className="text-[10px] text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+   558→          >
+   559→            Réinitialiser les défis (debug)
+   560→          </button>
+   561→        </div>
+   562→      </div>
+   563→
+   564→      {/* Mobile/Tablet Bottom Navigation */}
+   565→      <div className="lg:hidden">
+   566→        <BottomNavBar />
+   567→      </div>
+   568→    </div>
+   569→  );
+   570→}
+   571→

@@ -90,7 +90,7 @@ export function AIAssistant({ isOpen, onClose, onMediaClick }: AIAssistantProps)
       console.error('AI Error:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "Je suis désolé, une erreur s'est produite. Pouvez-vous reformuler votre demande ?"
+        content: "Je rencontre un problème technique. Essayez de reformuler votre recherche ou réessayez dans un instant."
       }]);
     } finally {
       setIsLoading(false);
