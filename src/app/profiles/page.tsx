@@ -187,8 +187,14 @@ export default function ProfilesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top bar with user dropdown */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* Top bar with user dropdown — FIXED, full black, extends under status bar */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50 bg-[#000000]"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          minHeight: 'calc(env(safe-area-inset-top, 0px) + 56px)',
+        }}
+      >
         <div className="flex items-center justify-between h-14 px-4 sm:px-6">
           <Logo size="sm" />
 
@@ -273,6 +279,9 @@ export default function ProfilesPage() {
           </div>
         </div>
       </header>
+
+      {/* Spacer — matches fixed header height so content starts below */}
+      <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} />
 
       {/* Custom logo import modal — "Changer le logo" = import your own */}
       {showCustomLogoModal && (
