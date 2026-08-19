@@ -42,6 +42,8 @@ export function GuestProvider({ children }: { children: ReactNode }) {
   const exitGuestMode = useCallback(() => {
     setIsGuest(false);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(GUEST_ID_KEY);
+    setGuestId('');
   }, []);
 
   return (

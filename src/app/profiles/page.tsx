@@ -122,8 +122,8 @@ function PromoBanner() {
 export default function ProfilesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { profiles, setProfile, profile: currentProfile, hydrated } = useProfile();
-  const { isGuest, enterGuestMode } = useGuest();
+  const { profiles, setProfile, profile: currentProfile, clearProfile, hydrated } = useProfile();
+  const { isGuest, enterGuestMode, exitGuestMode } = useGuest();
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCustomLogoModal, setShowCustomLogoModal] = useState(false);
@@ -134,10 +134,13 @@ export default function ProfilesPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Instead of redirecting to /login, enter guest mode
+  // If unauthenticated AND not in guest mode, redirect to login.
+  // (Guest mode is only entered explicitly by the user from the login page)
   useEffect(() => {
-    if (status === 'unauthenticated' && !isGuest) { enterGuestMode(); }
-  }, [status, isGuest, enterGuestMode]);
+    if (status === 'unauthenticated' && !isGuest) {
+      router.push('/login');
+    }
+  }, [status, isGuest, router]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -436,7 +439,16 @@ export default function ProfilesPage() {
                   Annuler
                 </button>
                 <button
-                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  onClick={async () => {
+                    // 1. Clear all localStorage state so user is NOT auto-restored on next visit
+                    clearProfile();           // removes netplus-profile
+                    exitGuestMode();           // removes netplus_guest_mode + netplus_guest_id
+                    localStorage.removeItem('netplus-custom-logo');
+                    localStorage.removeItem('netplus-official-logo');
+                    localStorage.removeItem('netplus-notifications');
+                    // 2. Sign out via NextAuth (clears JWT cookie) and redirect to /login
+                    await signOut({ callbackUrl: '/login', redirect: true });
+                  }}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all text-sm"
                 >
                   Déconnexion
