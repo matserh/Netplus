@@ -188,7 +188,7 @@ export default function ProfilesPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top bar with user dropdown */}
-      <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between h-14 px-4 sm:px-6">
           <Logo size="sm" />
 

@@ -26,8 +26,8 @@ export function Navbar({ genres, onSearch, onGenreSelect, onAIClick }: NavbarPro
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-[#000000]/90 backdrop-blur-2xl shadow-[0_2px_20px_rgba(0,0,0,0.4)]' 
-          : 'bg-gradient-to-b from-black/70 via-black/30 to-transparent'
+          ? 'bg-[#000000]/95 backdrop-blur-2xl' 
+          : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent'
       }`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between h-12 px-4">
           <Link href="/">

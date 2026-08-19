@@ -515,8 +515,8 @@ export default function HomePage() {
         </div>
 
         {/* Desktop Header — Netflix-style slim bar */}
-        <header className="hidden lg:flex h-12 items-center justify-between px-4 lg:px-12 sticky top-0 z-30 bg-background/70 backdrop-blur-xl">
-          <h1 className="text-sm font-semibold text-foreground/80 tracking-wide">
+        <header className="hidden lg:flex h-12 items-center justify-between px-4 lg:px-12 sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-white/[0.08]">
+          <h1 className="text-sm font-semibold text-white tracking-wide">
             {searchResults.length > 0 ? searchTitle : 'Accueil'}
           </h1>
           <div className="flex items-center gap-2.5">
