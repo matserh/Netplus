@@ -7,6 +7,20 @@ import { Logo } from '@/components/ui/Logo';
 import { useGuest } from '@/contexts/GuestContext';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2, Film, Shield, Sparkles, ArrowLeft, KeyRound, Ghost, MessageSquareCode } from 'lucide-react';
 
+// TypeScript declaration for the global puter object
+declare global {
+  interface Window {
+    puter?: {
+      auth: {
+        signIn: () => Promise<void>;
+        signOut: () => Promise<void>;
+        isSignedIn: () => boolean;
+        getUser: () => Promise<{ username: string; email?: string }>;
+      };
+    };
+  }
+}
+
 type AuthMode = 'magic-link' | 'credentials';
 
 export default function LoginPage() {
@@ -17,6 +31,65 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [puterLoading, setPuterLoading] = useState(false);
+  const [puterAvailable, setPuterAvailable] = useState(false);
+
+  // Check if Puter.js is loaded
+  useEffect(() => {
+    const checkPuter = () => {
+      if (typeof window !== 'undefined' && window.puter && window.puter.auth) {
+        setPuterAvailable(true);
+        return true;
+      }
+      return false;
+    };
+    if (checkPuter()) return;
+    const interval = setInterval(() => {
+      if (checkPuter()) clearInterval(interval);
+    }, 300);
+    setTimeout(() => clearInterval(interval), 10000); // give up after 10s
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sign in with Puter — opens popup, then creates our session
+  const handlePuterSignIn = async () => {
+    setError('');
+    setPuterLoading(true);
+    try {
+      if (!window.puter || !window.puter.auth) {
+        setError('Puter non disponible. Réessayez.');
+        return;
+      }
+      // 1. Open Puter popup — Puter verifies the email themselves
+      await window.puter.auth.signIn();
+      // 2. Get the verified user profile
+      const user = await window.puter.auth.getUser();
+      if (!user || !user.username) {
+        setError('Impossible de récupérer votre profil Puter');
+        return;
+      }
+      // 3. Send to our API to create/find user + establish session
+      // Puter may not always expose email — fall back to username@puter.com
+      const email = user.email || `${user.username}@puter.com`;
+      const res = await fetch('/api/auth/puter-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username: user.username }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Erreur de connexion');
+        return;
+      }
+      // 4. Redirect to profiles
+      window.location.href = '/profiles';
+    } catch (err) {
+      console.error('[puter] Sign-in error:', err);
+      setError('Connexion Puter annulée ou échouée');
+    } finally {
+      setPuterLoading(false);
+    }
+  };
 
   // Magic link state
   const [magicEmail, setMagicEmail] = useState('');
@@ -128,6 +201,31 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 shadow-2xl shadow-black/30 p-6 sm:p-8">
+
+          {/* PUTER SIGN-IN — primary, free, real email verification */}
+          <div className="mb-5">
+            <button
+              onClick={handlePuterSignIn}
+              disabled={puterLoading || !puterAvailable}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-bold text-sm hover:shadow-lg hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+            >
+              {puterLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /><span>Connexion en cours...</span></>
+              ) : puterAvailable ? (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                  <span>Se connecter avec Puter</span>
+                </>
+              ) : (
+                <><Loader2 className="w-4 h-4 animate-spin" /><span>Chargement...</span></>
+              )}
+            </button>
+            <p className="text-[10px] text-muted-foreground/40 text-center mt-2">
+              Vérification email réelle · 100% gratuit · Aucune config requise
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 my-5"><div className="flex-1 h-px bg-border/30" /><span className="text-[10px] text-muted-foreground/30">ou par email</span><div className="flex-1 h-px bg-border/30" /></div>
 
           {/* MAGIC LINK MODE */}
           {authMode === 'magic-link' && (<>

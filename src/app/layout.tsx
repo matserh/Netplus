@@ -52,6 +52,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         {/* Android: status bar color matches background */}
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Puter.js — free auth, no API keys, no server needed */}
+        <script src="https://js.puter.com/v2/" async></script>
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen`}
