@@ -45,8 +45,13 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning className="dark">
       <head>
-        <meta name="theme-color" content="#0f0f23" />
+        <meta name="theme-color" content="#000000" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        {/* iOS: hide native status bar — app takes full screen */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Android: status bar color matches background */}
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen`}
