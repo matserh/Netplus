@@ -7,7 +7,7 @@
  */
 
 // Admin identification
-export const ADMIN_EMAIL = 'matserhkevin12@gmail.com';
+export const ADMIN_EMAILS = ['matserhkevin12@gmail.com', 'devmaestro@puter.com'];
 
 // Staging password protection (only used on Vercel staging)
 export const STAGING_PASSWORD = process.env.STAGING_PASSWORD || 'NetPlus2026Staging';
@@ -17,5 +17,6 @@ export const BETA_MODE = process.env.BETA_MODE !== 'false'; // default: true
 
 // Check if an email is the admin
 export function isAdmin(email: string): boolean {
-  return email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase();
+  const normalized = email.toLowerCase().trim();
+  return ADMIN_EMAILS.some(a => a.toLowerCase() === normalized);
 }
