@@ -23,4 +23,7 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+// Cloudflare dev-only init (no-op on Vercel/other platforms)
+if (process.env.CF_PAGES === '1' || process.env.OPENNEXT_CLOUDFLARE) {
+  import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());
+}
