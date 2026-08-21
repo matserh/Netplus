@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/contexts/AuthContext';
 import { useWatchHistory, WatchHistoryEntry } from '@/contexts/WatchHistoryContext';
 import { useEffect, useState } from 'react';
 import { Trash2, Play, Film, Tv, Clock, Filter, LayoutGrid, List, TrendingUp } from 'lucide-react';

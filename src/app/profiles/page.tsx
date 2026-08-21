@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from '@/contexts/AuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
 import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles } from 'lucide-react';
@@ -121,7 +121,7 @@ function PromoBanner() {
 
 export default function ProfilesPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, signOut } = useSession();
   const { profiles, setProfile, profile: currentProfile, clearProfile, hydrated } = useProfile();
   const { isGuest, enterGuestMode, exitGuestMode } = useGuest();
   const [managing, setManaging] = useState(false);

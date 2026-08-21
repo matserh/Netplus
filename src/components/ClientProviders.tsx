@@ -8,8 +8,8 @@ import { ProfileProvider } from '@/contexts/ProfileContext';
 import { WatchHistoryProvider } from '@/contexts/WatchHistoryContext';
 import { ShortsProvider } from '@/contexts/ShortsContext';
 import { GuestProvider } from '@/contexts/GuestContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
-import { SessionProvider } from 'next-auth/react';
 // Force-load API_CONFIG in the initial client bundle to prevent
 // "API_CONFIG is not defined" ReferenceError from chunk load ordering
 import '@/types/media';
@@ -20,7 +20,7 @@ interface ClientProvidersProps {
 
 export function ClientProviders({ children }: ClientProvidersProps) {
   return (
-    <SessionProvider>
+    <AuthProvider>
       <GuestProvider>
         <LanguageProvider>
           <UserProgressProvider>
@@ -38,6 +38,6 @@ export function ClientProviders({ children }: ClientProvidersProps) {
           </UserProgressProvider>
         </LanguageProvider>
       </GuestProvider>
-    </SessionProvider>
+    </AuthProvider>
   );
 }

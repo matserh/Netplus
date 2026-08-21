@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/contexts/AuthContext';
 import { Search, X, TrendingUp, Film, Clock, ArrowRight } from 'lucide-react';
 import { Media, Genre, TMDBResponse, API_CONFIG } from '@/types/media';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';

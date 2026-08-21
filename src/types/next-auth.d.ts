@@ -1,7 +1,7 @@
-import 'next-auth';
-import 'next-auth/jwt';
+// Session type augmentation for our custom AuthContext
+// (kept for type compatibility — no runtime import of next-auth)
 
-declare module 'next-auth' {
+declare module '@/contexts/AuthContext' {
   interface Session {
     user: {
       id: string;
@@ -9,15 +9,6 @@ declare module 'next-auth' {
       name?: string | null;
       image?: string | null;
     };
-  }
-
-  interface User {
-    id: string;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
+    expires: string;
   }
 }
