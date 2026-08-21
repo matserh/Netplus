@@ -54,6 +54,8 @@ model User {
   name          String?
   password      String?
   image         String?
+  role          String    @default("user")
+  status        String    @default("active")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -62,6 +64,9 @@ model User {
   profiles         Profile[]
   shortComments    ShortComment[]
   shortLikes       ShortLike[]
+  betaAccess       BetaAccess?
+  invitationsCreated BetaInvitation[]
+  invitationUsed   BetaInvitation?  @relation("UsedInvitation")
 }
 
 model Profile {
@@ -116,4 +121,37 @@ model ShortLike {
 
   @@unique([userId, mediaId, mediaType, segment, season])
   @@index([mediaId, mediaType, segment, season])
+}
+
+// Beta Access — tracks which users have been granted beta access
+model BetaAccess {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  status    String   @default("active") // active, paused, banned
+  grantedBy String?
+  grantedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Beta Invitations — codes sent to users to join the beta
+model BetaInvitation {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  password  String
+  email     String?
+  maxUses   Int      @default(1)
+  useCount Int      @default(0)
+  status    String   @default("active") // active, used, revoked
+  createdBy String?
+  usedBy    String?  @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  creator   User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  userUsed  User?    @relation("UsedInvitation", fields: [usedBy], references: [id], onDelete: SetNull)
+
+  @@index([createdBy])
+  @@index([usedBy])
 }

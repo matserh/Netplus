@@ -31,6 +31,8 @@ import { Genre } from '@/types/media';
 import { cn } from '@/lib/utils';
 import { useProfile, ProfileType } from '@/contexts/ProfileContext';
 import { ProfileLogo, PROFILE_IMAGES } from '@/components/ui/ProfileAvatar';
+import { useSession } from '@/contexts/AuthContext';
+import { isAdmin } from '@/lib/beta-config';
 
 // Official logos for sidebar display
 const OFFICIAL_LOGOS = [
@@ -76,6 +78,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
   const pathname = usePathname();
   const { profile, profiles, setProfile } = useProfile();
   const router = useRouter();
+  const { data: session } = useSession();
 
   // Resolve the current logo to display
   const [currentLogoSrc, setCurrentLogoSrc] = useState<string | null>(null);
@@ -351,6 +354,15 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                   </Link>
                 ))}
               </nav>
+              {session?.user && isAdmin(session.user.email) && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10 transition-all duration-200 mt-1"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Administration</span>
+                </Link>
+              )}
             </>
           )}
 
@@ -358,7 +370,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
           {!isCollapsed && (
             <>
               <div className="my-3 h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
-              
+
               <button
                 onClick={() => setShowGenres(!showGenres)}
                 className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest hover:text-sidebar-foreground transition-colors"
@@ -366,7 +378,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                 <span>Genres</span>
                 <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", showGenres && "rotate-180")} />
               </button>
-              
+
               {showGenres && (
                 <div className="grid grid-cols-2 gap-1 mt-2">
                   {genres.slice(0, 12).map((genre) => (

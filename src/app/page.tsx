@@ -17,6 +17,7 @@ import { Search, UserCircle, Play, Clock, ChevronLeft, ChevronRight, Star } from
 import { useProfile } from '@/contexts/ProfileContext';
 import { SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { BetaGate } from '@/components/BetaGate';
 
 // Fetch helper
 const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
@@ -422,6 +423,14 @@ function InfiniteGrid({ profileType, onItemClick }: { profileType?: string; onIt
 }
 
 export default function HomePage() {
+  return (
+    <BetaGate>
+      <HomeContent />
+    </BetaGate>
+  );
+}
+
+function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [bannerItems, setBannerItems] = useState<Media[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
