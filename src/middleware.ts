@@ -6,6 +6,7 @@ import { isAdmin } from '@/lib/beta-config';
 const PUBLIC_PATHS = [
   '/api/auth',
   '/api/beta',
+  '/api/admin/staging-verify',
   '/login',
   '/_next',
   '/favicon',
@@ -23,21 +24,23 @@ export function middleware(request: NextRequest) {
   const isVercel = !!process.env.VERCEL;
 
   // ---- 1. Vercel Staging Password Protection ----
+  // The cookie stores the SHA-256 hash (set by /api/admin/staging-verify).
+  // We compare it against the pre-computed expected hash.
   if (isVercel) {
-    const stagingPw = request.cookies.get('np-staging-auth')?.value;
-    const expectedPw = process.env.STAGING_PASSWORD || 'NetPlus2026Staging';
+    const stagingCookie = request.cookies.get('np-staging-auth')?.value;
+    // This hash was pre-computed from: sha256("np-staging:Np$4g!7kQz#9mX")
+    const expectedHash = process.env.STAGING_PASSWORD_HASH ||
+      'f8316ec907e8315a38904e124c3b115d4bf48139706fbe23d04caafd54816528';
 
-    if (!stagingPw && pathname !== '/staging-login') {
-      const loginUrl = new URL('/staging-login', request.url);
-      return NextResponse.redirect(loginUrl);
+    if (!stagingCookie && pathname !== '/staging-login') {
+      return NextResponse.redirect(new URL('/staging-login', request.url));
     }
-    if (stagingPw && stagingPw !== expectedPw && pathname !== '/staging-login') {
-      const loginUrl = new URL('/staging-login', request.url);
-      const res = NextResponse.redirect(loginUrl);
+    if (stagingCookie && stagingCookie !== expectedHash && pathname !== '/staging-login') {
+      const res = NextResponse.redirect(new URL('/staging-login', request.url));
       res.cookies.set('np-staging-auth', '', { maxAge: 0, path: '/' });
       return res;
     }
-    if (pathname === '/staging-login' && stagingPw === expectedPw) {
+    if (pathname === '/staging-login' && stagingCookie === expectedHash) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
@@ -60,7 +63,6 @@ export function middleware(request: NextRequest) {
       if (!isAdmin(payload.email)) {
         return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
       }
-      // Inject admin info in headers for downstream API routes
       const reqHeaders = new Headers(request.headers);
       reqHeaders.set('x-admin-email', payload.email);
       reqHeaders.set('x-admin-id', payload.id);
@@ -70,16 +72,13 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  // ---- 4. Beta mode: check access for authenticated users ----
-  // (Beta enforcement happens client-side via BetaContext + API check)
-  // Here we just let the request through — the page will check beta access.
-
+  // ---- 4. Let all other requests through ----
+  // Beta enforcement is handled client-side via BetaContext + BetaGate
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Match all paths except static files and _next internals
-    '/((?!_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
+    '/((?!_next/static|_next/image|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
   ],
 };
