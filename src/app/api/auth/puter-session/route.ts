@@ -1,9 +1,9 @@
 /**
- * Puter Auth Session API
+ * Puter Auth Session API (Workers-compatible, NO Prisma)
  *
  * After user signs in with Puter via the popup, the frontend sends us the
- * verified user profile (email, username). We create/find the user in our DB
- * and establish a NextAuth-style session.
+ * verified user profile (email, username). We create a signed JWT and
+ * set it as the next-auth session cookie.
  *
  * SECURITY: The Puter profile data is trusted because it can ONLY be obtained
  * by calling puter.auth.getUser() AFTER the popup sign-in flow completes.
@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { signPuterToken } from '@/lib/puter-jwt';
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,50 +31,26 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const prisma = (await import('@/lib/prisma')).default;
+    // Generate a stable user ID from email (deterministic, no DB needed)
+    const { createHash } = await import('crypto');
+    const userId = createHash('sha256').update(`puter:${normalizedEmail}`).digest('hex').slice(0, 24);
 
-    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-
-    if (!user) {
-      // Create new user from Puter profile — no password (magic-link/puter users)
-      user = await prisma.user.create({
-        data: {
-          email: normalizedEmail,
-          name: username,
-        },
-      });
-      // Create default profiles
-      await prisma.profile.createMany({
-        data: [
-          { name: 'Jeunesse', type: 'JEUNESSE', avatar: 'kids', isDefault: true, userId: user.id },
-          { name: 'Frénésie', type: 'FRENESIE', avatar: 'flame', isDefault: false, userId: user.id },
-          { name: 'Nocturne', type: 'NOCTURNE', avatar: 'moon', isDefault: false, userId: user.id },
-        ],
-      });
-    } else if (!user.name || user.name === user.email.split('@')[0]) {
-      // Update name from Puter if it was a placeholder
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { name: username },
-      });
-      user.name = username;
-    }
-
-    // Create a session token in the DB
-    const crypto = await import('crypto');
-    const sessionToken = crypto.randomUUID();
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-    await prisma.session.create({
-      data: { sessionToken, userId: user.id, expires },
+    // Sign a JWT (30 days expiry)
+    const token = await signPuterToken({
+      id: userId,
+      email: normalizedEmail,
+      name: username,
     });
+
+    // Cookie expiry = 30 days from now
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     const response = NextResponse.json({
       success: true,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: userId, email: normalizedEmail, name: username },
     });
 
-    response.cookies.set('next-auth.session-token', sessionToken, {
+    response.cookies.set('next-auth.session-token', token, {
       expires,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -91,6 +68,10 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error('[puter-session] Error:', error);
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur', detail: message },
+      { status: 500 }
+    );
   }
 }
