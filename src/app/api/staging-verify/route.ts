@@ -5,7 +5,7 @@ import { createHash } from 'crypto';
 // To generate a new hash: node -e "console.log(require('crypto').createHash('sha256').update('np-staging:' + 'YOUR_PASSWORD').digest('hex'))"
 // Current: "Np$4g!7kQz#9mX"
 const STAGING_PW_HASH = process.env.STAGING_PASSWORD_HASH ||
-  '554390ba516c231bf9d33f401c30667bd463b58edc550a1f09b80c6e6829f394';
+  'f8316ec907e8315a38904e124c3b115d4bf48139706fbe23d04caafd54816528';
 
 function hashPassword(pw: string): string {
   return createHash('sha256').update(`np-staging:${pw}`).digest('hex');

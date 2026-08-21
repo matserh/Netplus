@@ -36,7 +36,7 @@ export function middleware(request: NextRequest) {
   if (isVercel) {
     const stagingCookie = request.cookies.get('np-staging-auth')?.value;
     const expectedHash = process.env.STAGING_PASSWORD_HASH ||
-      '554390ba516c231bf9d33f401c30667bd463b58edc550a1f09b80c6e6829f394';
+      'f8316ec907e8315a38904e124c3b115d4bf48139706fbe23d04caafd54816528';
 
     if (!stagingCookie && pathname !== '/staging-login') {
       return NextResponse.redirect(new URL('/staging-login', request.url));
