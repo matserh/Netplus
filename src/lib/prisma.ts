@@ -1,9 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+// Singleton pattern — avoids re-creating the client on every request.
+// On Cloudflare Workers, the client MUST be created once and reused.
+let prisma: PrismaClient | null = null;
+function getPrisma(): PrismaClient {
+  if (!prisma) {
+    // @ts-ignore — runtime check
+    const envUrl = typeof process.env.DATABASE_URL === 'string'
+      ? process.env.DATABASE_URL
+      : 'file:/home/z/my-project/db/custom.db';
+    prisma = new PrismaClient({ datasources: { db: { url: envUrl } } });
+  }
+  return prisma;
+}
 
-export const prisma = globalForPrisma.prisma || new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-export default prisma;
+export default getPrisma();
