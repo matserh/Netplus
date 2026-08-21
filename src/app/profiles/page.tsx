@@ -119,6 +119,80 @@ function PromoBanner() {
   );
 }
 
+function ProfileCard({ profile, index, isActive, isManaging, onSelect }: {
+  profile: UserProfile;
+  index: number;
+  isActive: boolean;
+  isManaging: boolean;
+  onSelect: (p: UserProfile) => void;
+}) {
+  const imgSrc = PROFILE_IMAGES[profile.type];
+  const desc = PROFILE_DESCRIPTIONS[profile.type];
+  const [hovered, setHovered] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 150 + index * 120);
+    return () => clearTimeout(timer);
+  }, [index]);
+
+  return (
+    <button
+      onClick={() => onSelect(profile)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`flex flex-col items-center gap-3 group transition-all duration-500 ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      }`}
+    >
+      <div
+        className={`relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl overflow-hidden
+          ring-2 ${isActive ? 'ring-primary ring-offset-2 ring-offset-background' : hovered ? 'ring-white/60 ring-offset-2 ring-offset-background' : 'ring-transparent'}
+          transition-all duration-300 ${hovered ? 'scale-105' : 'scale-100'}
+          shadow-lg bg-muted`}
+      >
+        {!imgLoaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
+        <img
+          src={imgSrc}
+          alt={profile.name}
+          className={`w-full h-full object-cover transition-all duration-300 ${
+            imgLoaded ? 'opacity-100' : 'opacity-0'
+          } group-hover:scale-110`}
+          onLoad={() => setImgLoaded(true)}
+        />
+        {isActive && !isManaging && (
+          <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+            <Check className="w-3.5 h-3.5 text-black" />
+          </div>
+        )}
+        {isManaging && (
+          <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity duration-200 ${
+            hovered ? 'opacity-100' : 'opacity-0'
+          }`}>
+            <Pencil className="w-8 h-8 text-white" />
+          </div>
+        )}
+        {!isManaging && !isActive && hovered && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center animate-fade-in">
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Check className="w-7 h-7 text-white" />
+            </div>
+          </div>
+        )}
+      </div>
+      <span className={`text-sm sm:text-base font-semibold transition-colors duration-200 ${
+        isActive ? 'text-primary' : hovered ? 'text-foreground' : 'text-foreground/60'
+      }`}>
+        {profile.name}
+      </span>
+      <span className="text-[11px] text-muted-foreground/40 max-w-[120px] text-center">
+        {desc}
+      </span>
+    </button>
+  );
+}
+
 export default function ProfilesPage() {
   const router = useRouter();
   const { data: session, status, signOut } = useSession();
@@ -134,13 +208,31 @@ export default function ProfilesPage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // MOVED BEFORE early return — React hooks must always be called in same order
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [officialLogo, setOfficialLogo] = useState<string | null>(null);
+  const handleSelect = (profile: UserProfile) => {
+    if (managing) return;
+    setProfile(profile);
+    router.push('/');
+  };
+
   // If unauthenticated AND not in guest mode, redirect to login.
-  // (Guest mode is only entered explicitly by the user from the login page)
   useEffect(() => {
     if (status === 'unauthenticated' && !isGuest) {
       router.push('/login');
     }
   }, [status, isGuest, router]);
+
+  // Load logo from localStorage
+  useEffect(() => {
+    setCustomLogo(localStorage.getItem('netplus-custom-logo'));
+    const officialId = localStorage.getItem('netplus-official-logo');
+    if (officialId) {
+      const found = OFFICIAL_LOGOS.find(l => l.id === officialId);
+      setOfficialLogo(found ? found.id : null);
+    }
+  }, [showCustomLogoModal, showOfficialLogosModal]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -154,7 +246,6 @@ export default function ProfilesPage() {
   }, []);
 
   // Wait for both session check AND profile hydration from localStorage
-  // This prevents the error boundary from catching null-profile errors on first load
   if ((status === 'loading' && !isGuest) || !hydrated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -166,25 +257,8 @@ export default function ProfilesPage() {
     );
   }
 
-  const handleSelect = (profile: UserProfile) => {
-    if (managing) return;
-    setProfile(profile);
-    router.push('/');
-  };
-
   const userName = session?.user?.name || (isGuest ? 'Invité' : 'Utilisateur');
   const userEmail = session?.user?.email || (isGuest ? '' : '');
-  // Priority: custom logo > official logo > profile default
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [officialLogo, setOfficialLogo] = useState<string | null>(null);
-  useEffect(() => {
-    setCustomLogo(localStorage.getItem('netplus-custom-logo'));
-    const officialId = localStorage.getItem('netplus-official-logo');
-    if (officialId) {
-      const found = OFFICIAL_LOGOS.find(l => l.id === officialId);
-      setOfficialLogo(found ? found.id : null);
-    }
-  }, [showCustomLogoModal, showOfficialLogosModal]);
   const currentImg = customLogo || (officialLogo ? null : (currentProfile ? PROFILE_IMAGES[currentProfile.type] : '/profiles/nocturne.png'));
   const officialLogoData = officialLogo ? OFFICIAL_LOGOS.find(l => l.id === officialLogo) : null;
 
@@ -475,87 +549,16 @@ export default function ProfilesPage() {
 
         {/* Profile cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-10 justify-items-center my-8 sm:my-10">
-          {profiles.map((profile, i) => {
-            const imgSrc = PROFILE_IMAGES[profile.type];
-            const gradient = PROFILE_COLORS[profile.type];
-            const desc = PROFILE_DESCRIPTIONS[profile.type];
-            const isActive = currentProfile?.type === profile.type;
-            const [hovered, setHovered] = useState(false);
-            const [visible, setVisible] = useState(false);
-            const [imgLoaded, setImgLoaded] = useState(false);
-
-            useEffect(() => {
-              const timer = setTimeout(() => setVisible(true), 150 + i * 120);
-              return () => clearTimeout(timer);
-            }, []);
-
-            return (
-              <button
-                key={profile.type}
-                onClick={() => handleSelect(profile)}
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-                className={`flex flex-col items-center gap-3 group transition-all duration-500 ${
-                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                }`}
-              >
-                {/* Avatar */}
-                <div
-                  className={`relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl overflow-hidden
-                    ring-2 ${isActive ? 'ring-primary ring-offset-2 ring-offset-background' : hovered ? 'ring-white/60 ring-offset-2 ring-offset-background' : 'ring-transparent'}
-                    transition-all duration-300 ${hovered ? 'scale-105' : 'scale-100'}
-                    shadow-lg bg-muted`}
-                >
-                  {!imgLoaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
-                  <img
-                    src={imgSrc}
-                    alt={profile.name}
-                    className={`w-full h-full object-cover transition-all duration-300 ${
-                      imgLoaded ? 'opacity-100' : 'opacity-0'
-                    } group-hover:scale-110`}
-                    onLoad={() => setImgLoaded(true)}
-                  />
-
-                  {/* Active badge */}
-                  {isActive && !managing && (
-                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
-                      <Check className="w-3.5 h-3.5 text-black" />
-                    </div>
-                  )}
-
-                  {/* Managing overlay */}
-                  {managing && (
-                    <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity duration-200 ${
-                      hovered ? 'opacity-100' : 'opacity-0'
-                    }`}>
-                      <Pencil className="w-8 h-8 text-white" />
-                    </div>
-                  )}
-
-                  {/* Hover overlay */}
-                  {!managing && !isActive && hovered && (
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center animate-fade-in">
-                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <Check className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Name */}
-                <span className={`text-sm sm:text-base font-semibold transition-colors duration-200 ${
-                  isActive ? 'text-primary' : hovered ? 'text-foreground' : 'text-foreground/60'
-                }`}>
-                  {profile.name}
-                </span>
-
-                {/* Description */}
-                <span className="text-[11px] text-muted-foreground/40 max-w-[120px] text-center">
-                  {desc}
-                </span>
-              </button>
-            );
-          })}
+          {profiles.map((profile, i) => (
+            <ProfileCard
+              key={profile.type}
+              profile={profile}
+              index={i}
+              isActive={currentProfile?.type === profile.type}
+              isManaging={managing}
+              onSelect={handleSelect}
+            />
+          ))}
         </div>
 
         {/* Managing toggle */}
