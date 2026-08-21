@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyPuterToken } from '@/lib/puter-jwt';
 import { isAdmin } from '@/lib/beta-config';
 
+// Staging verify endpoint — must be reachable without any cookie
+const STAGING_VERIFY = '/api/staging-verify';
+
 // Routes that are always accessible (no auth, no beta check)
 const PUBLIC_PATHS = [
   '/api/auth',
   '/api/beta',
-  '/api/admin/staging-verify',
+  STAGING_VERIFY,
   '/login',
   '/_next',
   '/favicon',
@@ -23,14 +26,17 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isVercel = !!process.env.VERCEL;
 
-  // ---- 1. Vercel Staging Password Protection ----
-  // The cookie stores the SHA-256 hash (set by /api/admin/staging-verify).
-  // We compare it against the pre-computed expected hash.
+  // ---- 1. Let staging verify endpoint through WITHOUT any redirect ----
+  // This MUST come before the staging password check to avoid a redirect loop.
+  if (pathname === STAGING_VERIFY || pathname.startsWith(STAGING_VERIFY + '/')) {
+    return NextResponse.next();
+  }
+
+  // ---- 2. Vercel Staging Password Protection ----
   if (isVercel) {
     const stagingCookie = request.cookies.get('np-staging-auth')?.value;
-    // This hash was pre-computed from: sha256("np-staging:Np$4g!7kQz#9mX")
     const expectedHash = process.env.STAGING_PASSWORD_HASH ||
-      'f8316ec907e8315a38904e124c3b115d4bf48139706fbe23d04caafd54816528';
+      '554390ba516c231bf9d33f401c30667bd463b58edc550a1f09b80c6e6829f394';
 
     if (!stagingCookie && pathname !== '/staging-login') {
       return NextResponse.redirect(new URL('/staging-login', request.url));
@@ -45,12 +51,12 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ---- 2. Skip auth for public paths ----
+  // ---- 3. Skip auth for public paths ----
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // ---- 3. Admin API protection ----
+  // ---- 4. Admin API protection ----
   if (ADMIN_API_PATHS.some(p => pathname.startsWith(p))) {
     const token = request.cookies.get('next-auth.session-token')?.value;
     if (!token) {
@@ -72,8 +78,7 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  // ---- 4. Let all other requests through ----
-  // Beta enforcement is handled client-side via BetaContext + BetaGate
+  // ---- 5. Let all other requests through ----
   return NextResponse.next();
 }
 

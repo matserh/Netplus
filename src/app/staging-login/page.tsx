@@ -16,7 +16,7 @@ export default function StagingLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/staging-verify', {
+      const res = await fetch('/api/staging-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
