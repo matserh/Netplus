@@ -60,9 +60,15 @@ export default function LoginPage() {
         return;
       }
       const email = user.email || `${user.username}@puter.com`;
+      // Clear any stale cookies first
+      document.cookie = 'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      document.cookie = 'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
+      document.cookie = 'next-auth.callback-url=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+
       const res = await fetch('/api/auth/puter-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, username: user.username }),
       });
       const data = await res.json();
@@ -70,23 +76,7 @@ export default function LoginPage() {
         setError(data.error || 'Erreur de connexion');
         return;
       }
-      // Clear any stale session cookies before setting the new one
-      document.cookie = 'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-      document.cookie = 'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
-      document.cookie = 'next-auth.callback-url=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-      // Re-send to set fresh cookie
-      const res2 = await fetch('/api/auth/puter-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, username: user.username }),
-      });
-      const data2 = await res2.json();
-      if (!res2.ok) {
-        setError(data2.error || 'Erreur de connexion');
-        return;
-      }
-      // Hard navigate to force fresh bundle load
+      // Hard navigate — forces fresh JS bundle load, bypasses any cached old code
       window.location.replace('/profiles');
     } catch (err) {
       console.error('[puter] Sign-in error:', err);

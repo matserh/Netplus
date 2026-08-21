@@ -54,6 +54,8 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Puter.js — free auth, no API keys, no server needed */}
         <script src="https://js.puter.com/v2/" async></script>
+        {/* Cache-bust: force fresh assets after every deployment */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{fetch('/BUILD_ID').then(function(r){return r.text()}).then(function(id){var prev=sessionStorage.getItem('np-build');if(prev&&prev!==id.trim()){if('caches' in window){caches.keys().then(function(names){return Promise.all(names.map(function(n){return caches.delete(n)}))})}sessionStorage.clear();window.location.reload(true)}sessionStorage.setItem('np-build',id.trim())}).catch(function(){})}catch(e){}})()` }} />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground min-h-screen`}
