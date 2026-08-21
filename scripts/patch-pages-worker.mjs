@@ -1,65 +1,105 @@
 /**
  * Patch _worker.js for Cloudflare Pages deployment.
- * 1. Expose env.AI binding to the app via globalThis.__CF_AI_BINDING
- * 2. Add static asset passthrough so Pages serves static files directly
- * 3. Add token rate limiting via Cloudflare KV (Durable Object lite)
+ * 1. Expose env.AI binding
+ * 2. Static asset passthrough
+ * 3. Token rate limiting
+ * 4. Force no-cache on HTML responses
  */
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
-const WORKER_PATH = join(".open-next", "pages-deploy", "_worker.js");
+const WORKER_PATH = join(".open-next", "worker.js");
 
-let workerCode = readFileSync(WORKER_PATH, "utf8");
+let code = readFileSync(WORKER_PATH, "utf8");
 
-// Check if already patched
-if (workerCode.includes("/* PATCHED: Pages static asset passthrough */")) {
-  console.log("✅ _worker.js already patched for Pages");
+if (code.includes("/* PATCHED: NP */")) {
+  console.log("✅ Already patched");
   process.exit(0);
 }
 
-const patchCode = `\
-    /* PATCHED: Expose CF AI binding */
+// --- INSERT pre-processing block right after 'async fetch(request, env, ctx) {' ---
+const prePatch = `
+    /* PATCHED: NP pre-processing */
+    const __npUrl = new URL(request.url);
+
+    /* PATCHED: AI binding */
     if (env.AI) globalThis.__CF_AI_BINDING = env.AI;
 
-    /* PATCHED: Token rate limiting — per-IP, 100 AI requests/hour */
+    /* PATCHED: Rate limiting for /api/ai */
     try {
-      const __clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-      if (__url.pathname.startsWith('/api/ai')) {
-        const __rateKey = \`ai-rate:\${__clientIP}\`;
-        const __now = Math.floor(Date.now() / 60000); // minute bucket
-        const __bucket = (await env.AI_RATE?.get(__rateKey)) || \`0:\${__now}\`;
-        const [__count, __min] = __bucket.split(':').map(Number);
-        if (__min === __now && __count >= 100) {
-          return new Response(JSON.stringify({
-            error: 'rate_limit',
-            response: 'Limite atteinte ! Réessayez dans quelques minutes. Les requêtes IA sont limitées pour garantir le service pour tous.',
-            results: []
-          }), { status: 429, headers: { 'Content-Type': 'application/json' } });
-        }
-        const __newCount = __min === __now ? __count + 1 : 1;
-        await env.AI_RATE?.put(__rateKey, \`\${__newCount}:\${__now}\`, { expirationTtl: 3600 });
+      const __ip = request.headers.get("CF-Connecting-IP") || "x";
+      if (__npUrl.pathname.startsWith("/api/ai")) {
+        const __rk = \`ai:\${__ip}\`;
+        const __now = Math.floor(Date.now() / 3600000);
+        const __b = (await env.AI_RATE?.get(__rk)) || \`0:\${__now}\`;
+        const [c, m] = __b.split(":").map(Number);
+        if (m === __now && c >= 100) return new Response('{"error":"rate_limit"}', { status: 429, headers: { "Content-Type": "application/json" } });
+        await env.AI_RATE?.put(__rk, \`\${m===__now?c+1:1}:\${__now}\`, { expirationTtl: 3600 });
       }
-    } catch (__rateErr) { /* KV not bound, skip rate limiting */ }
+    } catch(e) {}
 
-    /* PATCHED: Pages static asset passthrough */
-    const __url = new URL(request.url);
+    /* PATCHED: Static asset passthrough */
     if (
-      __url.pathname.startsWith("/_next/static/") ||
-      __url.pathname.startsWith("/_next/image") ||
-      __url.pathname.match(/\\.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|ico|webp|avif|json|webmanifest|xml|txt|map)$/i)
+      __npUrl.pathname.startsWith("/_next/static/") ||
+      __npUrl.pathname.startsWith("/_next/image") ||
+      __npUrl.pathname.match(/\.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|ico|webp|avif|json|webmanifest|xml|txt|map)$/i)
     ) {
-      const __assetResp = await env.ASSETS.fetch(request);
-      if (__assetResp && __assetResp.status !== 404) {
-        return __assetResp;
-      }
+      const __ar = await env.ASSETS.fetch(request);
+      if (__ar && __ar.status !== 404) return __ar;
     }
 `;
 
-// Insert the patch right after the fetch handler opens
-workerCode = workerCode.replace(
-  /async fetch\(request,\s*env,\s*ctx\)\s*\{/,
-  `async fetch(request, env, ctx) {\n${patchCode}`
+code = code.replace(
+  /async fetch\(request,\s*env,\s*ctx\)\s*\{\n/,
+  `async fetch(request, env, ctx) {\n${prePatch}`
 );
 
-writeFileSync(WORKER_PATH, workerCode, "utf8");
-console.log("✅ _worker.js patched for Pages static asset passthrough + AI binding + rate limiting");
+// --- WRAP the entire fetch handler body to post-process responses ---
+// Find the pattern: fetch(request, env, ctx) { ... return SOMETHING; },
+// and wrap it so we can intercept the return value
+//
+// Strategy: replace the closing of the fetch handler with a wrapper
+// The fetch handler ends with a return statement followed by },
+//
+// We'll wrap by replacing the export default pattern:
+//
+// ORIGINAL: export default { async fetch(request, env, ctx) { BODY } };
+// NEW:      export default { async fetch(request, env, ctx) { const __npR = await (async () => { BODY })(); /* post-process */ return __npR; } };
+
+// Actually, simpler approach: wrap at the module level using a Proxy-like pattern
+// Just replace 'return runWithCloudflareRequestContext' with a wrapper
+
+code = code.replace(
+  'return runWithCloudflareRequestContext(request, env, ctx, async () => {',
+  'return (async () => { const __npResult = await runWithCloudflareRequestContext(request, env, ctx, async () => {'
+);
+
+// Now close the wrapper after the runWithCloudflareRequestContext call
+// The original code has: 
+//   return runWithCloudflareRequestContext(request, env, ctx, async () => {
+//     ... body ...
+//   });
+//   },
+// We changed the opening, now we need to change the closing ');' to add our post-processing
+code = code.replace(
+  /return handler\(reqOrResp, env, ctx, request\.signal\);\s*\}\);\s*\},\s*\};\s*$/,
+  `return handler(reqOrResp, env, ctx, request.signal);
+        });
+        /* PATCHED: Force no-cache on HTML */
+        const __npCT = __npResult.headers.get("content-type") || "";
+        if (__npCT.includes("text/html")) {
+          const __npH = new Headers(__npResult.headers);
+          __npH.set("Cache-Control", "no-store, no-cache, must-revalidate");
+          __npH.set("Pragma", "no-cache");
+          __npH.set("Expires", "0");
+          return new Response(__npResult.body, { status: __npResult.status, statusText: __npResult.statusText, headers: __npH });
+        }
+        return __npResult;
+    })();
+  },
+};
+`
+);
+
+writeFileSync(WORKER_PATH, code, "utf8");
+console.log("✅ _worker.js patched: assets + AI + rate-limit + HTML no-cache");

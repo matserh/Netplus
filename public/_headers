@@ -1,4 +1,27 @@
 # https://developers.cloudflare.com/workers/static-assets/headers
 # https://opennext.js.org/cloudflare/caching#static-assets-caching
+
+# JS/CSS bundles — long cache (content-hashed filenames)
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# HTML pages — NEVER cache (must always hit the Worker for fresh content)
+/*.html
+  Cache-Control: no-cache,no-store,must-revalidate
+  X-Frame-Options: DENY
+
+# Root and all HTML routes
+/
+  Cache-Control: no-cache,no-store,must-revalidate
+
+/login
+  Cache-Control: no-cache,no-store,must-revalidate
+
+/profiles
+  Cache-Control: no-cache,no-store,must-revalidate
+
+/api/*
+  Cache-Control: no-cache,no-store,must-revalidate
+
+/BUILD_ID
+  Cache-Control: no-cache,no-store,must-revalidate
