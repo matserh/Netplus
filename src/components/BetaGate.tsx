@@ -15,13 +15,13 @@ import { Loader2 } from 'lucide-react';
  */
 export function BetaGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { hasAccess, isAdmin, betaMode, reason } = useBeta();
+  const { hasAccess, isAdmin, betaMode, reason, loading: betaLoading } = useBeta();
   const { status } = useSession();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Wait for beta check to complete
-    if (status === 'loading') return;
+    // Wait for BOTH auth and beta check to complete
+    if (status === 'loading' || betaLoading) return;
 
     // If not in beta mode, allow everyone
     if (!betaMode) {
@@ -44,7 +44,7 @@ export function BetaGate({ children }: { children: React.ReactNode }) {
         router.replace('/beta-access');
       }
     }
-  }, [status, hasAccess, isAdmin, betaMode, reason, router]);
+  }, [status, hasAccess, isAdmin, betaMode, reason, betaLoading, router]);
 
   // Show loading while checking
   if (!checked) {

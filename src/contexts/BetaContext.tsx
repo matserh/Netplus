@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { isAdmin } from '@/lib/beta-config';
 
 export interface BetaInfo {
   hasAccess: boolean;
@@ -11,6 +10,7 @@ export interface BetaInfo {
 }
 
 interface BetaContextType extends BetaInfo {
+  loading: boolean;
   refresh: () => Promise<void>;
 }
 
@@ -23,8 +23,10 @@ export function BetaProvider({ children }: { children: ReactNode }) {
     betaMode: true,
     reason: 'not_authenticated',
   });
+  const [loading, setLoading] = useState(true);
 
   const checkBeta = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/beta/check');
       if (res.ok) {
@@ -33,12 +35,14 @@ export function BetaProvider({ children }: { children: ReactNode }) {
       }
     } catch {
       // Silently fail — will show beta access page
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => { checkBeta(); }, [checkBeta]);
 
-  // Also refresh when window gains focus (user might have been unbanned etc.)
+  // Also refresh when window gains focus
   useEffect(() => {
     const handler = () => checkBeta();
     window.addEventListener('focus', handler);
@@ -46,7 +50,7 @@ export function BetaProvider({ children }: { children: ReactNode }) {
   }, [checkBeta]);
 
   return (
-    <BetaContext.Provider value={{ ...betaInfo, refresh: checkBeta }}>
+    <BetaContext.Provider value={{ ...betaInfo, loading, refresh: checkBeta }}>
       {children}
     </BetaContext.Provider>
   );
