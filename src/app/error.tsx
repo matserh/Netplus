@@ -1,6 +1,7 @@
 'use client';
 
 import { Logo } from '@/components/ui/Logo';
+import { useEffect } from 'react';
 
 export default function Error({
   error,
@@ -9,6 +10,11 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Log error for debugging
+    console.error('[NetPlus Error Boundary]', error.message, error.stack);
+  }, [error]);
+
   return (
     <div style={{
       display: 'flex',
@@ -47,8 +53,12 @@ export default function Error({
       <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
         Oups, une erreur
       </h2>
-      <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', marginBottom: '2rem', textAlign: 'center', maxWidth: '320px' }}>
-        Quelque chose s&apos;est mal passé. Réessayez ou revenez à l&apos;accueil.
+      <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textAlign: 'center', maxWidth: '400px' }}>
+        Quelque chose s'est mal passé. Réessayez ou revenez à l'accueil.
+      </p>
+      {/* Show error detail for debugging */}
+      <p style={{ fontSize: '0.75rem', color: 'rgba(229, 160, 13, 0.6)', marginBottom: '2rem', textAlign: 'center', maxWidth: '400px', wordBreak: 'break-all' }}>
+        {error.message}
       </p>
 
       <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -68,7 +78,7 @@ export default function Error({
           Réessayer
         </button>
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => window.location.href = '/' }
           style={{
             padding: '0.75rem 1.5rem',
             borderRadius: '0.75rem',
