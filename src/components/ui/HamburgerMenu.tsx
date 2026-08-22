@@ -25,8 +25,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Genre } from '@/types/media';
-import { useSession } from '@/contexts/AuthContext';
-import { isAdmin } from '@/lib/beta-config';
 
 interface HamburgerMenuProps {
   genres: Genre[];
@@ -37,7 +35,6 @@ interface HamburgerMenuProps {
 export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { data: session } = useSession();
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -182,14 +179,6 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
                 Premium
               </Link>
             </Button>
-            {session?.user && isAdmin(session.user.email) && (
-              <Button variant="ghost" className="w-full justify-start gap-3 hover:bg-amber-500/10 hover:text-amber-400 text-amber-400" asChild>
-                <Link href="/admin">
-                  <Shield className="w-5 h-5" />
-                  Administration
-                </Link>
-              </Button>
-            )}
           </div>
 
           {/* Divider */}
