@@ -94,3 +94,4 @@ worklog.md
 .wrangler
 .dev.vars*
 !.dev.vars.example
+tool-results/

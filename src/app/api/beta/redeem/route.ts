@@ -1,72 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyPuterToken } from '@/lib/puter-jwt';
-import { db } from '@/lib/db';
-import { createHash } from 'crypto';
+import { verifyInvitationJWT, createAccessJWT, ACCESS_COOKIE_NAME } from '@/lib/invitation';
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, password } = await req.json();
-    if (!code || !password) {
-      return NextResponse.json({ error: 'Code et mot de passe requis' }, { status: 400 });
-    }
-
-    const token = req.cookies.get('next-auth.session-token')?.value;
+    const { token } = await req.json();
     if (!token) {
-      return NextResponse.json({ error: 'Vous devez être connecté' }, { status: 401 });
+      return NextResponse.json({ error: 'Token d\'invitation requis' }, { status: 400 });
     }
 
-    const payload = await verifyPuterToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Session invalide' }, { status: 401 });
-    }
-
-    const userId = createHash('sha256').update(`puter:${payload.email.toLowerCase()}`).digest('hex').slice(0, 24);
-
-    // Find invitation
-    const invitation = await db.betaInvitation.findUnique({ where: { code: code.toUpperCase() } });
+    // 1. Verify the invitation JWT
+    const invitation = await verifyInvitationJWT(token);
     if (!invitation) {
-      return NextResponse.json({ error: 'Code invalide' }, { status: 404 });
-    }
-    if (invitation.status !== 'active') {
-      return NextResponse.json({ error: 'Ce code a été utilisé ou révoqué' }, { status: 410 });
-    }
-    if (invitation.expiresAt && invitation.expiresAt < new Date()) {
-      return NextResponse.json({ error: 'Ce code a expiré' }, { status: 410 });
-    }
-    if (invitation.email && invitation.email.toLowerCase() !== payload.email.toLowerCase()) {
-      return NextResponse.json({ error: "Ce code n'est pas pour votre adresse email" }, { status: 403 });
+      return NextResponse.json({ error: 'Lien d\'invitation invalide ou expiré' }, { status: 400 });
     }
 
-    // Verify password
-    const hashedInput = createHash('sha256').update(`netplus-beta:${password}`).digest('hex');
-    if (hashedInput !== invitation.password) {
-      return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 403 });
+    // 2. Verify user session
+    const sessionToken = req.cookies.get('next-auth.session-token')?.value;
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Vous devez être connecté pour utiliser cette invitation' }, { status: 401 });
     }
 
-    // Create user + beta access
-    await db.user.upsert({
-      where: { id: userId },
-      create: { id: userId, email: payload.email, name: payload.name },
-      update: { name: payload.name, status: 'active' },
+    const payload = await verifyPuterToken(sessionToken);
+    if (!payload) {
+      return NextResponse.json({ error: 'Session invalide. Déconnectez-vous et reconnectez-vous.' }, { status: 401 });
+    }
+
+    // 3. Check email restriction
+    if (invitation.forEmail && invitation.forEmail !== payload.email.toLowerCase()) {
+      return NextResponse.json({ error: 'Cette invitation n\'est pas destinée à votre adresse email' }, { status: 403 });
+    }
+
+    // 4. Check if user already has access (cookie already set)
+    const existingAccess = req.cookies.get(ACCESS_COOKIE_NAME)?.value;
+    if (existingAccess) {
+      const { verifyAccessJWT } = await import('@/lib/invitation');
+      const access = await verifyAccessJWT(existingAccess);
+      if (access) {
+        return NextResponse.json({ success: true, alreadyHadAccess: true });
+      }
+    }
+
+    // 5. Create access JWT and set as httpOnly cookie (1 year)
+    const accessJWT = await createAccessJWT(payload.email, invitation.jti);
+    const response = NextResponse.json({ success: true });
+    response.cookies.set(ACCESS_COOKIE_NAME, accessJWT, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 365 * 24 * 60 * 60, // 1 year
+      path: '/',
     });
 
-    await db.betaAccess.upsert({
-      where: { userId },
-      create: { userId, status: 'active' },
-      update: { status: 'active' },
-    });
-
-    // Mark invitation as used
-    await db.betaInvitation.update({
-      where: { id: invitation.id },
-      data: {
-        useCount: { increment: 1 },
-        status: invitation.useCount + 1 >= invitation.maxUses ? 'used' : 'active',
-        usedBy: userId,
-      },
-    });
-
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error) {
     console.error('[beta/redeem] Error:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
