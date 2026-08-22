@@ -1,0 +1,587 @@
+     1→'use client';
+     2→
+     3→export const dynamic = 'force-dynamic';
+     4→
+     5→import { useState, useEffect, useRef } from 'react';
+     6→import { useRouter } from 'next/navigation';
+     7→import { useSession } from '@/contexts/AuthContext';
+     8→import { Logo } from '@/components/ui/Logo';
+     9→import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
+    10→import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles } from 'lucide-react';
+    11→import { useGuest } from '@/contexts/GuestContext';
+    12→import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
+    13→import { PROFILE_IMAGES, SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
+    14→
+    15→// 20 Official NetPlus logos — real generated icons with distinct visual styles
+    16→const OFFICIAL_LOGOS = [
+    17→  { id: 'netplus-gold', name: 'Or Classic', src: '/logos/gold.png' },
+    18→  { id: 'netplus-fire', name: 'Flamme', src: '/logos/fire.png' },
+    19→  { id: 'netplus-ocean', name: 'Oc\u00e9an', src: '/logos/ocean.png' },
+    20→  { id: 'netplus-forest', name: 'For\u00eat', src: '/logos/forest.png' },
+    21→  { id: 'netplus-night', name: 'Nuit', src: '/logos/night.png' },
+    22→  { id: 'netplus-sunset', name: 'Coucher', src: '/logos/sunset.png' },
+    23→  { id: 'netplus-ice', name: 'Glace', src: '/logos/ice.png' },
+    24→  { id: 'netplus-royal', name: 'Royal', src: '/logos/royal.png' },
+    25→  { id: 'netplus-emerald', name: '\u00c9meraude', src: '/logos/emerald.png' },
+    26→  { id: 'netplus-ruby', name: 'Rubis', src: '/logos/ruby.png' },
+    27→  { id: 'netplus-amber', name: 'Ambre', src: '/logos/amber.png' },
+    28→  { id: 'netplus-violet', name: 'Violet', src: '/logos/violet.png' },
+    29→  { id: 'netplus-copper', name: 'Cuivre', src: '/logos/copper.png' },
+    30→  { id: 'netplus-silver', name: 'Argent', src: '/logos/silver.png' },
+    31→  { id: 'netplus-platinum', name: 'Platine', src: '/logos/platinum.png' },
+    32→  { id: 'netplus-crimson', name: 'Cramoisi', src: '/logos/crimson.png' },
+    33→  { id: 'netplus-teal', name: 'Turquoise', src: '/logos/teal.png' },
+    34→  { id: 'netplus-rose', name: 'Rose', src: '/logos/rose.png' },
+    35→  { id: 'netplus-indigo', name: 'Indigo', src: '/logos/indigo.png' },
+    36→  { id: 'netplus-graphite', name: 'Graphite', src: '/logos/graphite.png' },
+    37→];
+    38→
+    39→const PROFILE_DESCRIPTIONS: Record<ProfileType, string> = {
+    40→  JEUNESSE: 'Contenu familial et éducatif',
+    41→  FRENESIE: 'Action, horreur et thrills',
+    42→  NOCTURNE: 'Tout sans restrictions',
+    43→};
+    44→
+    45→const PROFILE_COLORS: Record<ProfileType, string> = {
+    46→  JEUNESSE: 'from-emerald-500 to-teal-600',
+    47→  FRENESIE: 'from-red-500 to-orange-600',
+    48→  NOCTURNE: 'from-violet-500 to-purple-700',
+    49→};
+    50→
+    51→// Fetch helper
+    52→const fetchTMDB = async <T,>(endpoint: string): Promise<T | null> => {
+    53→  try {
+    54→    const res = await fetch(
+    55→      `${API_CONFIG.tmdb.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}api_key=${API_CONFIG.tmdb.apiKey}&language=fr-FR`
+    56→    );
+    57→    return res.ok ? await res.json() : null;
+    58→  } catch {
+    59→    return null;
+    60→  }
+    61→};
+    62→
+    63→// Promotional banner
+    64→function PromoBanner() {
+    65→  const [items, setItems] = useState<Media[]>([]);
+    66→  const [currentIndex, setCurrentIndex] = useState(0);
+    67→
+    68→  useEffect(() => {
+    69→    const load = async () => {
+    70→      const data = await fetchTMDB<TMDBResponse<Media>>('/movie/now_playing?region=FR');
+    71→      if (data?.results) {
+    72→        setItems(data.results.filter(m => m.backdrop_path).slice(0, 5));
+    73→      }
+    74→    };
+    75→    load();
+    76→  }, []);
+    77→
+    78→  useEffect(() => {
+    79→    if (items.length <= 1) return;
+    80→    const interval = setInterval(() => {
+    81→      setCurrentIndex(prev => (prev + 1) % items.length);
+    82→    }, 6000);
+    83→    return () => clearInterval(interval);
+    84→  }, [items.length]);
+    85→
+    86→  if (items.length === 0) return null;
+    87→
+    88→  const current = items[currentIndex];
+    89→  const title = current.title || current.name || '';
+    90→
+    91→  return (
+    92→    <div className="relative w-full h-[35vh] sm:h-[40vh] overflow-hidden">
+    93→      <div className="absolute inset-0">
+    94→        <img
+    95→          src={`${API_CONFIG.tmdb.imageUrl}/original${current.backdrop_path}`}
+    96→          alt={title}
+    97→          className="w-full h-full object-cover transition-all duration-1000"
+    98→          key={currentIndex}
+    99→        />
+   100→      </div>
+   101→      <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/10 to-background" />
+   102→      <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-transparent" />
+   103→
+   104→      {/* Dots */}
+   105→      {items.length > 1 && (
+   106→        <div className="absolute bottom-3 right-6 flex items-center gap-1.5">
+   107→          {items.map((_, i) => (
+   108→            <button
+   109→              key={i}
+   110→              onClick={() => setCurrentIndex(i)}
+   111→              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+   112→                i === currentIndex ? 'bg-primary w-4' : 'bg-white/30 hover:bg-white/50'
+   113→              }`}
+   114→            />
+   115→          ))}
+   116→        </div>
+   117→      )}
+   118→    </div>
+   119→  );
+   120→}
+   121→
+   122→function ProfileCard({ profile, index, isActive, isManaging, onSelect }: {
+   123→  profile: UserProfile;
+   124→  index: number;
+   125→  isActive: boolean;
+   126→  isManaging: boolean;
+   127→  onSelect: (p: UserProfile) => void;
+   128→}) {
+   129→  const imgSrc = PROFILE_IMAGES[profile.type];
+   130→  const desc = PROFILE_DESCRIPTIONS[profile.type];
+   131→  const [hovered, setHovered] = useState(false);
+   132→  const [visible, setVisible] = useState(false);
+   133→  const [imgLoaded, setImgLoaded] = useState(false);
+   134→
+   135→  useEffect(() => {
+   136→    const timer = setTimeout(() => setVisible(true), 150 + index * 120);
+   137→    return () => clearTimeout(timer);
+   138→  }, [index]);
+   139→
+   140→  return (
+   141→    <button
+   142→      onClick={() => onSelect(profile)}
+   143→      onMouseEnter={() => setHovered(true)}
+   144→      onMouseLeave={() => setHovered(false)}
+   145→      className={`flex flex-col items-center gap-3 group transition-all duration-500 ${
+   146→        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+   147→      }`}
+   148→    >
+   149→      <div
+   150→        className={`relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl overflow-hidden
+   151→          ring-2 ${isActive ? 'ring-primary ring-offset-2 ring-offset-background' : hovered ? 'ring-white/60 ring-offset-2 ring-offset-background' : 'ring-transparent'}
+   152→          transition-all duration-300 ${hovered ? 'scale-105' : 'scale-100'}
+   153→          shadow-lg bg-muted`}
+   154→      >
+   155→        {!imgLoaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
+   156→        <img
+   157→          src={imgSrc}
+   158→          alt={profile.name}
+   159→          className={`w-full h-full object-cover transition-all duration-300 ${
+   160→            imgLoaded ? 'opacity-100' : 'opacity-0'
+   161→          } group-hover:scale-110`}
+   162→          onLoad={() => setImgLoaded(true)}
+   163→        />
+   164→        {isActive && !isManaging && (
+   165→          <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-md">
+   166→            <Check className="w-3.5 h-3.5 text-black" />
+   167→          </div>
+   168→        )}
+   169→        {isManaging && (
+   170→          <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity duration-200 ${
+   171→            hovered ? 'opacity-100' : 'opacity-0'
+   172→          }`}>
+   173→            <Pencil className="w-8 h-8 text-white" />
+   174→          </div>
+   175→        )}
+   176→        {!isManaging && !isActive && hovered && (
+   177→          <div className="absolute inset-0 bg-black/30 flex items-center justify-center animate-fade-in">
+   178→            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+   179→              <Check className="w-7 h-7 text-white" />
+   180→            </div>
+   181→          </div>
+   182→        )}
+   183→      </div>
+   184→      <span className={`text-sm sm:text-base font-semibold transition-colors duration-200 ${
+   185→        isActive ? 'text-primary' : hovered ? 'text-foreground' : 'text-foreground/60'
+   186→      }`}>
+   187→        {profile.name}
+   188→      </span>
+   189→      <span className="text-[11px] text-muted-foreground/40 max-w-[120px] text-center">
+   190→        {desc}
+   191→      </span>
+   192→    </button>
+   193→  );
+   194→}
+   195→
+   196→export default function ProfilesPage() {
+   197→  const router = useRouter();
+   198→  const { data: session, status, signOut } = useSession();
+   199→  const { profiles, setProfile, profile: currentProfile, clearProfile, hydrated } = useProfile();
+   200→  const { isGuest, enterGuestMode, exitGuestMode } = useGuest();
+   201→  const [managing, setManaging] = useState(false);
+   202→  const [showDropdown, setShowDropdown] = useState(false);
+   203→  const [showCustomLogoModal, setShowCustomLogoModal] = useState(false);
+   204→  const [showOfficialLogosModal, setShowOfficialLogosModal] = useState(false);
+   205→  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+   206→  const [customLogoPreview, setCustomLogoPreview] = useState<string | null>(null);
+   207→  const [selectedOfficialLogo, setSelectedOfficialLogo] = useState<string | null>(null);
+   208→  const dropdownRef = useRef<HTMLDivElement>(null);
+   209→  const fileInputRef = useRef<HTMLInputElement>(null);
+   210→
+   211→  // MOVED BEFORE early return — React hooks must always be called in same order
+   212→  const [customLogo, setCustomLogo] = useState<string | null>(null);
+   213→  const [officialLogo, setOfficialLogo] = useState<string | null>(null);
+   214→  const handleSelect = (profile: UserProfile) => {
+   215→    if (managing) return;
+   216→    setProfile(profile);
+   217→    router.push('/');
+   218→  };
+   219→
+   220→  // If unauthenticated AND not in guest mode, redirect to login.
+   221→  useEffect(() => {
+   222→    if (status === 'unauthenticated' && !isGuest) {
+   223→      router.push('/login');
+   224→    }
+   225→  }, [status, isGuest, router]);
+   226→
+   227→  // Load logo from localStorage
+   228→  useEffect(() => {
+   229→    setCustomLogo(localStorage.getItem('netplus-custom-logo'));
+   230→    const officialId = localStorage.getItem('netplus-official-logo');
+   231→    if (officialId) {
+   232→      const found = OFFICIAL_LOGOS.find(l => l.id === officialId);
+   233→      setOfficialLogo(found ? found.id : null);
+   234→    }
+   235→  }, [showCustomLogoModal, showOfficialLogosModal]);
+   236→
+   237→  // Close dropdown on outside click
+   238→  useEffect(() => {
+   239→    const handleClick = (e: MouseEvent) => {
+   240→      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+   241→        setShowDropdown(false);
+   242→      }
+   243→    };
+   244→    document.addEventListener('mousedown', handleClick);
+   245→    return () => document.removeEventListener('mousedown', handleClick);
+   246→  }, []);
+   247→
+   248→  // Wait for both session check AND profile hydration from localStorage
+   249→  if ((status === 'loading' && !isGuest) || !hydrated) {
+   250→    return (
+   251→      <div className="min-h-screen bg-background flex items-center justify-center">
+   252→        <div className="flex flex-col items-center gap-4">
+   253→          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+   254→          <span className="text-sm text-muted-foreground/50">Chargement...</span>
+   255→        </div>
+   256→      </div>
+   257→    );
+   258→  }
+   259→
+   260→  const userName = session?.user?.name || (isGuest ? 'Invité' : 'Utilisateur');
+   261→  const userEmail = session?.user?.email || (isGuest ? '' : '');
+   262→  const currentImg = customLogo || (officialLogo ? null : (currentProfile ? PROFILE_IMAGES[currentProfile.type] : '/profiles/nocturne.png'));
+   263→  const officialLogoData = officialLogo ? OFFICIAL_LOGOS.find(l => l.id === officialLogo) : null;
+   264→
+   265→  return (
+   266→    <div className="min-h-screen bg-background flex flex-col">
+   267→      {/* Top bar with user dropdown — FIXED, full black, extends under status bar */}
+   268→      <header
+   269→        className="fixed top-0 left-0 right-0 z-50 bg-[#000000]"
+   270→        style={{
+   271→          paddingTop: 'env(safe-area-inset-top, 0px)',
+   272→          minHeight: 'calc(env(safe-area-inset-top, 0px) + 56px)',
+   273→        }}
+   274→      >
+   275→        <div className="flex items-center justify-between h-14 px-4 sm:px-6">
+   276→          <Logo size="sm" />
+   277→
+   278→          {/* User dropdown trigger */}
+   279→          <div ref={dropdownRef} className="relative">
+   280→            <button
+   281→              onClick={() => setShowDropdown(!showDropdown)}
+   282→              className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-muted/50 transition-colors group"
+   283→            >
+   284→              <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/30 group-hover:ring-primary/60 transition-all">
+   285→                {officialLogoData ? (
+   286→                  <img src={officialLogoData.src} alt="Logo" className="w-full h-full object-cover" />
+   287→                ) : (
+   288→                  <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+   289→                )}
+   290→              </div>
+   291→              <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors hidden sm:block">
+   292→                {currentProfile?.name || 'Profil'}
+   293→              </span>
+   294→              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+   295→            </button>
+   296→
+   297→            {/* Dropdown */}
+   298→            {showDropdown && (
+   299→              <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden animate-scale-in z-50">
+   300→                {/* User info */}
+   301→                <div className="p-4 border-b border-border/50">
+   302→                  <div className="flex items-center gap-3">
+   303→                    <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30">
+   304→                      {officialLogoData ? (
+   305→                        <img src={officialLogoData.src} alt="Logo" className="w-full h-full object-cover" />
+   306→                      ) : (
+   307→                        <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
+   308→                      )}
+   309→                    </div>
+   310→                    <div className="flex-1 min-w-0">
+   311→                      <p className="text-sm font-semibold truncate">{userName}</p>
+   312→                      {userEmail && <p className="text-xs text-muted-foreground truncate">{userEmail}</p>}
+   313→                    </div>
+   314→                  </div>
+   315→                </div>
+   316→
+   317→                {/* Actions */}
+   318→                <div className="p-2">
+   319→                  <button
+   320→                    onClick={() => {
+   321→                      setShowDropdown(false);
+   322→                      setShowCustomLogoModal(true);
+   323→                    }}
+   324→                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
+   325→                  >
+   326→                    <Upload className="w-4 h-4" />
+   327→                    Changer le logo
+   328→                  </button>
+   329→
+   330→                  <button
+   331→                    onClick={() => {
+   332→                      setShowDropdown(false);
+   333→                      setShowOfficialLogosModal(true);
+   334→                    }}
+   335→                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
+   336→                  >
+   337→                    <Sparkles className="w-4 h-4" />
+   338→                    Gérer le profil
+   339→                  </button>
+   340→
+   341→                  <div className="my-1.5 h-px bg-border/50" />
+   342→
+   343→                  <button
+   344→                    onClick={() => {
+   345→                      setShowDropdown(false);
+   346→                      setShowDisconnectConfirm(true);
+   347→                    }}
+   348→                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+   349→                  >
+   350→                    <LogOut className="w-4 h-4" />
+   351→                    Déconnexion
+   352→                  </button>
+   353→                </div>
+   354→              </div>
+   355→            )}
+   356→          </div>
+   357→        </div>
+   358→      </header>
+   359→
+   360→      {/* Spacer — matches fixed header height so content starts below */}
+   361→      <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} />
+   362→
+   363→      {/* Custom logo import modal — "Changer le logo" = import your own */}
+   364→      {showCustomLogoModal && (
+   365→        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+   366→          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCustomLogoModal(false)} />
+   367→          <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
+   368→            <div className="flex items-center justify-between mb-4">
+   369→              <h3 className="text-lg font-bold">Changer le logo</h3>
+   370→              <button onClick={() => setShowCustomLogoModal(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
+   371→                <X className="w-4 h-4" />
+   372→              </button>
+   373→            </div>
+   374→            <p className="text-sm text-muted-foreground mb-4">Importez votre propre logo personnalisé pour votre profil.</p>
+   375→
+   376→            {/* Preview area */}
+   377→            <div className="w-32 h-32 mx-auto rounded-xl border-2 border-dashed border-border mb-4 flex items-center justify-center overflow-hidden bg-muted/30">
+   378→              {customLogoPreview ? (
+   379→                <img src={customLogoPreview} alt="Aperçu" className="w-full h-full object-cover" />
+   380→              ) : (
+   381→                <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+   382→                  <Upload className="w-8 h-8" />
+   383→                  <span className="text-xs">Aucun fichier</span>
+   384→                </div>
+   385→              )}
+   386→            </div>
+   387→
+   388→            {/* File input */}
+   389→            <input
+   390→              ref={fileInputRef}
+   391→              type="file"
+   392→              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+   393→              className="hidden"
+   394→              onChange={(e) => {
+   395→                const file = e.target.files?.[0];
+   396→                if (file) {
+   397→                  const reader = new FileReader();
+   398→                  reader.onload = (ev) => {
+   399→                    setCustomLogoPreview(ev.target?.result as string);
+   400→                  };
+   401→                  reader.readAsDataURL(file);
+   402→                }
+   403→              }}
+   404→            />
+   405→
+   406→            <div className="flex gap-3">
+   407→              <button
+   408→                onClick={() => fileInputRef.current?.click()}
+   409→                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+   410→              >
+   411→                <Upload className="w-4 h-4" />
+   412→                Parcourir
+   413→              </button>
+   414→              <button
+   415→                onClick={() => {
+   416→                  if (customLogoPreview) {
+   417→                    // Save custom logo to localStorage
+   418→                    localStorage.setItem('netplus-custom-logo', customLogoPreview);
+   419→                    setShowCustomLogoModal(false);
+   420→                  }
+   421→                }}
+   422→                disabled={!customLogoPreview}
+   423→                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm disabled:opacity-40"
+   424→              >
+   425→                Appliquer
+   426→              </button>
+   427→            </div>
+   428→          </div>
+   429→        </div>
+   430→      )}
+   431→
+   432→      {/* Official logos modal — "Gérer le profil" = choose from 20 real NetPlus logo icons */}
+   433→      {showOfficialLogosModal && (
+   434→        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+   435→          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowOfficialLogosModal(false)} />
+   436→          <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-lg w-full animate-scale-in max-h-[85vh] overflow-y-auto">
+   437→            <div className="flex items-center justify-between mb-2">
+   438→              <div>
+   439→                <h3 className="text-lg font-bold">Thèmes Netplus</h3>
+   440→                <p className="text-xs text-muted-foreground">20 icônes exclusives pour personnaliser votre profil</p>
+   441→              </div>
+   442→              <button onClick={() => setShowOfficialLogosModal(false)} className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center">
+   443→                <X className="w-4 h-4" />
+   444→              </button>
+   445→            </div>
+   446→
+   447→            <div className="grid grid-cols-4 gap-3 mt-4">
+   448→              {OFFICIAL_LOGOS.map((logo) => {
+   449→                const isSelected = selectedOfficialLogo === logo.id || localStorage.getItem('netplus-official-logo') === logo.id;
+   450→                return (
+   451→                  <button
+   452→                    key={logo.id}
+   453→                    onClick={() => setSelectedOfficialLogo(logo.id)}
+   454→                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all group ${
+   455→                      isSelected ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted/50'
+   456→                    }`}
+   457→                  >
+   458→                    <div className="w-14 h-14 rounded-xl overflow-hidden shadow-md ring-1 ring-white/10">
+   459→                      <img src={logo.src} alt={logo.name} className="w-full h-full object-cover" />
+   460→                    </div>
+   461→                    <span className="text-[10px] font-medium text-foreground/60 group-hover:text-foreground transition-colors truncate w-full text-center">
+   462→                      {logo.name}
+   463→                    </span>
+   464→                    {isSelected && <Check className="w-3 h-3 text-primary" />}
+   465→                  </button>
+   466→                );
+   467→              })}
+   468→            </div>
+   469→
+   470→            <div className="flex gap-3 mt-5">
+   471→              <button
+   472→                onClick={() => setShowOfficialLogosModal(false)}
+   473→                className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+   474→              >
+   475→                Annuler
+   476→              </button>
+   477→              <button
+   478→                onClick={() => {
+   479→                  if (selectedOfficialLogo) {
+   480→                    localStorage.setItem('netplus-official-logo', selectedOfficialLogo);
+   481→                    localStorage.removeItem('netplus-custom-logo');
+   482→                    setShowOfficialLogosModal(false);
+   483→                  }
+   484→                }}
+   485→                disabled={!selectedOfficialLogo}
+   486→                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm disabled:opacity-40"
+   487→              >
+   488→                Appliquer
+   489→              </button>
+   490→            </div>
+   491→          </div>
+   492→        </div>
+   493→      )}
+   494→
+   495→      {/* Disconnect confirmation modal */}
+   496→      {showDisconnectConfirm && (
+   497→        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+   498→          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDisconnectConfirm(false)} />
+   499→          <div className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
+   500→            <div className="flex flex-col items-center gap-4 text-center">
+   501→              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+   502→                <LogOut className="w-7 h-7 text-red-400" />
+   503→              </div>
+   504→              <div>
+   505→                <h3 className="text-lg font-bold mb-1">Déconnexion</h3>
+   506→                <p className="text-sm text-muted-foreground">Voulez-vous vraiment vous déconnecter de Netplus ?</p>
+   507→              </div>
+   508→              <div className="flex gap-3 w-full">
+   509→                <button
+   510→                  onClick={() => setShowDisconnectConfirm(false)}
+   511→                  className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-foreground font-medium hover:bg-muted/80 transition-all text-sm"
+   512→                >
+   513→                  Annuler
+   514→                </button>
+   515→                <button
+   516→                  onClick={async () => {
+   517→                    // 1. Clear all localStorage state so user is NOT auto-restored on next visit
+   518→                    clearProfile();           // removes netplus-profile
+   519→                    exitGuestMode();           // removes netplus_guest_mode + netplus_guest_id
+   520→                    localStorage.removeItem('netplus-custom-logo');
+   521→                    localStorage.removeItem('netplus-official-logo');
+   522→                    localStorage.removeItem('netplus-notifications');
+   523→                    // 2. Sign out via NextAuth (clears JWT cookie) and redirect to /login
+   524→                    await signOut({ callbackUrl: '/login', redirect: true });
+   525→                  }}
+   526→                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all text-sm"
+   527→                >
+   528→                  Déconnexion
+   529→                </button>
+   530→              </div>
+   531→            </div>
+   532→          </div>
+   533→        </div>
+   534→      )}
+   535→
+   536→      {/* Promo banner */}
+   537→      <PromoBanner />
+   538→
+   539→      {/* Profile selection */}
+   540→      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+   541→        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 animate-fade-in">
+   542→          {managing ? 'Gérer les profils' : 'Qui regarde ?'}
+   543→        </h1>
+   544→        {managing && (
+   545→          <p className="text-sm text-primary mb-2 animate-fade-in">
+   546→            Cliquez sur un profil pour le modifier
+   547→          </p>
+   548→        )}
+   549→
+   550→        {/* Profile cards */}
+   551→        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 md:gap-10 justify-items-center my-8 sm:my-10">
+   552→          {profiles.map((profile, i) => (
+   553→            <ProfileCard
+   554→              key={profile.type}
+   555→              profile={profile}
+   556→              index={i}
+   557→              isActive={currentProfile?.type === profile.type}
+   558→              isManaging={managing}
+   559→              onSelect={handleSelect}
+   560→            />
+   561→          ))}
+   562→        </div>
+   563→
+   564→        {/* Managing toggle */}
+   565→        {managing && (
+   566→          <button
+   567→            onClick={() => setManaging(false)}
+   568→            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm"
+   569→          >
+   570→            Terminé
+   571→          </button>
+   572→        )}
+   573→      </div>
+   574→
+   575→      {/* Bottom */}
+   576→      <div className="py-3 text-center">
+   577→        <p className="text-[10px] text-muted-foreground/20">
+   578→          © 2026 Netplus · Aeronlabs + IAgen
+   579→        </p>
+   580→      </div>
+   581→    </div>
+   582→  );
+   583→}
+   584→
+   585→// Re-export for backward compatibility
+   586→export { SmallProfileAvatar, PROFILE_IMAGES } from '@/components/ui/ProfileAvatar';
+   587→

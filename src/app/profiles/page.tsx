@@ -4,10 +4,12 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSession } from '@/contexts/AuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
-import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles } from 'lucide-react';
+import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles, Shield } from 'lucide-react';
+import { isAdmin } from '@/lib/beta-config';
 import { useGuest } from '@/contexts/GuestContext';
 import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
 import { PROFILE_IMAGES, SmallProfileAvatar, ProfileLogo } from '@/components/ui/ProfileAvatar';
@@ -338,7 +340,19 @@ export default function ProfilesPage() {
                     Gérer le profil
                   </button>
 
-                  <div className="my-1.5 h-px bg-border/50" />
+                  {session?.user?.email && isAdmin(session.user.email) && (
+                    <>
+                      <Link
+                        href="/admin"
+                        onClick={() => setShowDropdown(false)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Administration
+                      </Link>
+                      <div className="my-1.5 h-px bg-border/50" />
+                    </>
+                  )}
 
                   <button
                     onClick={() => {

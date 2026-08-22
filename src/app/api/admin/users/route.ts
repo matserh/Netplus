@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { ADMIN_EMAIL } from '@/lib/beta-config';
+import { isAdmin } from '@/lib/beta-config';
 
 // GET /api/admin/users — List all users with beta access info
 export async function GET(req: NextRequest) {
   try {
     const adminEmail = req.headers.get('x-admin-email');
-    if (!adminEmail || adminEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (!adminEmail || !isAdmin(adminEmail)) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const adminEmail = req.headers.get('x-admin-email');
-    if (!adminEmail || adminEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (!adminEmail || !isAdmin(adminEmail)) {
       return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
     }
 
