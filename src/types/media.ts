@@ -154,68 +154,61 @@ export const API_CONFIG = {
   videoServers: {
     server1: {
       name: 'VidSrc',
-      lang: 'VF',
+      lang: 'FR',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=fr`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=fr`
     },
     server2: {
       name: 'VidCore',
-      lang: 'VF',
+      lang: 'FR',
       movieUrl: (id: number) => `https://vidcore.org/embed/movie/${id}`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidcore.org/embed/tv/${id}/${season}/${episode}`
     },
     server3: {
       name: '2Embed',
-      lang: 'VF',
+      lang: 'FR',
       movieUrl: (id: number) => `https://www.2embed.cc/embed/movie/${id}`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`
     },
     server4: {
       name: 'VidSrc',
-      lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}`
-    },
-    server5: {
-      name: 'VidSrc',
-      lang: 'VO',
+      lang: 'EN',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=en`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=en`
     },
-    server6: {
+    server5: {
       name: 'VidSrc',
       lang: 'ES',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=es`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=es`
     },
-    server7: {
+    server6: {
       name: 'VidSrc',
       lang: 'DE',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=de`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=de`
     },
-    server8: {
+    server7: {
       name: 'VidSrc',
       lang: 'AR',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ar`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ar`
     },
-    server9: {
+    server8: {
       name: 'VidSrc',
       lang: 'JA',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ja`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ja`
     },
-    server10: {
+    server9: {
       name: 'VidSrc',
       lang: 'PT',
       movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=pt`,
@@ -224,11 +217,10 @@ export const API_CONFIG = {
     },
   },
 
-  /** Language groups for the UI language selector */
+  /** Language groups for the UI — these control subtitle language, not audio dub */
   languageGroups: [
-    { id: 'VF', label: 'Français', flag: '🇫🇷' },
-    { id: 'VOSTFR', label: 'Sous-titres FR', flag: '💬' },
-    { id: 'VO', label: 'Original', flag: '🌐' },
+    { id: 'FR', label: 'Français', flag: '🇫🇷' },
+    { id: 'EN', label: 'English', flag: '🇬🇧' },
     { id: 'ES', label: 'Español', flag: '🇪🇸' },
     { id: 'DE', label: 'Deutsch', flag: '🇩🇪' },
     { id: 'AR', label: 'العربية', flag: '🇸🇦' },

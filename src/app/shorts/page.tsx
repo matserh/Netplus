@@ -180,6 +180,7 @@ function SmartShortPlayer({ src, title, onSwitchServer, serverIndex, totalServer
         src={src}
         className={cn('w-full h-full transition-opacity duration-500', showOverlay ? 'opacity-0' : 'opacity-100')}
         style={{ aspectRatio: '16/9', minHeight: '100%', maxWidth: '177.78%' }}
+        sandbox="allow-scripts allow-same-origin allow-forms"
         allowFullScreen
         allow="autoplay; fullscreen; picture-in-picture"
         referrerPolicy="origin"

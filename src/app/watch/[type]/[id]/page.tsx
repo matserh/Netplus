@@ -88,7 +88,7 @@ function WatchContent() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [seasonsList, setSeasonsList] = useState<{ number: number; name: string; episodeCount: number }[]>([]);
   const [serverIndex, setServerIndex] = useState(0);
-  const [selectedLang, setSelectedLang] = useState('VF');
+  const [selectedLang, setSelectedLang] = useState('FR');
   const [iframeKey, setIframeKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [watchTimer, setWatchTimer] = useState(0);
@@ -225,7 +225,7 @@ function WatchContent() {
     const servers = Object.values(API_CONFIG.videoServers).filter(s => s.lang === selectedLang);
     if (servers.length === 0) {
       // Fallback: if no server for this language, use VF
-      const fallback = Object.values(API_CONFIG.videoServers).filter(s => s.lang === 'VF');
+      const fallback = Object.values(API_CONFIG.videoServers).filter(s => s.lang === 'FR');
       const server = fallback[0];
       return isMovie ? server.movieUrl(mediaId) : server.tvUrl(mediaId, currentSeason, currentEpisode);
     }
@@ -405,7 +405,7 @@ function WatchContent() {
     setServerIndex(0);
   };
 
-  const serverEntries = filteredServers.length > 0 ? filteredServers : allServers.filter(s => s.lang === 'VF');
+  const serverEntries = filteredServers.length > 0 ? filteredServers : allServers.filter(s => s.lang === 'FR');
 
   // Get history entry for progress display
   const historyEntry = getHistoryEntry(mediaId, mediaType);

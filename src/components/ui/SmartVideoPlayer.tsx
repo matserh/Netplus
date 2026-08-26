@@ -219,6 +219,7 @@ export function SmartVideoPlayer({
           'absolute inset-0 w-full h-full transition-opacity duration-500',
           showOverlay ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
+        sandbox="allow-scripts allow-same-origin allow-forms"
         allowFullScreen
         allow="autoplay; fullscreen; picture-in-picture"
         referrerPolicy="origin"
@@ -454,7 +455,7 @@ export function SmartVideoPlayer({
                         
                         <span className={cn(
                           'px-1 py-0.5 rounded text-[8px] font-bold',
-                          lang === 'VF' ? 'bg-blue-500/20 text-blue-400/70' : 'bg-amber-500/20 text-amber-400/70'
+                          lang === 'FR' ? 'bg-blue-500/20 text-blue-400/70' : 'bg-amber-500/20 text-amber-400/70'
                         )}>
                           {lang}
                         </span>
