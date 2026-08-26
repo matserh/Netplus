@@ -145,46 +145,46 @@ export const API_CONFIG = {
   },
   videoServers: {
     server1: {
-      name: 'Serveur Principal',
-      lang: 'VF',
-      movieUrl: (id: number) => `https://moviesapi.club/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
-        `https://moviesapi.club/tv/${id}-${season}-${episode}`
+      name: 'VidCore',
+      lang: 'VOSTFR',
+      movieUrl: (id: number) => `https://vidcore.org/embed/movie/${id}`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidcore.org/embed/tv/${id}/${season}/${episode}`
     },
     server2: {
+      name: 'CineSrc',
+      lang: 'VOSTFR',
+      movieUrl: (id: number) => `https://cinesrc.st/embed/movie/${id}`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://cinesrc.st/embed/tv/${id}/${season}/${episode}`
+    },
+    server3: {
       name: 'VidSrc',
       lang: 'VOSTFR',
       movieUrl: (id: number) => `https://vidsrc.pro/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
+      tvUrl: (id: number, season: number, episode: number) =>
         `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`
     },
-    server3: {
+    server4: {
       name: 'EmbedSu',
       lang: 'VOSTFR',
       movieUrl: (id: number) => `https://embed.su/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
+      tvUrl: (id: number, season: number, episode: number) =>
         `https://embed.su/embed/tv/${id}/${season}/${episode}`
     },
-    server4: {
-      name: 'VidSrc CC',
-      lang: 'VO',
-      movieUrl: (id: number) => `https://vidsrc.cc/v2/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
-        `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`
-    },
     server5: {
-      name: 'Smashy',
+      name: 'SuperEmbed',
       lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://player.smashy.stream/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
-        `https://player.smashy.stream/tv/${id}?s=${season}&e=${episode}`
+      movieUrl: (id: number) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
     },
     server6: {
-      name: 'AutoEmbed',
+      name: 'VidSrc To',
       lang: 'VO',
-      movieUrl: (id: number) => `https://autoembed.co/movie/tmdb/${id}`,
-      tvUrl: (id: number, season: number, episode: number) => 
-        `https://autoembed.co/tv/tmdb/${id}-${season}-${episode}`
+      movieUrl: (id: number) => `https://vidsrc.to/embed/movie/${id}`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
     },
   },
   language: 'fr-FR'

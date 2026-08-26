@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://developer.themoviedb.org/reference/getting-started",
+    "name": "Getting Started - TMDb API",
+    "snippet": "This is where you will find the definitive list of currently available methods for our movie, tv, actor and image API. 1Pick a language.",
+    "host_name": "developer.themoviedb.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.vidcore.org/movie-api-no-key",
+    "name": "Movie API with No Key for TMDB Iframe Player Embeds - VidCore",
+    "snippet": "This page explains how VidCore turns TMDB IDs into practical movie and TV embed URLs that can send search visitors back to the main VidCore service.",
+    "host_name": "www.vidcore.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=FlFyrOEz2S4",
+    "name": "The Movie Database API Tutorial | For Beginners - YouTube",
+    "snippet": "Aug 9, 2022 · https://andystechtutor... Create An Account for themoviedb.org: ; https://www.themoviedb... The Movie Database API Documentation: ; https:// ...",
+    "host_name": "www.youtube.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://httpie.io/blog/cli-api-diving",
+    "name": "Navigating an API from the terminal – HTTPie blog",
+    "snippet": "Today, we'll be diving into The Movie Database with HTTPie, jq, and jid and learning how to navigate its API efficiently.",
+    "host_name": "httpie.io",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/api_connector/comments/158mhog/pull_directors_from_tmdb_api",
+    "name": "pull directors from TMDB API ? : r/api_connector - Reddit",
+    "snippet": "Jul 24, 2023 · To get the director you will need to use the credits endpoint. For example. https://api.themoviedb.org/3/movie/{movie_id}/credits. or to get ...",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

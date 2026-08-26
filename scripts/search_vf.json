@@ -1,0 +1,65 @@
+[
+  {
+    "url": "https://developer.themoviedb.org/reference/getting-started",
+    "name": "Getting Started",
+    "snippet": "This is where you will find the definitive list of currently available methods for our movie , tv , actor and image API . 1Pick a language. Read more",
+    "host_name": "developer.themoviedb.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/webdev/comments/1uznyoq/looking_for_a_movie_api_that_supports_random",
+    "name": "Looking for a movie API that supports random",
+    "snippet": "TheMovieDB has a free API . It does now require an API key. Grab the I created a small TMDb Client App to help discovering Movies & TV Shows .  ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.movieofthenight.com/about/api",
+    "name": "Streaming Availability API for Movies & TV Shows",
+    "snippet": "Streaming Availability API delivers real-time access to global streaming metadata for movies and TV shows across all the major streaming services including ...",
+    "host_name": "www.movieofthenight.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://api.watchmode.com",
+    "name": "Movie & TV Streaming Availability API | Watchmode",
+    "snippet": "Use Watchmode as a movie API , TV show API, or provider availability API for search, discovery, recommendations, and where-to-watch apps. Read more",
+    "host_name": "api.watchmode.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://apideposu.com/en/blog/best-free-movie-tv-apis",
+    "name": "Best Free Movie and TV APIs for Developers in 2026",
+    "snippet": "TMDB API is the de-facto choice for movie discovery. It has the richest poster and backdrop coverage, well-maintained trending and discovery endpoints, APIs ...",
+    "host_name": "apideposu.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://apileague.com/articles/best-movie-api",
+    "name": "9 Best Movies API of 2026",
+    "snippet": "Find the best movie APIs for 2026 . Learn how to integrate, utilize, and maximize movie APIs . Ideal for developers seeking top solutions.",
+    "host_name": "apileague.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/leandrowkz/movieshelf",
+    "name": "leandrowkz/movieshelf",
+    "snippet": "TV shows and movies catalog that uses the TMDB API . Built using React, Context API and more. - leandrowkz/movieshelf.",
+    "host_name": "github.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  }
+]

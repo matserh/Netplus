@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://www.superembed.stream",
+    "name": "SuperEmbed | Free Movie Streaming API - stream movies by",
+    "snippet": "SuperEmbed is the best free movie streaming API for your website. Auto embed thousands of movies and tv shows available on multiple servers. no API key needed. ...",
+    "host_name": "www.superembed.stream",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.themoviedb.org/reference/getting-started",
+    "name": "Getting Started",
+    "snippet": "This is where you will find the definitive list of currently available methods for our movie , tv , actor and image API . 1Pick a language. Read more",
+    "host_name": "developer.themoviedb.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.superembed.stream/movie-streaming-api.html",
+    "name": "Movie Streaming API - Get movie and TV show",
+    "snippet": "With our SuperEmbed API you can get streaming links in JSON format and store them to your database. Request movie by TMDB id: Each URL is valid for 48 hours ...",
+    "host_name": "www.superembed.stream",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.protopie.io/blog/movie-database-web-design",
+    "name": "Design a Movie Website with Real Data",
+    "snippet": "Jan 10, 2024 — Learn to prototype a dynamic movie database website with real Movies & TV Shows data using ProtoPie's API integration and The Movie Database ...",
+    "host_name": "www.protopie.io",
+    "rank": 3,
+    "date": "Jan 10, 2024",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/Inside4ndroid/TMDB-Embed-API",
+    "name": "Inside4ndroid/TMDB-Embed-API",
+    "snippet": "An api to get embed sources using tmdb id. Modern, configurable streaming metadata + source aggregation API with a secure admin panel and multi-key TMDB ...",
+    "host_name": "github.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]

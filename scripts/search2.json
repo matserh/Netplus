@@ -1,0 +1,83 @@
+[
+  {
+    "url": "https://github.com/vjdev1212/embedin",
+    "name": "vjdev1212/embedin: A frontend for VidSrc and similar",
+    "snippet": "A simple and sleek frontend for VidSrc and similar services that provide embedded movies and TV shows. Easily search, browse, and watch content with a user- ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/webdev/comments/1hyzq0l/i_made_a_streaming_web_app",
+    "name": "I made a streaming web app : r/webdev",
+    "snippet": "The video providers are VidSrc , VidSrc Pro and Embed .su. come from TMDB using their public API . There is no download option, no torrenting … ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.similarweb.com/website/vidsrc.to/competitors",
+    "name": "vidsrc.to Competitors - Top Sites Like",
+    "snippet": "The Top 10 Sites Like vidsrc.to in July 2026 are ranked by their affinity to vidsrc.to in terms of keyword traffic, audience targeting, and market overlap. Read more",
+    "host_name": "www.similarweb.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://routinehub.co/shortcut/19616",
+    "name": "Vidsrc",
+    "snippet": "Sep 3, 2025 — I have launched a new Android App and Progressive web app to watch movies and tv shows with your favorite embed providers. Please do checkout! Read more",
+    "host_name": "routinehub.co",
+    "rank": 3,
+    "date": "Sep 3, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.scribd.com/document/953692645/GitHub-Habitual69-VidSrc-Streamer-VidSrc-Streamer-is-a-Python-Application-Designed-to-Simplify-the-Process-of-Fetching-Direct-Stream-URLs-for-Movie",
+    "name": "VidSrc Streamer: Python IPTV Tool | PDF",
+    "snippet": "VidSrc Streamer is a Python application that fetches direct stream URLs for movies from the VidSrc website using IMDb IDs and generates IPTV playlists",
+    "host_name": "www.scribd.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/samratt5/best-vidsrc-alternative",
+    "name": "samratt5/best-vidsrc-alternative: Compare",
+    "snippet": "Jun 21, 2026 — VidCore is a developer-focused movie embed API designed around TMDB integration. Key features include: Movie Embed API; TV Show Embed API; Anime ... Read more",
+    "host_name": "github.com",
+    "rank": 5,
+    "date": "Jun 21, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://news.ycombinator.com/item?id=42632850",
+    "name": "I Built a Movie Streaming Site in 2 Days",
+    "snippet": "Jan 8, 2025 — Using vidsrc.dev API , the site gives you access to real, working movie streams (no fake links here). Here's the link: https://lensloria.netlify ...",
+    "host_name": "news.ycombinator.com",
+    "rank": 6,
+    "date": "Jan 8, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://dev.to/debrone/i-built-a-movie-streaming-site-in-48-hours-heres-how-it-went-42g8",
+    "name": "I Built a Movie Streaming Site in 48 Hours - Here's How It",
+    "snippet": "Dec 20, 2024 — They were using APIs like TMDB to pull movie data and vidsrc .dev to stream the actual videos. actual streaming links from vidsrc . Find the site ...",
+    "host_name": "dev.to",
+    "rank": 7,
+    "date": "Dec 20, 2024",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.wjunction.com/threads/vidsrc-me-movie-streaming-api-discussion-thread.261605",
+    "name": "Vidsrc.me Movie Streaming API - Discussion Thread",
+    "snippet": "Aug 1, 2023 — Hey guys, Many of you may already have heard about Vidsrc API , as our service has been online for over 5 years now. Read more",
+    "host_name": "www.wjunction.com",
+    "rank": 8,
+    "date": "Aug 1, 2023",
+    "favicon": ""
+  }
+]

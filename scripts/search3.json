@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://github.com/samratt5/best-vidsrc-alternative",
+    "name": "samratt5/best-vidsrc-alternative: Compare",
+    "snippet": "Jun 21, 2026 — VidCore is a developer-focused movie embed API designed around TMDB integration. Key features include: Movie Embed API; TV Show Embed API; Anime ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "Jun 21, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/webdev/comments/1hyzq0l/i_made_a_streaming_web_app",
+    "name": "I made a streaming web app : r/webdev",
+    "snippet": "The video providers are VidSrc , VidSrc Pro and Embed .su. come from TMDB using their public API . There is no download option, For TV shows, you ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.superembed.stream",
+    "name": "SuperEmbed | Free Movie Streaming API - stream movies by",
+    "snippet": "SuperEmbed is the best free movie streaming API for your website. Auto embed thousands of movies and tv shows available on multiple servers. Totally free No ...",
+    "host_name": "www.superembed.stream",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.vidcore.org/movie-website-api-for-developers",
+    "name": "Movie Website API for Developers Building TMDB Apps",
+    "snippet": "VidCore is a movie website API for developers who need TMDB iframe embeds, movie players, TV episode players, HLS playback, subtitles, and docs.",
+    "host_name": "www.vidcore.org",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/vidsrc?l=typescript",
+    "name": "vidsrc · GitHub Topics",
+    "snippet": "an open-source movie, integrates TMDB, AniList, and VidSrc APIs to deliver ad-free HD streaming, full metadata, shows, and series.",
+    "host_name": "github.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.similarweb.com/website/vidsrc.to/competitors",
+    "name": "vidsrc.to Competitors - Top Sites Like",
+    "snippet": "The Top 10 Sites Like vidsrc .to in July 2026 are ranked by their affinity to vidsrc .to in terms of keyword traffic, audience targeting, and market overlap.",
+    "host_name": "www.similarweb.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.blackhatworld.com/seo/free-movie-streaming-api-request.1683726",
+    "name": "Free Movie Streaming API Request",
+    "snippet": "Feb 5, 2025 — free movie streaming database api website like superembed.stream , embed.su and vidsrc.me. Works flawlessly with with TMDB or IMDB API.",
+    "host_name": "www.blackhatworld.com",
+    "rank": 6,
+    "date": "Feb 5, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://cinesrc.st",
+    "name": "CineSrc - Free Video Streaming API | Embed Movies & TV",
+    "snippet": "CineSrc offers a free video streaming API with minimal ads . Easily embed movies and TV shows into your website using TMDB IDs. Built by the ShuttleTV team.",
+    "host_name": "cinesrc.st",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]

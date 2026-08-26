@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://apideposu.com/en/blog/best-free-movie-tv-apis",
+    "name": "Best Free Movie and TV APIs for Developers in 2026",
+    "snippet": "Compare TMDB , OMDb, and TVmaze — free movie and TV metadata APIs for posters, ratings, schedules, and search.",
+    "host_name": "apideposu.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/webdev/comments/1hyzq0l/i_made_a_streaming_web_app",
+    "name": "I made a streaming web app : r/webdev",
+    "snippet": "The video providers are VidSrc , VidSrc Pro and Embed .su. come from TMDB using their public API. There is no download option, no torrenting ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/samratt5/best-vidsrc-alternative",
+    "name": "samratt5/best-vidsrc-alternative: Compare",
+    "snippet": "Jun 21, 2026 — This guide compares some of the most popular movie embed APIs and TMDB player solutions currently available.",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "Jun 21, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://getchannels.com/docs/server-api/resources/movies",
+    "name": "Server API: Movies",
+    "snippet": "On this page, we'll dive into the different movie endpoints you can use to read movie information programmatically from the Channels library.",
+    "host_name": "getchannels.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://cinesrc.st",
+    "name": "CineSrc - Free Video Streaming API | Embed Movies & TV",
+    "snippet": "CineSrc offers a free video streaming API with minimal ads . Easily embed movies and TV shows into your website using TMDB IDs. Built by the ShuttleTV team.",
+    "host_name": "cinesrc.st",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.pcmag.com/picks/the-best-free-video-streaming-services",
+    "name": "The Best Free Video Streaming Services for 2026",
+    "snippet": "Jun 2, 2026 — Tubi is our top pick , Kanopy is a top-tier streaming video service that offers a wealth of independent, ad-free educational and entertainment ...",
+    "host_name": "www.pcmag.com",
+    "rank": 5,
+    "date": "Jun 2, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.scribd.com/document/944190747/Video-Providers",
+    "name": "Movie and TV Embed Guide | PDF | Software | Computing",
+    "snippet": "The document provides various methods for embedding movies and TV shows using different platforms such as SuperEmbed, VidSrc, Vidify, SmashyStream, and 2embed.",
+    "host_name": "www.scribd.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://korben.info/en/free-legal-streaming-sites-2026-guide.html",
+    "name": "Free legal streaming Sites – The real 2026 guide",
+    "snippet": "Feb 10, 2026 — Free and legal streaming in 2026 : Pluto TV, Arte, France.tv, WikiFlix, and 10 other tested platforms. Films, series, and catch-up TV with no ...",
+    "host_name": "korben.info",
+    "rank": 7,
+    "date": "Feb 10, 2026",
+    "favicon": ""
+  }
+]
