@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://github.com/morpheus65535/bazarr/issues/2050",
+    "name": "Bazarr marks every single show and movie as English",
+    "snippet": "Jan 30, 2023 — Picking French shows is an important point: very little French TV shows are dubbed to English . A lot of movies is the same. So it's more rare ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "Jan 30, 2023",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.mediakind.com/mkio/how-to/ai-features/multi-language-vod-dubbing",
+    "name": "Multi-language VOD Dubbing Guide",
+    "snippet": "This guide shows how to use the MK.IO AI dubbing pipeline to generate Spanish, German, and French audio tracks from English- language video content. Read more",
+    "host_name": "docs.mediakind.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://apis.support.brightcove.com/dynamic-ingest/ingest-guides/ingesting-videos-multiple-audio-tracks.html",
+    "name": "Ingesting Videos with Multi-Language Audio Tracks",
+    "snippet": "Ingestion of multi - language audio tracks is supported through the Dynamic Ingest API only, Note: adding multiple audio tracks must be enabled for your account ... Read more",
+    "host_name": "apis.support.brightcove.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.mux.com/articles/video-dubbing-multi-language-audio-tracks-api-guide",
+    "name": "Video Dubbing and Multi-Language Audio Tracks",
+    "snippet": "How to build a complete video dubbing pipeline using Mux Robots, the audio track API, and AI services to deliver multi-language playback.",
+    "host_name": "www.mux.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/French/comments/bdwqw0/best_way_to_see_french_movies_with_french_audio",
+    "name": "Best way to see French movies with French audio AND",
+    "snippet": "I am finding it difficult to get hold of these.\n\nAmazon Prime/ Netflix in the UK tend to offer English subtitles only.\n\nI have no idea what Torrent sites ...",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/gamesounddesign/posts/10160451253872679",
+    "name": "Can onset audio be dubbed for foreign languages?",
+    "snippet": "Can a film that has all audio recorded onset be dubbed?\n\nWorking on a film that has all audio recorded onset from a single mic and the distributor wants ...",
+    "host_name": "www.facebook.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://amazonforum.my.site.com/s/question/0D56Q0000CnsvGQSQY/watch-multilingual-video-in-original-languages?language=en_US",
+    "name": "Watch multi-lingual video in original languages",
+    "snippet": "Jan 24, 2024 — For many Prime Video titles, you can choose multilanguage Subtitles and audio dubbing for video playback. Open Audio & Languages.",
+    "host_name": "amazonforum.my.site.com",
+    "rank": 6,
+    "date": "Jan 24, 2024",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.google.com/youtube/answer/13338784?hl=en",
+    "name": "Add Multi-language features to your videos - YouTube Help",
+    "snippet": "Multi-language audio enables you to upload additional audio tracks in multiple languages for both new and previously uploaded videos. How it works for viewers: ... Read more",
+    "host_name": "support.google.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]

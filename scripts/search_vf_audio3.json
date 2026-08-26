@@ -1,0 +1,65 @@
+[
+  {
+    "url": "https://www.reddit.com/r/editors/comments/17br0yx/making_a_video_with_4_audio_languages",
+    "name": "Making a video with 4 audio languages? : r/editors",
+    "snippet": "I'm currently editing a video on Premiere Pro and my client asked to add 4 languages (no subtitles, only audio tracks) in order to have a video with ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.google.com/youtube/answer/13338784?hl=en",
+    "name": "Add Multi-language features to your videos - YouTube Help",
+    "snippet": "The Multi-language audio feature allows you to upload audio tracks in different languages to a single video or Short.",
+    "host_name": "support.google.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.mux.com/articles/video-dubbing-multi-language-audio-tracks-api-guide",
+    "name": "Video Dubbing and Multi-Language Audio Tracks",
+    "snippet": "How to build a complete video dubbing pipeline using Mux Robots, the audio track API, and AI services to deliver multi-language playback.",
+    "host_name": "www.mux.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://apis.support.brightcove.com/dynamic-ingest/ingest-guides/ingesting-videos-multiple-audio-tracks.html",
+    "name": "Ingesting Videos with Multi-Language Audio Tracks",
+    "snippet": "Ingesting Videos with Multi-Language Audio Tracks. Language audio tracks in your source videos can be preserved in your Video Cloud video renditions. Read more",
+    "host_name": "apis.support.brightcove.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.mediakind.com/mkio/how-to/ai-features/multi-language-vod-dubbing",
+    "name": "Multi-language VOD Dubbing Guide",
+    "snippet": "This guide shows how to use the MK.IO AI dubbing pipeline to generate Spanish, German, and French audio tracks from English-language video content. Read more",
+    "host_name": "docs.mediakind.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.forasoft.com/learn/audio-for-video/articles-audio/multi-language-audio-tracks-dubs-descriptive",
+    "name": "Multi-Language Audio: Tracks, Dubs, Descriptive Audio, Sign",
+    "snippet": "Jun 8, 2026 — A film shot in English might ship with the original English mix, a French dub , a Spanish dub , a German dub , and — separately — an English track ... Read more",
+    "host_name": "www.forasoft.com",
+    "rank": 5,
+    "date": "Jun 8, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.yuja.com/hc/en-us/articles/20995749773719-How-to-Generate-Multi-Language-Audio-Tracks-for-Video-and-Audio-Files",
+    "name": "How to Generate Multi-Language Audio Tracks for Video",
+    "snippet": "Jul 2, 2026 — Creators can generate dubbed audio tracks for their videos and audio files that natively contain an English track. Read more",
+    "host_name": "support.yuja.com",
+    "rank": 6,
+    "date": "Jul 2, 2026",
+    "favicon": ""
+  }
+]

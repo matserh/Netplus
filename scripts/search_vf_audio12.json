@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://medium.com/web3-use-case/python-and-api-to-download-your-favorite-anime-episodes-e9715fca4ff5",
+    "name": "Python and API to download your favorite Anime episodes",
+    "snippet": "GogoAnime API is a free anime streaming restful API serving anime from Gogoanime. You can get recent episodes, get popular anime list, you can ...",
+    "host_name": "medium.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/node/comments/1spxs61/live_streaming_api_like_gogoanime",
+    "name": "live streaming api like gogoanime : r/node",
+    "snippet": "I'm building a custom anime frontend (Node.js/Express) and I'm looking for a working Consumet API instance or a similar Gogoanime scraper API ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/consumet?l=typescript&o=desc&s=updated",
+    "name": "consumet · GitHub Topics",
+    "snippet": "A website where you can watch anime , made using next.js and animetize- api , source code for youtube tutorial. website youtube anime nextjs watch consumet ...",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://classic.yarnpkg.com/en/package/gogoanime-api-new",
+    "name": "gogoanime-api-new",
+    "snippet": "Gogoanime is a custom API that provides data from the 10.gogoanime.io website. You will have access to the entire catalog whether movies, series, current ...",
+    "host_name": "classic.yarnpkg.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://jsr.io/@samirxpikachu/anime-api",
+    "name": "@samirxpikachu/anime-api - JSR",
+    "snippet": "consumet .ts is a Node library which provides high-level APIs to get information about several entertainment mediums like books, movies, comics, anime , manga, ...",
+    "host_name": "jsr.io",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.val.town/x/HeilAnime/animeStreamingApp/code/main.tsx",
+    "name": "main.tsx - Anime Streaming",
+    "snippet": "A TypeScript project on Val Town written by HeilAnime. Free Anime API : Consumet's Anime API const. API = \"https:// api . consumet .org/ anime / gogoanime /\";",
+    "host_name": "www.val.town",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.scribd.com/document/643908773/Gogo-anime",
+    "name": "GoGoAnime Module Overview | PDF | Computer Engineering",
+    "snippet": "GoGoAnime differentiates between dubbed and subbed content using a straightforward conditional check within the getType function. The function analyzes the ...",
+    "host_name": "www.scribd.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://flutterawesome.com/an-anime-streaming-application-with-flutter",
+    "name": "An Anime streaming application with Flutter",
+    "snippet": "May 30, 2023 — So, basically this is an Anime streaming application. It uses consumet API under-the-hood for everything from searching to streaming.",
+    "host_name": "flutterawesome.com",
+    "rank": 7,
+    "date": "May 30, 2023",
+    "favicon": ""
+  }
+]

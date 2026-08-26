@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://developers.google.com/youtube/iframe_api_reference",
+    "name": "YouTube Player API Reference for iframe Embeds",
+    "snippet": "The IFrame player API lets you embed a YouTube video player on your website and control the player using JavaScript. Using the API's JavaScript functions, ... Read more",
+    "host_name": "developers.google.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://javascript.plainenglish.io/how-to-stream-a-youtube-video-with-javascript-basics-and-beyond-3c4018eee9b6",
+    "name": "How to Stream a YouTube Video with JavaScript: Basics",
+    "snippet": "Nov 7, 2023 — In this tutorial, we'll dive into the YouTube IFrame Player API , which allows us to embed YouTube videos and control them programmatically ...",
+    "host_name": "javascript.plainenglish.io",
+    "rank": 1,
+    "date": "Nov 7, 2023",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@mihauco/youtube-iframe-api-without-youtube-iframe-api-f0ac5fcf7c74",
+    "name": "YouTube iFrame API without YouTube iFrame API",
+    "snippet": "If you've ever tried to control an embedded YouTube player with JavaScript, you probably ended up using the official YouTube API script. Read more",
+    "host_name": "medium.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developers.cloudflare.com/stream/viewing-videos/using-the-stream-player/using-the-player-api",
+    "name": "Stream Player API",
+    "snippet": "Apr 21, 2026 — Control Cloudflare Stream video playback and listen for media events using the JavaScript SDK.",
+    "host_name": "developers.cloudflare.com",
+    "rank": 3,
+    "date": "Apr 21, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://stackoverflow.com/questions/5832462/youtube-player-tracking-api-for-iframe-embed",
+    "name": "Youtube player tracking API for iframe embed",
+    "snippet": "Youtube Player API for iframe tracking is experimental and should not be used for production sites! like this can be used to get events and ...",
+    "host_name": "stackoverflow.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/IBM/video-streaming-web-player-api",
+    "name": "IBM/video-streaming-web-player-api",
+    "snippet": "Enables sites using the IBM Video Streaming embed iframe to build and adapt on the embed live player . The Player API provides basic methods to control the ... Read more",
+    "host_name": "github.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developers.video.ibm.com/player-api-usage",
+    "name": "Usage",
+    "snippet": "The Player API enables sites using the IBM Video Streaming embed iframe to build and adapt on the embed live player . The Player API provides basic methods to ... Read more",
+    "host_name": "developers.video.ibm.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://support.google.com/youtube/answer/171780?hl=en",
+    "name": "Embed videos & playlists - YouTube Help",
+    "snippet": "You can add a YouTube video or playlist to a website or blog by embedding it . If you are an educator, get in touch with your Educational Technology platform ...",
+    "host_name": "support.google.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]
