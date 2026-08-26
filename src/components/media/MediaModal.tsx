@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -24,6 +24,7 @@ import {
   getMediaYear,
   API_CONFIG 
 } from '@/types/media';
+import { useDynamicTheme } from '@/contexts/ThemeContext';
 
 interface MediaModalProps {
   media: Media | null;
@@ -77,6 +78,17 @@ export function MediaModal({ media, open, onOpenChange }: MediaModalProps) {
   const [details, setDetails] = useState<MovieDetails | TVDetails | null>(null);
   const [extraData, setExtraData] = useState<ExtraData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { setContentTheme, resetTheme } = useDynamicTheme();
+  const themedMediaIdRef = useRef<number | null>(null);
+
+  // Reset theme when modal closes
+  useEffect(() => {
+    if (!open) {
+      themedMediaIdRef.current = null;
+      // Don't reset immediately — let the banner reclaim the theme
+      // resetTheme is called by the isActive check in context if needed
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!media || !open) {
@@ -149,7 +161,14 @@ export function MediaModal({ media, open, onOpenChange }: MediaModalProps) {
     };
 
     fetchDetails();
-  }, [media, open]);
+
+    // Dynamic theme: adapt colors to this media's backdrop
+    if (media.id !== themedMediaIdRef.current) {
+      themedMediaIdRef.current = media.id;
+      const themeImg = getBackdropUrl(media.backdrop_path, 'w500') || getPosterUrl(media.poster_path, 'w342');
+      if (themeImg) setContentTheme(themeImg);
+    }
+  }, [media, open, setContentTheme]);
 
   if (!media) return null;
 

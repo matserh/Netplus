@@ -15,6 +15,7 @@ import {
 } from '@/types/media';
 import { useChallenge } from '@/contexts/ChallengeContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
+import { useDynamicTheme } from '@/contexts/ThemeContext';
 import { SmartVideoPlayer } from '@/components/ui/SmartVideoPlayer';
 import { SubtitleOverlay } from '@/components/ui/SubtitleOverlay';
 
@@ -70,6 +71,7 @@ function WatchContent() {
     isLoaded,
   } = useChallenge();
   const { addToHistory, updateProgress, getHistoryEntry } = useWatchHistory();
+  const { setContentTheme } = useDynamicTheme();
   const progressSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const mediaType = params.type as 'movie' | 'tv';
@@ -153,6 +155,10 @@ function WatchContent() {
           const data = await res.json();
           setDetails(data);
 
+          // Dynamic theme: adapt to this content's backdrop
+          const bd = data.backdrop_path || data.poster_path;
+          if (bd) setContentTheme(`https://image.tmdb.org/t/p/w500${bd}`);
+
           if (!isMovie && data.seasons) {
             const filtered = data.seasons
               .filter((s: { season_number: number }) => s.season_number > 0)
@@ -172,7 +178,7 @@ function WatchContent() {
     };
 
     fetchDetails();
-  }, [mediaId, mediaType, isMovie, router]);
+  }, [mediaId, mediaType, isMovie, router, setContentTheme]);
 
   // Fetch episodes for TV when season changes
   useEffect(() => {

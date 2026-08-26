@@ -107,6 +107,23 @@
   }
 }
 
+/* ── Dynamic content-based theme transitions ── */
+html {
+  --dynamic-glow: rgba(229, 160, 13, 0.06);
+}
+
+/* When theme-transitioning class is active (added briefly during color shifts),
+   smoothly animate all color-related properties for a cinematic feel */
+html.theme-transitioning * {
+  transition: color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              fill 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              outline-color 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

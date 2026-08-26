@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Info, Star, Volume2, VolumeX, TrendingUp, Film, Tv } from 'lucide-react';
 import { Media, getBackdropUrl, getPosterUrl, getMediaTitle, getMediaYear, API_CONFIG } from '@/types/media';
+import { useDynamicTheme } from '@/contexts/ThemeContext';
 
 // Genre name map (French)
 const GENRE_NAMES_FR: Record<number, string> = {
@@ -25,9 +26,19 @@ export function Banner({ items, onItemClick }: BannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { setContentTheme } = useDynamicTheme();
+  const prevSlideRef = useRef(0);
 
   const current = items[currentIndex];
   const totalItems = items.length;
+
+  // Dynamic theme: adapt colors to current banner slide
+  useEffect(() => {
+    if (!current || currentIndex === prevSlideRef.current) return;
+    prevSlideRef.current = currentIndex;
+    const img = getBackdropUrl(current.backdrop_path, 'large') || getPosterUrl(current.poster_path, 'medium');
+    if (img) setContentTheme(img);
+  }, [currentIndex, current, setContentTheme]);
 
   const goToNext = useCallback(() => {
     if (isTransitioning || totalItems === 0) return;
@@ -114,6 +125,9 @@ export function Banner({ items, onItemClick }: BannerProps) {
           }} />
         )}
         
+        {/* Ambient glow tinted by dynamic theme */}
+        <div className="absolute inset-0" style={{ background: 'var(--dynamic-glow)' }} />
+
         {/* Cinematic Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />

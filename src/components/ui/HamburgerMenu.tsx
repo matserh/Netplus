@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/Logo';
+import { DynamicThemeToggle } from '@/components/ui/DynamicThemeToggle';
 import {
   Home,
   Film,
@@ -179,6 +180,7 @@ export function HamburgerMenu({ genres, onGenreSelect, onAIClick }: HamburgerMen
                 Premium
               </Link>
             </Button>
+            <DynamicThemeToggle className="!p-3 !border-0 rounded-lg hover:bg-white/5" />
           </div>
 
           {/* Divider */}

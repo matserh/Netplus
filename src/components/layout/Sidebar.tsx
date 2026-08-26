@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/Logo';
+import { DynamicThemeToggle } from '@/components/ui/DynamicThemeToggle';
 import {
   Home,
   TrendingUp,
@@ -350,6 +351,7 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                     <span>{item.label}</span>
                   </Link>
                 ))}
+                <DynamicThemeToggle className="!p-0 !border-0 bg-transparent hover:bg-transparent" />
               </nav>
 
             </>

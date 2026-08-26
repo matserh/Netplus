@@ -22,6 +22,7 @@ export interface ThemeColors {
   primaryForeground: string;
   accent: string;
   accentForeground: string;
+  backdropGlow: string;
 }
 
 // Context type
@@ -29,10 +30,15 @@ interface DynamicThemeContextType {
   isActive: boolean;
   currentColors: ThemeColors | null;
   currentImageUrl: string | null;
-  extractColorsFromImage: (imageUrl: string) => Promise<ThemeColors | null>;
-  applyTheme: (colors: ThemeColors) => void;
-  resetTheme: () => void;
   isExtracting: boolean;
+  /** Extract + apply in one call — the main API for content-based theming */
+  setContentTheme: (imageUrl: string) => Promise<void>;
+  /** Reset to default gold palette */
+  resetTheme: () => void;
+  /** Extract colors without applying */
+  extractColorsFromImage: (imageUrl: string) => Promise<ThemeColors | null>;
+  /** Manually apply pre-computed colors */
+  applyTheme: (colors: ThemeColors) => void;
 }
 
 // Default Netplus gold colors
@@ -41,6 +47,7 @@ const DEFAULT_COLORS: ThemeColors = {
   primaryForeground: '#000000',
   accent: '#f0c14b',
   accentForeground: '#000000',
+  backdropGlow: 'rgba(229, 160, 13, 0.06)',
 };
 
 // Create context
@@ -100,29 +107,17 @@ function hslToHex(h: number, s: number, l: number): string {
   let b = 0;
 
   if (0 <= h && h < 60) {
-    r = c;
-    g = x;
-    b = 0;
+    r = c; g = x; b = 0;
   } else if (60 <= h && h < 120) {
-    r = x;
-    g = c;
-    b = 0;
+    r = x; g = c; b = 0;
   } else if (120 <= h && h < 180) {
-    r = 0;
-    g = c;
-    b = x;
+    r = 0; g = c; b = x;
   } else if (180 <= h && h < 240) {
-    r = 0;
-    g = x;
-    b = c;
+    r = 0; g = x; b = c;
   } else if (240 <= h && h < 300) {
-    r = x;
-    g = 0;
-    b = c;
+    r = x; g = 0; b = c;
   } else if (300 <= h && h < 360) {
-    r = c;
-    g = 0;
-    b = x;
+    r = c; g = 0; b = x;
   }
 
   const toHex = (n: number) => {
@@ -133,9 +128,16 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+// Convert hex to rgba string
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Check if color is light or dark
 function isLightColor(r: number, g: number, b: number): boolean {
-  // Calculate relative luminance
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5;
 }
@@ -144,29 +146,24 @@ function isLightColor(r: number, g: number, b: number): boolean {
 function generateThemeColors(dominantRgb: RGB): ThemeColors {
   const hsl = rgbToHsl(dominantRgb.r, dominantRgb.g, dominantRgb.b);
   
-  // Adjust saturation and lightness for better UI colors
-  const primaryH = hsl.h;
-  const primaryS = Math.min(80, Math.max(50, hsl.s));
-  const primaryL = Math.min(55, Math.max(40, hsl.l));
+  // Boost saturation for more vivid primary
+  const primaryS = Math.min(85, Math.max(55, hsl.s + 10));
+  const primaryL = Math.min(55, Math.max(42, hsl.l));
+  const primary = hslToHex(hsl.h, primaryS, primaryL);
   
-  const primary = hslToHex(primaryH, primaryS, primaryL);
-  
-  // Generate accent color (slightly lighter/different hue)
-  const accentH = (primaryH + 20) % 360;
-  const accentS = Math.min(70, primaryS + 10);
-  const accentL = Math.min(60, primaryL + 15);
-  
+  // Accent: shift hue slightly, make lighter
+  const accentH = (hsl.h + 25) % 360;
+  const accentS = Math.min(75, primaryS);
+  const accentL = Math.min(62, primaryL + 12);
   const accent = hslToHex(accentH, accentS, accentL);
   
-  // Foreground colors based on primary brightness
+  // Foreground based on primary brightness
   const foreground = isLightColor(dominantRgb.r, dominantRgb.g, dominantRgb.b) ? '#000000' : '#ffffff';
   
-  return {
-    primary,
-    primaryForeground: foreground,
-    accent,
-    accentForeground: foreground,
-  };
+  // Subtle backdrop glow color for ambient effect
+  const backdropGlow = hexToRgba(primary, 0.06);
+  
+  return { primary, primaryForeground: foreground, accent, accentForeground: foreground, backdropGlow };
 }
 
 // Dynamic Theme Provider component
@@ -177,6 +174,7 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
   const [isExtracting, setIsExtracting] = useState(false);
   const previousColorsRef = useRef<ThemeColors | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const lastExtractedUrlRef = useRef<string | null>(null);
 
   // Load state from localStorage
   useEffect(() => {
@@ -208,6 +206,11 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
   const extractColorsFromImage = useCallback(async (imageUrl: string): Promise<ThemeColors | null> => {
     if (!canvasRef.current) return null;
     
+    // Skip if we already extracted from this exact URL
+    if (lastExtractedUrlRef.current === imageUrl) {
+      return previousColorsRef.current;
+    }
+    
     setIsExtracting(true);
     
     try {
@@ -215,8 +218,9 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
       img.crossOrigin = 'Anonymous';
       
       await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error('Failed to load image'));
+        const timeout = setTimeout(() => reject(new Error('Timeout')), 5000);
+        img.onload = () => { clearTimeout(timeout); resolve(); };
+        img.onerror = () => { clearTimeout(timeout); reject(new Error('Failed to load image')); };
         img.src = imageUrl;
       });
       
@@ -224,17 +228,16 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
       const ctx = canvas.getContext('2d');
       if (!ctx) return null;
       
-      // Draw image at small size for performance
+      // Draw at small size for performance
       const size = 50;
       canvas.width = size;
       canvas.height = size;
       ctx.drawImage(img, 0, 0, size, size);
       
-      // Get pixel data
       const imageData = ctx.getImageData(0, 0, size, size);
       const pixels = imageData.data;
       
-      // Color quantization using simple k-means-like approach
+      // Color quantization
       const colorCounts: Map<string, { count: number; r: number; g: number; b: number }> = new Map();
       
       for (let i = 0; i < pixels.length; i += 4) {
@@ -243,20 +246,16 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
         const b = pixels[i + 2];
         const a = pixels[i + 3];
         
-        // Skip transparent pixels
         if (a < 128) continue;
         
-        // Skip very dark or very light pixels
         const brightness = (r + g + b) / 3;
-        if (brightness < 20 || brightness > 235) continue;
+        if (brightness < 25 || brightness > 230) continue;
         
-        // Quantize colors (reduce to fewer distinct colors)
         const qr = Math.round(r / 32) * 32;
         const qg = Math.round(g / 32) * 32;
         const qb = Math.round(b / 32) * 32;
         
         const key = `${qr},${qg},${qb}`;
-        
         const existing = colorCounts.get(key);
         if (existing) {
           existing.count++;
@@ -271,13 +270,9 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
       
       colorCounts.forEach((color) => {
         const hsl = rgbToHsl(color.r, color.g, color.b);
-        
-        // Score based on saturation and count
-        // Prefer more saturated, mid-lightness colors
         const saturationScore = hsl.s;
         const lightnessScore = 100 - Math.abs(hsl.l - 50) * 2;
         const countScore = Math.log(color.count + 1) * 10;
-        
         const score = saturationScore * 0.4 + lightnessScore * 0.3 + countScore * 0.3;
         
         if (score > maxScore) {
@@ -287,7 +282,6 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
       });
       
       if (!dominantColor) {
-        // Fallback: find most common color
         let maxCount = 0;
         colorCounts.forEach((color) => {
           if (color.count > maxCount) {
@@ -297,42 +291,46 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
         });
       }
       
-      if (!dominantColor) {
-        return null;
-      }
+      if (!dominantColor) return null;
       
       const themeColors = generateThemeColors(dominantColor);
+      lastExtractedUrlRef.current = imageUrl;
       setCurrentColors(themeColors);
       setCurrentImageUrl(imageUrl);
       
       return themeColors;
     } catch (error) {
-      console.error('Error extracting colors:', error);
+      // Silent fail — don't break UX if image can't be loaded
       return null;
     } finally {
       setIsExtracting(false);
     }
   }, []);
 
-  // Apply theme colors to CSS variables
+  // Apply theme colors to CSS variables with smooth transitions
   const applyTheme = useCallback((colors: ThemeColors) => {
     if (typeof window === 'undefined') return;
     
     const root = document.documentElement;
     
-    // Add transition class for smooth color change
-    root.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+    // Enable transition class, apply colors, then remove after transition
+    root.classList.add('theme-transitioning');
     
-    // Apply colors to CSS variables
     root.style.setProperty('--primary', colors.primary);
     root.style.setProperty('--primary-foreground', colors.primaryForeground);
     root.style.setProperty('--accent', colors.accent);
     root.style.setProperty('--accent-foreground', colors.accentForeground);
-    
-    // Also set ring color for focus states
     root.style.setProperty('--ring', colors.primary);
+    root.style.setProperty('--sidebar-primary', colors.primary);
+    root.style.setProperty('--sidebar-ring', colors.primary);
+    root.style.setProperty('--dynamic-glow', colors.backdropGlow);
     
     previousColorsRef.current = colors;
+    
+    // Remove transition class after the animation completes
+    setTimeout(() => {
+      root.classList.remove('theme-transitioning');
+    }, 900);
   }, []);
 
   // Reset to default theme
@@ -340,16 +338,34 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
     if (typeof window === 'undefined') return;
     
     const root = document.documentElement;
+    root.classList.add('theme-transitioning');
     
     root.style.setProperty('--primary', DEFAULT_COLORS.primary);
     root.style.setProperty('--primary-foreground', DEFAULT_COLORS.primaryForeground);
     root.style.setProperty('--accent', DEFAULT_COLORS.accent);
     root.style.setProperty('--accent-foreground', DEFAULT_COLORS.accentForeground);
     root.style.setProperty('--ring', DEFAULT_COLORS.primary);
+    root.style.setProperty('--sidebar-primary', DEFAULT_COLORS.primary);
+    root.style.setProperty('--sidebar-ring', DEFAULT_COLORS.primary);
+    root.style.setProperty('--dynamic-glow', DEFAULT_COLORS.backdropGlow);
     
     setCurrentColors(null);
     setCurrentImageUrl(null);
+    lastExtractedUrlRef.current = null;
+    
+    setTimeout(() => {
+      root.classList.remove('theme-transitioning');
+    }, 900);
   }, []);
+
+  // **Main API**: extract colors from image + apply them in one call
+  const setContentTheme = useCallback(async (imageUrl: string) => {
+    if (!isActive || !imageUrl) return;
+    const colors = await extractColorsFromImage(imageUrl);
+    if (colors) {
+      applyTheme(colors);
+    }
+  }, [isActive, extractColorsFromImage, applyTheme]);
 
   // Handle dynamic theme active state changes
   useEffect(() => {
@@ -362,11 +378,12 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
     isActive,
     currentColors,
     currentImageUrl,
+    isExtracting,
+    setContentTheme,
+    resetTheme,
     extractColorsFromImage,
     applyTheme,
-    resetTheme,
-    isExtracting,
-  }), [isActive, currentColors, currentImageUrl, extractColorsFromImage, applyTheme, resetTheme, isExtracting]);
+  }), [isActive, currentColors, currentImageUrl, isExtracting, setContentTheme, resetTheme, extractColorsFromImage, applyTheme]);
 
   return (
     <DynamicThemeContext.Provider value={value}>
