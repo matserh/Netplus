@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://www.reddit.com/r/animepiracy/comments/jl713o/how_do_anime_websites_like_9anime_gogoanime",
+    "name": "How do anime websites like 9anime, Gogoanime, Twist(dot",
+    "snippet": "My current understanding of how this might work would be through Nyaa RSS feed, they're probably scraping it to get the torrent file and then use something ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.jsdelivr.com/package/npm/gogoanime-api-new",
+    "name": "gogoanime-api-new",
+    "snippet": "Gogoanime is a custom API that provides data. You will have access to the entire catalog whether movies, series, current episodes, etc., with English subtitles ...",
+    "host_name": "www.jsdelivr.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/wanghaisheng/apify-anime-api",
+    "name": "wanghaisheng/apify-anime-api: Open source",
+    "snippet": "Open source anime streaming provider API with Gogoanime + Anilist for amvstrm - wanghaisheng/apify- anime - api .",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.blackhatworld.com/seo/can-someone-help-me-with-making-anime-sites.1341911",
+    "name": "Can someone help me with making anime sites?",
+    "snippet": "Jul 16, 2021 — A magnitude of \" anime streaming sites\" these days are just \"gogo scraper\" which copy the iframe urls from gogoanime to put on their website ... Read more",
+    "host_name": "www.blackhatworld.com",
+    "rank": 3,
+    "date": "Jul 16, 2021",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.quora.com/How-can-I-create-an-anime-streaming-website-like-Gogo-anime-and-Animixplay-How-do-I-do-this-all-step-by-step",
+    "name": "How to create an anime streaming website like Gogo",
+    "snippet": "How can I create an anime streaming website like Gogo anime and Animixplay? How do I do this all step by step?",
+    "host_name": "www.quora.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://watchanime247.webflow.io",
+    "name": "Webflow Ecommerce website template: Store",
+    "snippet": "From there, Gogoanime TV was born, specializing in free and safe anime streaming for millions of anime lovers. The first version that was gogoanime .io was ... Read more",
+    "host_name": "watchanime247.webflow.io",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://classic.yarnpkg.com/en/package/anigo-anime-api",
+    "name": "anigo-anime-api",
+    "snippet": "Anigo-AnimeAPI is a anime streaming and discovery api built using NodeJS that scrapes Gogoanime and Animixplay. Get streaming URLs from Gogoanime",
+    "host_name": "classic.yarnpkg.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://addons.mozilla.org/en-CA/firefox/addon/watch-free-anime-at-gogoanime",
+    "name": "Watch free anime with eng sub at gogoanime",
+    "snippet": "Oct 12, 2022 — Gogoanime is a website that provides the best quality eng sub-anime series today, where you can easily watch the best quality anime at no cost. Read more",
+    "host_name": "addons.mozilla.org",
+    "rank": 7,
+    "date": "Oct 12, 2022",
+    "favicon": ""
+  }
+]

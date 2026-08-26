@@ -13,6 +13,7 @@ import {
   getMediaYear,
   API_CONFIG,
 } from '@/types/media';
+import { ANIME_GENRE_ID, isAnimeMedia } from '@/types/servers/anime';
 import { useChallenge } from '@/contexts/ChallengeContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
 import { useDynamicTheme } from '@/contexts/ThemeContext';
@@ -88,7 +89,7 @@ function WatchContent() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [seasonsList, setSeasonsList] = useState<{ number: number; name: string; episodeCount: number }[]>([]);
   const [serverIndex, setServerIndex] = useState(0);
-  const [selectedLang, setSelectedLang] = useState('FR');
+  const [selectedLang, setSelectedLang] = useState('VF');
   const [iframeKey, setIframeKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [watchTimer, setWatchTimer] = useState(0);
@@ -225,7 +226,7 @@ function WatchContent() {
     const servers = Object.values(API_CONFIG.videoServers).filter(s => s.lang === selectedLang);
     if (servers.length === 0) {
       // Fallback: if no server for this language, use VF
-      const fallback = Object.values(API_CONFIG.videoServers).filter(s => s.lang === 'FR');
+      const fallback = Object.values(API_CONFIG.videoServers).filter(s => s.lang === 'VF');
       const server = fallback[0];
       return isMovie ? server.movieUrl(mediaId) : server.tvUrl(mediaId, currentSeason, currentEpisode);
     }
@@ -337,6 +338,17 @@ function WatchContent() {
   const formattedRuntime = runtime ? `${Math.floor(runtime / 60)}h ${runtime % 60}min` : null;
   const numberOfSeasons = (details as TVDetails)?.number_of_seasons;
   const tagline = (details as MovieDetails)?.tagline || (details as TVDetails)?.tagline;
+
+  // Detect anime and redirect to anime watch page
+  useEffect(() => {
+    if (!details || loading) return;
+    const genreIds = (details as MovieDetails | TVDetails).genre_ids || 
+      ((details as MovieDetails | TVDetails).genres?.map((g: { id: number }) => g.id) || []);
+    const origLang = details.original_language;
+    if (isAnimeMedia(genreIds, origLang)) {
+      router.replace(`/anime/watch/${mediaId}?e=${currentEpisode}&s=${currentSeason}`);
+    }
+  }, [details, loading]);
 
   // Show loading until both TMDB data and challenge state are ready
   if (loading || !isLoaded) {

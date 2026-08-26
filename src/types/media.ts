@@ -1,5 +1,7 @@
 // Media Types for TMDB API
 
+import { DEBRID_SERVERS, DEBRID_LANGUAGE_GROUPS } from './servers/debrid';
+
 export interface Media {
   id: number;
   title?: string;
@@ -118,6 +120,7 @@ export interface TMDBResponse<T> {
   total_results: number;
 }
 
+// Legacy server types (kept for backward compatibility)
 export interface VideoServer {
   name: string;
   url: string;
@@ -132,6 +135,10 @@ export interface LanguageGroup {
 }
 
 // API Configuration
+// NOTE: videoServers & languageGroups are now sourced from servers/debrid.ts
+// They are kept here for backward compatibility with existing watch pages.
+// New code should import directly from '@/types/servers'
+
 export const API_CONFIG = {
   tmdb: {
     baseUrl: 'https://api.themoviedb.org/3',
@@ -151,82 +158,25 @@ export const API_CONFIG = {
       original: '/original'
     }
   },
-  videoServers: {
-    server1: {
-      name: 'VidSrc',
-      lang: 'FR',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=fr`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=fr`
-    },
-    server2: {
-      name: 'VidCore',
-      lang: 'FR',
-      movieUrl: (id: number) => `https://vidcore.org/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidcore.org/embed/tv/${id}/${season}/${episode}`
-    },
-    server3: {
-      name: '2Embed',
-      lang: 'FR',
-      movieUrl: (id: number) => `https://www.2embed.cc/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`
-    },
-    server4: {
-      name: 'VidSrc',
-      lang: 'EN',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=en`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=en`
-    },
-    server5: {
-      name: 'VidSrc',
-      lang: 'ES',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=es`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=es`
-    },
-    server6: {
-      name: 'VidSrc',
-      lang: 'DE',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=de`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=de`
-    },
-    server7: {
-      name: 'VidSrc',
-      lang: 'AR',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ar`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ar`
-    },
-    server8: {
-      name: 'VidSrc',
-      lang: 'JA',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ja`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ja`
-    },
-    server9: {
-      name: 'VidSrc',
-      lang: 'PT',
-      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=pt`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=pt`
-    },
-  },
+  // Legacy: mapped from DEBRID_SERVERS for backward compatibility
+  videoServers: Object.fromEntries(
+    Object.entries(DEBRID_SERVERS).map(([key, server]) => [
+      key.replace('debrid_', 'server'),
+      {
+        name: server.name,
+        lang: server.lang,
+        movieUrl: server.movieUrl,
+        tvUrl: server.tvUrl,
+      }
+    ])
+  ),
 
-  /** Language groups for the UI — these control subtitle language, not audio dub */
-  languageGroups: [
-    { id: 'FR', label: 'Français', flag: '🇫🇷' },
-    { id: 'EN', label: 'English', flag: '🇬🇧' },
-    { id: 'ES', label: 'Español', flag: '🇪🇸' },
-    { id: 'DE', label: 'Deutsch', flag: '🇩🇪' },
-    { id: 'AR', label: 'العربية', flag: '🇸🇦' },
-    { id: 'JA', label: '日本語', flag: '🇯🇵' },
-    { id: 'PT', label: 'Português', flag: '🇧🇷' },
-  ] as const,
+  /** Language groups — re-exported from debrid module */
+  languageGroups: DEBRID_LANGUAGE_GROUPS.map(g => ({
+    id: g.id,
+    label: g.label,
+    flag: g.flag,
+  })) as unknown as readonly { id: string; label: string; flag: string }[],
   language: 'fr-FR'
 } as const;
 

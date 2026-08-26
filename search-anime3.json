@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://github.com/topics/anime-streaming",
+    "name": "anime-streaming · GitHub Topics",
+    "snippet": "Free Anime streaming website with AniList tracker integration. Watch Animes, Read Mangas and make Comments on this website made with Next.js, TypeScript, ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/anime-api",
+    "name": "anime-api · GitHub Topics",
+    "snippet": "Watch Animes, Read Mangas and make Comments on this website made with Next.js, TypeScript, Firebase, Anilist, Consumet and Aniwatch API.",
+    "host_name": "github.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/anilist?l=typescript&o=desc&s=stars",
+    "name": "anilist · GitHub Topics",
+    "snippet": "AniProject: Watch Animes, Read Mangas and make Comments on this website made with Next.js, TypeScript, Firebase, Anilist, Consumet and Aniwatch API.",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/anime-streaming?l=typescript&o=desc&s=forks",
+    "name": "anime-streaming · GitHub Topics",
+    "snippet": "This project is an open-source API for retrieving multimedia content such as anime, movies and series, news, and manga in both Spanish and English.",
+    "host_name": "github.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/wanghaisheng/apify-anime-api",
+    "name": "wanghaisheng/apify-anime-api: Open source anime streaming  - GitHub",
+    "snippet": "Open source anime streaming provider API with Gogoanime + Anilist. Self-host your own API if you do high-volume requests. All APIs will be rate-limited from 80 ...",
+    "host_name": "github.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/developersIndia/comments/1ewqgez/mini_project_anime_torrent_streamer_made_this_to",
+    "name": "Mini Project : Anime torrent streamer | Made this to practice React  - Reddit",
+    "snippet": "Aug 20, 2024 · https://api.ani.zip is the API that is currently being used to fetch anime episodes with https://graphql.anilist.co as a fallback in case AniZip ...",
+    "host_name": "www.reddit.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://download.plaud.ai/ShivaBhattacharjee/AnimeTrix-next",
+    "name": "GitHub - ShivaBhattacharjee/AnimeTrix-next",
+    "snippet": "Aug 1, 2025 · Animetrix is a project that utilizes the Anilist platform to obtain information on various anime titles, and it combines this data with the ...",
+    "host_name": "download.plaud.ai",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/anime-watch?o=asc&s=stars",
+    "name": "anime-watch · GitHub Topics",
+    "snippet": "An anime streaming site created with NextJs … a website where you can watch anime, made using next.js",
+    "host_name": "github.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/194976851609008/posts/793046061802081",
+    "name": "Anime streaming website built with NextJS, React, and TailwindCSS",
+    "snippet": "Oct 26, 2022 · I made an anime streaming website using NEXTJS, REACT,TAILWINDCSS,REDUX, if you are interested here is the github repo to play with it: https:// ...",
+    "host_name": "www.facebook.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/topics/anime-watching?l=typescript",
+    "name": "anime-watching · GitHub Topics",
+    "snippet": "An anime streaming site created with NextJs 14, React 18, NextUI, Anify API, Consumet API and Anilist API. react anime nextjs anilist anime-search ...",
+    "host_name": "github.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://github.com/wanghaisheng/apify-anime-api",
+    "name": "wanghaisheng/apify-anime-api: Open source",
+    "snippet": "Open source anime streaming provider API with Gogoanime + Anilist for amvstrm - wanghaisheng/apify- anime - api .",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/animepiracy/comments/jl713o/how_do_anime_websites_like_9anime_gogoanime",
+    "name": "How do anime websites like 9anime, Gogoanime, Twist(dot",
+    "snippet": "My current understanding of how this might work would be through Nyaa RSS feed, they're probably scraping it to get the torrent file and then use something ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.blackhatworld.com/seo/can-someone-help-me-with-making-anime-sites.1341911",
+    "name": "Can someone help me with making anime sites?",
+    "snippet": "Jul 16, 2021 — A magnitude of \" anime streaming sites\" these days are just \"gogo scraper\" which copy the iframe urls from gogoanime to put on their website (my ... Read more",
+    "host_name": "www.blackhatworld.com",
+    "rank": 2,
+    "date": "Jul 16, 2021",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.jsdelivr.com/package/npm/gogoanime-api-new",
+    "name": "gogoanime-api-new",
+    "snippet": "A free, fast, and reliable CDN for gogoanime - api -new. Gogoanime is a custom API that provides data from the `10. gogoanime .io` website.",
+    "host_name": "www.jsdelivr.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://rapidapi.com/adarsh.chouhan11/api/anime-streaming",
+    "name": "Anime Streaming",
+    "snippet": "A comprehensive REST API for accessing anime content, metadata, and streaming sources. Get iframe embeds , direct M3U8/HLS video URLs",
+    "host_name": "rapidapi.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://docs.anilist.co",
+    "name": "AniList API Docs",
+    "snippet": "AniList and AniChart are both built on the same API , ensuring a high level of compatibility and reliability. Read more",
+    "host_name": "docs.anilist.co",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.quora.com/How-can-I-create-an-anime-streaming-website-like-Gogo-anime-and-Animixplay-How-do-I-do-this-all-step-by-step",
+    "name": "How to create an anime streaming website like Gogo",
+    "snippet": "How can I create an anime streaming website like Gogo anime and Animixplay? How do I do this all step by step?",
+    "host_name": "www.quora.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://classic.yarnpkg.com/en/package/anigo-anime-api",
+    "name": "anigo-anime-api",
+    "snippet": "Anigo-AnimeAPI is a anime streaming and discovery api built using NodeJS that scrapes Gogoanime and Animixplay to return data. Read more",
+    "host_name": "classic.yarnpkg.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]
