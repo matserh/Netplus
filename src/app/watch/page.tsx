@@ -83,6 +83,7 @@ function WatchContent() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [seasonsList, setSeasonsList] = useState<{ number: number; name: string; episodeCount: number }[]>([]);
   const [serverIndex, setServerIndex] = useState(0);
+  const [selectedLang, setSelectedLang] = useState('VF');
   const [iframeKey, setIframeKey] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [watchTimer, setWatchTimer] = useState(0);
@@ -202,18 +203,25 @@ function WatchContent() {
     fetchEpisodes();
   }, [mediaId, currentSeason, isMovie, currentEpisode]);
 
-  // Build video URL
+  // Get servers filtered by selected language
+  const allServers = Object.values(API_CONFIG.videoServers);
+  const filteredServers = allServers.filter(s => s.lang === selectedLang);
+  const activeServerIndex = serverIndex % Math.max(filteredServers.length, 1);
+
+  // Build video URL using language-filtered servers
   const getVideoUrl = useCallback(() => {
     const id = Number(mediaId);
-    const servers = Object.values(API_CONFIG.videoServers);
-    const server = servers[serverIndex % servers.length];
-
-    if (isMovie) {
-      return server.movieUrl(id);
-    } else {
-      return server.tvUrl(id, currentSeason, currentEpisode);
+    const servers = Object.values(API_CONFIG.videoServers).filter(s => s.lang === selectedLang);
+    if (servers.length === 0) {
+      const fallback = Object.values(API_CONFIG.videoServers).filter(s => s.lang === 'VF');
+      const server = fallback[0];
+      return isMovie ? server.movieUrl(id) : server.tvUrl(id, currentSeason, currentEpisode);
     }
-  }, [mediaId, isMovie, currentSeason, currentEpisode, serverIndex]);
+    const server = servers[activeServerIndex % servers.length];
+    return isMovie
+      ? server.movieUrl(id)
+      : server.tvUrl(id, currentSeason, currentEpisode);
+  }, [mediaId, isMovie, currentSeason, currentEpisode, activeServerIndex, selectedLang]);
 
   // Reload iframe when switching server/episode
   const reloadPlayer = () => {
@@ -222,7 +230,7 @@ function WatchContent() {
 
   useEffect(() => {
     reloadPlayer();
-  }, [serverIndex, currentSeason, currentEpisode]);
+  }, [serverIndex, currentSeason, currentEpisode, selectedLang]);
 
   // Save progress to history periodically and on unmount
   // NOTE: watchTimer is NOT in deps to avoid re-creating the interval every second.
@@ -374,7 +382,12 @@ function WatchContent() {
     );
   }
 
-  const serverEntries = Object.values(API_CONFIG.videoServers);
+  const handleLangChange = (lang: string) => {
+    setSelectedLang(lang);
+    setServerIndex(0);
+  };
+
+  const serverEntries = filteredServers.length > 0 ? filteredServers : allServers.filter(s => s.lang === 'VF');
 
   return (
     <div className="min-h-screen bg-background">
@@ -414,7 +427,7 @@ function WatchContent() {
           title={title}
           serverIndex={serverIndex}
           totalServers={serverEntries.length}
-          onNextServer={() => setServerIndex(i => (i + 1) % serverEntries.length)}
+          onNextServer={() => setServerIndex(i => (i + 1) % Math.max(serverEntries.length, 1))}
           onRetry={() => setIframeKey(k => k + 1)}
           aspectClass="aspect-video"
         />
@@ -471,16 +484,15 @@ function WatchContent() {
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-3 sm:line-clamp-none">{overview}</p>
         </div>
 
-        {/* Server Switch + AI Subtitles */}
+        {/* Language Selector + Server Switch + AI Subtitles */}
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
               </svg>
-              <span className="text-xs sm:text-sm text-muted-foreground font-medium">Serveur de lecture</span>
+              <span className="text-xs sm:text-sm text-muted-foreground font-medium">Lecteur vidéo</span>
             </div>
-            {/* AI Subtitles toggle — single button only */}
             <button
               onClick={() => setSubtitlesActive(prev => !prev)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
@@ -495,36 +507,53 @@ function WatchContent() {
               {subtitlesActive ? 'Sous-titres ON' : 'Sous-titres IA'}
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {serverEntries.map((server, idx) => {
-              const lang = (server as { lang?: string }).lang || 'VO';
-              const isVF = lang === 'VF';
-              const isVOSTFR = lang === 'VOSTFR';
+          <div className="flex gap-1 sm:gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-hide">
+            {API_CONFIG.languageGroups.map(g => {
+              const serverCount = allServers.filter(s => s.lang === g.id).length;
+              if (serverCount === 0) return null;
               return (
                 <button
-                  key={server.name}
-                  onClick={() => setServerIndex(idx)}
-                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                    serverIndex === idx
+                  key={g.id}
+                  onClick={() => handleLangChange(g.id)}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                    selectedLang === g.id
                       ? 'bg-primary text-black shadow-lg shadow-primary/20'
-                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
                   }`}
                 >
-                  <span className={`px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-black leading-none ${
-                    serverIndex === idx
+                  <span>{g.flag}</span>
+                  <span>{g.label}</span>
+                  <span className={`px-1 py-0.5 rounded text-[9px] font-black ${
+                    selectedLang === g.id
                       ? 'bg-black/20 text-black'
-                      : isVF
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : isVOSTFR
-                      ? 'bg-amber-500/20 text-amber-400'
-                      : 'bg-white/10 text-white/40'
+                      : 'bg-white/10 text-white/30'
                   }`}>
-                    {lang}
+                    {serverCount}
                   </span>
-                  <span>{server.name.replace(' VF', '').replace(' VOSTFR', '')}</span>
                 </button>
               );
             })}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {serverEntries.map((server, idx) => (
+              <button
+                key={`${server.lang}-${server.name}-${idx}`}
+                onClick={() => setServerIndex(idx)}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                  activeServerIndex === idx
+                    ? 'bg-white/10 text-white border border-primary/40'
+                    : 'bg-white/[0.03] text-white/40 hover:bg-white/[0.06] hover:text-white/60 border border-transparent'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  activeServerIndex === idx ? 'bg-primary' : 'bg-white/20'
+                }`} />
+                <span>{server.name}</span>
+                {activeServerIndex === idx && (
+                  <span className="text-[9px] text-primary font-bold">ACTIF</span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 

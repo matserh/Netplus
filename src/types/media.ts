@@ -121,6 +121,14 @@ export interface TMDBResponse<T> {
 export interface VideoServer {
   name: string;
   url: string;
+  lang: string;
+}
+
+export interface LanguageGroup {
+  id: string;
+  label: string;
+  flag: string;
+  servers: VideoServer[];
 }
 
 // API Configuration
@@ -145,48 +153,88 @@ export const API_CONFIG = {
   },
   videoServers: {
     server1: {
+      name: 'VidSrc',
+      lang: 'VF',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=fr`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=fr`
+    },
+    server2: {
       name: 'VidCore',
-      lang: 'VOSTFR',
+      lang: 'VF',
       movieUrl: (id: number) => `https://vidcore.org/embed/movie/${id}`,
       tvUrl: (id: number, season: number, episode: number) =>
         `https://vidcore.org/embed/tv/${id}/${season}/${episode}`
     },
-    server2: {
-      name: 'CineSrc',
-      lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://cinesrc.st/embed/movie/${id}`,
-      tvUrl: (id: number, season: number, episode: number) =>
-        `https://cinesrc.st/embed/tv/${id}/${season}/${episode}`
-    },
     server3: {
-      name: 'VidSrc',
-      lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://vidsrc.pro/embed/movie/${id}`,
+      name: '2Embed',
+      lang: 'VF',
+      movieUrl: (id: number) => `https://www.2embed.cc/embed/movie/${id}`,
       tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.pro/embed/tv/${id}/${season}/${episode}`
+        `https://www.2embed.cc/embed/tv/${id}/${season}/${episode}`
     },
     server4: {
-      name: 'EmbedSu',
+      name: 'VidSrc',
       lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://embed.su/embed/movie/${id}`,
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}`,
       tvUrl: (id: number, season: number, episode: number) =>
-        `https://embed.su/embed/tv/${id}/${season}/${episode}`
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}`
     },
     server5: {
-      name: 'SuperEmbed',
-      lang: 'VOSTFR',
-      movieUrl: (id: number) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+      name: 'VidSrc',
+      lang: 'VO',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=en`,
       tvUrl: (id: number, season: number, episode: number) =>
-        `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=en`
     },
     server6: {
-      name: 'VidSrc To',
-      lang: 'VO',
-      movieUrl: (id: number) => `https://vidsrc.to/embed/movie/${id}`,
+      name: 'VidSrc',
+      lang: 'ES',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=es`,
       tvUrl: (id: number, season: number, episode: number) =>
-        `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=es`
+    },
+    server7: {
+      name: 'VidSrc',
+      lang: 'DE',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=de`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=de`
+    },
+    server8: {
+      name: 'VidSrc',
+      lang: 'AR',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ar`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ar`
+    },
+    server9: {
+      name: 'VidSrc',
+      lang: 'JA',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=ja`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=ja`
+    },
+    server10: {
+      name: 'VidSrc',
+      lang: 'PT',
+      movieUrl: (id: number) => `https://vidsrc.pm/embed/movie/${id}?lang=pt`,
+      tvUrl: (id: number, season: number, episode: number) =>
+        `https://vidsrc.pm/embed/tv/${id}/${season}/${episode}?lang=pt`
     },
   },
+
+  /** Language groups for the UI language selector */
+  languageGroups: [
+    { id: 'VF', label: 'Français', flag: '🇫🇷' },
+    { id: 'VOSTFR', label: 'Sous-titres FR', flag: '💬' },
+    { id: 'VO', label: 'Original', flag: '🌐' },
+    { id: 'ES', label: 'Español', flag: '🇪🇸' },
+    { id: 'DE', label: 'Deutsch', flag: '🇩🇪' },
+    { id: 'AR', label: 'العربية', flag: '🇸🇦' },
+    { id: 'JA', label: '日本語', flag: '🇯🇵' },
+    { id: 'PT', label: 'Português', flag: '🇧🇷' },
+  ] as const,
   language: 'fr-FR'
 } as const;
 
