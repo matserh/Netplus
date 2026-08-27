@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { useSession } from '@/contexts/AuthContext';
+import { ADMIN_EMAILS } from '@/lib/beta-config';
 
 interface ChallengeState {
   // Task 1: Talk with Maître Netplus
@@ -23,12 +25,14 @@ interface ChallengeContextType extends ChallengeState {
   recordWatchStart: () => void;
   recordWatchSeconds: (seconds: number) => void;
   recordScroll: () => void;
-  incrementWatchCount: () => boolean; // returns false if blocked (basic limit reached)
+  incrementWatchCount: () => boolean; // returns false if blocked (limit reached)
   canWatch: () => boolean;
   resetChallenges: () => void;
   getProgress: () => number; // 0-3 tasks completed
   BASIC_LIMIT: number;
   isLoaded: boolean; // true once localStorage state has been hydrated
+  isAdminUser: boolean;
+  getUserLimit: () => number;
 }
 
 const STORAGE_KEY = 'netplus_challenges';
@@ -79,6 +83,22 @@ const ChallengeContext = createContext<ChallengeContextType | null>(null);
 export function ChallengeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ChallengeState>(defaultState);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { data: session, status } = useSession();
+
+  // Admin check
+  const isAdminUser = useMemo(() => {
+    if (status !== 'authenticated' || !session?.user?.email) return false;
+    return ADMIN_EMAILS.some(a => a.toLowerCase() === session.user.email.toLowerCase());
+  }, [status, session?.user?.email]);
+
+  // Dynamic user limit based on tier
+  const getUserLimit = useCallback((): number => {
+    if (isAdminUser) return Infinity;
+    const effectivePremium = checkPremium(state);
+    if (effectivePremium) return Infinity;
+    if (status === 'authenticated') return 20;
+    return 10; // guest/basic
+  }, [isAdminUser, state, status]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -141,10 +161,13 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const incrementWatchCount = useCallback((): boolean => {
+    // Admin always allowed
+    if (isAdminUser) return true;
     // Use functional update to avoid stale closure over state
     let allowed = false;
     setState(prev => {
-      const canIncrement = prev.isPremium || prev.watchCount < BASIC_LIMIT;
+      const limit = getUserLimit();
+      const canIncrement = checkPremium(prev) || prev.watchCount < limit;
       if (canIncrement) {
         allowed = true;
         return { ...prev, watchCount: prev.watchCount + 1 };
@@ -152,14 +175,17 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
       return prev;
     });
     return allowed;
-  }, []);
+  }, [isAdminUser, getUserLimit]);
 
   const canWatch = useCallback((): boolean => {
+    // Admin always allowed
+    if (isAdminUser) return true;
     // Recalculate isPremium from task flags to prevent stale premium state
     const effectivePremium = checkPremium(state);
     if (effectivePremium) return true;
-    return state.watchCount < BASIC_LIMIT;
-  }, [state]);
+    const limit = getUserLimit();
+    return state.watchCount < limit;
+  }, [isAdminUser, state, getUserLimit]);
 
   const resetChallenges = useCallback(() => {
     setState(defaultState);
@@ -187,6 +213,8 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
       getProgress,
       BASIC_LIMIT,
       isLoaded,
+      isAdminUser,
+      getUserLimit,
     }}>
       {children}
     </ChallengeContext.Provider>

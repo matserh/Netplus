@@ -15,6 +15,7 @@ import {
 } from '@/types/media';
 import { ANIME_GENRE_ID, isAnimeMedia } from '@/types/servers/anime';
 import { useChallenge } from '@/contexts/ChallengeContext';
+import { useSession } from '@/contexts/AuthContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
 import { useDynamicTheme } from '@/contexts/ThemeContext';
 import { SmartVideoPlayer } from '@/components/ui/SmartVideoPlayer';
@@ -70,7 +71,9 @@ function WatchContent() {
     hasWatchedContent,
     BASIC_LIMIT,
     isLoaded,
+    getUserLimit,
   } = useChallenge();
+  const { status: authStatus } = useSession();
   const { addToHistory, updateProgress, getHistoryEntry } = useWatchHistory();
   const { setContentTheme } = useDynamicTheme();
   const progressSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -368,6 +371,8 @@ function WatchContent() {
   }
 
   // Access blocked overlay
+  const isAuthenticated = authStatus === 'authenticated';
+  const userLimit = getUserLimit();
   if (isBlocked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -379,21 +384,26 @@ function WatchContent() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-3">Limite atteinte</h1>
           <p className="text-sm text-muted-foreground mb-2">
-            Vous avez utilis&eacute; vos {BASIC_LIMIT} contenus gratuits.
+            {isAuthenticated
+              ? <>Vous avez atteint l&apos;usage de vos {userLimit === Infinity ? '∞' : userLimit} contenus. Accomplissez les 3 d&eacute;fis pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !</>
+              : <>Vous avez atteint l&apos;usage de vos {userLimit === Infinity ? '∞' : userLimit} contenus gratuits. Cr&eacute;ez un compte ou accomplissez les 3 d&eacute;fis pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !</>
+            }
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Cr&eacute;ez un compte ou accomplissez les 3 d&eacute;fis pour d&eacute;bloquer l&apos;acc&egrave;s illimit&eacute; &mdash; c&apos;est 100% gratuit !
+            &nbsp;
           </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-black font-bold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all hover:scale-105"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
-            </svg>
-            Cr&eacute;er un compte
-          </Link>
-          <div className="mt-3">
+          {!isAuthenticated && (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-black font-bold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all hover:scale-105"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
+              </svg>
+              Cr&eacute;er un compte
+            </Link>
+          )}
+          <div className={isAuthenticated ? '' : 'mt-3'}>
             <Link
               href="/pricing"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/40 text-foreground/80 font-medium text-sm hover:border-primary/40 hover:text-primary transition-all"
@@ -403,7 +413,7 @@ function WatchContent() {
           </div>
           <div className="mt-4">
             <Link href="/" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              ← Retour &agrave; l&apos;accueil
+              &larr; Retour &agrave; l&apos;accueil
             </Link>
           </div>
         </div>
@@ -567,7 +577,9 @@ function WatchContent() {
 
           {/* Language Tabs */}
           <div className="flex gap-1 sm:gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-            {API_CONFIG.languageGroups.map(g => {
+            {API_CONFIG.languageGroups
+              .filter(g => isAuthenticated || g.id === 'FR')
+              .map(g => {
               const serverCount = allServers.filter(s => s.lang === g.id).length;
               if (serverCount === 0) return null;
               return (

@@ -200,6 +200,7 @@ export default function ProfilesPage() {
   const { data: session, status, signOut } = useSession();
   const { profiles, setProfile, profile: currentProfile, clearProfile, hydrated } = useProfile();
   const { isGuest, enterGuestMode, exitGuestMode } = useGuest();
+  const isGuestUser = status !== 'authenticated';
   const [managing, setManaging] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCustomLogoModal, setShowCustomLogoModal] = useState(false);
@@ -321,23 +322,33 @@ export default function ProfilesPage() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
+                      if (isGuestUser) {
+                        router.push('/login');
+                        return;
+                      }
                       setShowCustomLogoModal(true);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
+                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " + (isGuestUser ? "text-foreground/30 cursor-not-allowed" : "text-foreground/70 hover:text-foreground hover:bg-muted/50")}
                   >
                     <Upload className="w-4 h-4" />
                     Changer le logo
+                    {isGuestUser && <Lock className="w-3 h-3 ml-auto text-foreground/20" />}
                   </button>
 
                   <button
                     onClick={() => {
                       setShowDropdown(false);
+                      if (isGuestUser) {
+                        router.push('/login');
+                        return;
+                      }
                       setShowOfficialLogosModal(true);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
+                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " + (isGuestUser ? "text-foreground/30 cursor-not-allowed" : "text-foreground/70 hover:text-foreground hover:bg-muted/50")}
                   >
                     <Sparkles className="w-4 h-4" />
                     Gérer le profil
+                    {isGuestUser && <Lock className="w-3 h-3 ml-auto text-foreground/20" />}
                   </button>
 
                   {session?.user?.email && isAdmin(session.user.email) && (
@@ -464,10 +475,17 @@ export default function ProfilesPage() {
                 return (
                   <button
                     key={logo.id}
-                    onClick={() => setSelectedOfficialLogo(logo.id)}
-                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all group ${
+                    onClick={() => {
+                      if (isGuestUser) {
+                        setShowOfficialLogosModal(false);
+                        router.push('/login');
+                        return;
+                      }
+                      setSelectedOfficialLogo(logo.id);
+                    }}
+                    className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all group relative ${
                       isSelected ? 'ring-2 ring-primary bg-primary/10' : 'hover:bg-muted/50'
-                    }`}
+                    } ${isGuestUser ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
                     <div className="w-14 h-14 rounded-xl overflow-hidden shadow-md ring-1 ring-white/10">
                       <img src={logo.src} alt={logo.name} className="w-full h-full object-cover" />
@@ -476,6 +494,13 @@ export default function ProfilesPage() {
                       {logo.name}
                     </span>
                     {isSelected && <Check className="w-3 h-3 text-primary" />}
+                    {isGuestUser && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center">
+                          <Lock className="w-3 h-3 text-white/70" />
+                        </div>
+                      </div>
+                    )}
                   </button>
                 );
               })}

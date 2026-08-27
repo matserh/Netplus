@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles } from 'lucide-react';
+import { Palette, Sparkles, Lock } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useDynamicTheme } from '@/contexts/ThemeContext';
+import { useSession } from '@/contexts/AuthContext';
 
 interface DynamicThemeToggleProps {
   className?: string;
@@ -14,6 +15,8 @@ interface DynamicThemeToggleProps {
 export function DynamicThemeToggle({ className, variant = 'default' }: DynamicThemeToggleProps) {
   const [isActive, setIsActive] = useState(false);
   const { currentColors } = useDynamicTheme();
+  const { status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
   useEffect(() => {
     const saved = localStorage.getItem('netplus-dynamic-theme');
@@ -21,6 +24,7 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
   }, []);
 
   const handleToggle = (value: boolean) => {
+    if (!isAuthenticated) return;
     setIsActive(value);
     localStorage.setItem('netplus-dynamic-theme', String(value));
     window.dispatchEvent(new CustomEvent('dynamicThemeChange', { detail: { active: value } }));
@@ -31,17 +35,21 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
     return (
       <button
         onClick={() => handleToggle(!isActive)}
+        disabled={!isAuthenticated}
+        title={!isAuthenticated ? 'Connectez-vous pour activer le thème dynamique' : undefined}
         className={cn(
           'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
-          isActive
-            ? 'bg-primary/15 border-primary/30 text-primary'
-            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/8 hover:text-white/80',
+          !isAuthenticated
+            ? 'opacity-40 cursor-not-allowed bg-white/5 border-white/10 text-white/30'
+            : isActive
+              ? 'bg-primary/15 border-primary/30 text-primary'
+              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/8 hover:text-white/80',
           className
         )}
       >
-        <Palette className="w-3.5 h-3.5" />
+        {!isAuthenticated ? <Lock className="w-3.5 h-3.5" /> : <Palette className="w-3.5 h-3.5" />}
         <span>{isActive ? 'Thème auto' : 'Thème auto'}</span>
-        {isActive && currentColors && (
+        {isActive && currentColors && isAuthenticated && (
           <span
             className="w-3 h-3 rounded-full ring-1 ring-white/20"
             style={{ backgroundColor: currentColors.primary }}
@@ -54,11 +62,12 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
   // Compact — for tight spaces
   if (variant === 'compact') {
     return (
-      <div className={cn('flex items-center gap-2', className)}>
-        <Palette className="w-3.5 h-3.5 text-primary" />
+      <div className={cn('flex items-center gap-2', !isAuthenticated && 'opacity-40', className)}>
+        {!isAuthenticated ? <Lock className="w-3.5 h-3.5 text-muted-foreground" /> : <Palette className="w-3.5 h-3.5 text-primary" />}
         <Switch
           checked={isActive}
           onCheckedChange={handleToggle}
+          disabled={!isAuthenticated}
           className="data-[state=checked]:bg-primary"
         />
       </div>
@@ -68,11 +77,15 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
   // Default full-width card
   return (
     <button
+      disabled={!isAuthenticated}
+      title={!isAuthenticated ? 'Connectez-vous pour activer le thème dynamique' : undefined}
       className={cn(
-        'w-full p-4 rounded-xl transition-all cursor-pointer border',
-        isActive
-          ? 'bg-primary/10 border-primary/30'
-          : 'bg-white/5 border-white/10 hover:bg-white/8',
+        'w-full p-4 rounded-xl transition-all border',
+        !isAuthenticated
+          ? 'opacity-40 cursor-not-allowed bg-white/5 border-white/10'
+          : isActive
+            ? 'bg-primary/10 border-primary/30 cursor-pointer'
+            : 'bg-white/5 border-white/10 hover:bg-white/8 cursor-pointer',
         className
       )}
       onClick={() => handleToggle(!isActive)}
@@ -80,9 +93,11 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
       <div className="flex items-center gap-3">
         <div className={cn(
           'w-10 h-10 rounded-full flex items-center justify-center transition-all',
-          isActive ? 'bg-primary/20' : 'bg-white/5'
+          !isAuthenticated ? 'bg-white/5' : isActive ? 'bg-primary/20' : 'bg-white/5'
         )}>
-          {isActive && currentColors ? (
+          {!isAuthenticated ? (
+            <Lock className="w-5 h-5 text-white/30" />
+          ) : isActive && currentColors ? (
             <span
               className="w-5 h-5 rounded-full"
               style={{ backgroundColor: currentColors.primary }}
@@ -99,11 +114,11 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
           <div className="flex items-center gap-2">
             <span className={cn(
               'font-medium transition-colors',
-              isActive ? 'text-primary' : 'text-white/80'
+              !isAuthenticated ? 'text-white/30' : isActive ? 'text-primary' : 'text-white/80'
             )}>
               {isActive ? 'Thème Adaptatif' : 'Thème Dynamique'}
             </span>
-            {isActive && (
+            {isActive && isAuthenticated && (
               <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary">
                 <Sparkles className="w-2.5 h-2.5" />
                 Actif
@@ -111,17 +126,20 @@ export function DynamicThemeToggle({ className, variant = 'default' }: DynamicTh
             )}
           </div>
           <span className="text-xs text-white/50">
-            {isActive
-              ? currentColors
-                ? `Couleurs extraites du contenu`
-                : 'Les couleurs s\'adaptent au contenu visionné'
-              : 'Les couleurs s\'adaptent aux films et séries'}
+            {!isAuthenticated
+              ? 'Connectez-vous pour débloquer'
+              : isActive
+                ? currentColors
+                  ? `Couleurs extraites du contenu`
+                  : 'Les couleurs s\'adaptent au contenu visionné'
+                : 'Les couleurs s\'adaptent aux films et séries'}
           </span>
         </div>
 
         <Switch
           checked={isActive}
           onCheckedChange={handleToggle}
+          disabled={!isAuthenticated}
           className="data-[state=checked]:bg-primary pointer-events-none"
           onClick={(e) => e.stopPropagation()}
         />
