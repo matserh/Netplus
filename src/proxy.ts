@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+// Proxy replaces middleware in Next.js 16
+// Merged from middleware.ts — all auth/beta/staging logic preserved
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { verifyPuterToken } from '@/lib/puter-jwt';
 import { isAdmin } from '@/lib/beta-config';
 
@@ -22,12 +25,11 @@ const PUBLIC_PATHS = [
 // API routes that need admin auth
 const ADMIN_API_PATHS = ['/api/admin'];
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isVercel = !!process.env.VERCEL;
 
   // ---- 1. Let staging verify endpoint through WITHOUT any redirect ----
-  // This MUST come before the staging password check to avoid a redirect loop.
   if (pathname === STAGING_VERIFY || pathname.startsWith(STAGING_VERIFY + '/')) {
     return NextResponse.next();
   }
@@ -62,7 +64,8 @@ export function middleware(request: NextRequest) {
     if (!token) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
-    return verifyPuterToken(token).then(payload => {
+    try {
+      const payload = await verifyPuterToken(token);
       if (!payload) {
         return NextResponse.json({ error: 'Session invalide' }, { status: 401 });
       }
@@ -75,7 +78,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.next({
         request: { headers: reqHeaders },
       });
-    });
+    } catch {
+      return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    }
   }
 
   // ---- 5. Let all other requests through ----
