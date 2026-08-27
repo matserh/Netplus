@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { isAdmin } from '@/lib/beta-config';
+import { verifyAdminRequest } from '@/lib/beta-config';
+
+// Helper to verify admin and return early if unauthorized
+async function requireAdmin(req: NextRequest): Promise<string | NextResponse> {
+  const result = await verifyAdminRequest(req);
+  if (!result.authorized) {
+    const data = await result.response.json();
+    return NextResponse.json(data, { status: result.response.status });
+  }
+  return result.email;
+}
 
 // GET /api/admin/users — List all users with beta access info
 export async function GET(req: NextRequest) {
   try {
-    const adminEmail = req.headers.get('x-admin-email');
-    if (!adminEmail || !isAdmin(adminEmail)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
+    const adminEmail = await requireAdmin(req);
+    if (typeof adminEmail !== 'string') return adminEmail;
 
     const users = await db.user.findMany({
       orderBy: { createdAt: 'desc' },
@@ -43,10 +51,8 @@ export async function GET(req: NextRequest) {
 // PATCH /api/admin/users — Update user status (ban, pause, activate, grant admin)
 export async function PATCH(req: NextRequest) {
   try {
-    const adminEmail = req.headers.get('x-admin-email');
-    if (!adminEmail || !isAdmin(adminEmail)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
+    const adminEmail = await requireAdmin(req);
+    if (typeof adminEmail !== 'string') return adminEmail;
 
     const { userId, action } = await req.json();
     if (!userId || !action) {

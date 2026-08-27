@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/beta-config';
+import { verifyAdminRequest } from '@/lib/beta-config';
 import { createInvitationJWT, buildInvitationURL } from '@/lib/invitation';
+
+async function requireAdmin(req: NextRequest): Promise<string | NextResponse> {
+  const result = await verifyAdminRequest(req);
+  if (!result.authorized) {
+    const data = await result.response.json();
+    return NextResponse.json(data, { status: result.response.status });
+  }
+  return result.email;
+}
 
 // POST /api/admin/invitations — Auto-generate an invitation link
 export async function POST(req: NextRequest) {
   try {
-    const adminEmail = req.headers.get('x-admin-email');
-    if (!adminEmail || !isAdmin(adminEmail)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
-    }
+    const adminEmail = await requireAdmin(req);
+    if (typeof adminEmail !== 'string') return adminEmail;
 
     const { forEmail, expiresInDays } = await req.json();
 
