@@ -299,74 +299,11 @@ export default function ProfilesPage() {
 
             {/* Dropdown */}
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden animate-scale-in z-50">
-                {/* User info */}
-                <div className="p-4 border-b border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30">
-                      {officialLogoData ? (
-                        <img src={officialLogoData.src} alt="Logo" className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={currentImg} alt="Profil" className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{userName}</p>
-                      {userEmail && <p className="text-xs text-muted-foreground truncate">{userEmail}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="p-2">
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
-                      setShowCustomLogoModal(true);
-                    }}
-                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-foreground/70 hover:text-foreground hover:bg-muted/50"}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Changer le logo
-                    {isGuestUser && <Lock className="w-3 h-3 ml-auto text-foreground/20" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
-                      setShowOfficialLogosModal(true);
-                    }}
-                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-foreground/70 hover:text-foreground hover:bg-muted/50"}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Gérer le profil
-                    {isGuestUser && <Lock className="w-3 h-3 ml-auto text-foreground/20" />}
-                  </button>
-
-                  {session?.user?.email && isAdmin(session.user.email) && (
-                    <>
-                      <Link
-                        href="/admin"
-                        onClick={() => setShowDropdown(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-amber-400/80 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
-                      >
-                        <Shield className="w-4 h-4" />
-                        Administration
-                      </Link>
-                      <div className="my-1.5 h-px bg-border/50" />
-                    </>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
-                      setShowDisconnectConfirm(true);
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Déconnexion
-                  </button>
+              <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden z-50">
+                {/* DEBUG: minimal content to test */}
+                <div className="p-4">
+                  <p className="text-sm">Test dropdown</p>
+                  <p className="text-xs text-muted-foreground">{userName}</p>
                 </div>
               </div>
             )}
