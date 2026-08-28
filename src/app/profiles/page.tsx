@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useSession } from '@/contexts/AuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { useProfile, ProfileType, UserProfile } from '@/contexts/ProfileContext';
-import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles, Shield } from 'lucide-react';
+import { Pencil, LogOut, Check, ChevronDown, UserCircle, Camera, X, Ghost, Upload, Sparkles, Shield, Lock } from 'lucide-react';
 import { isAdmin } from '@/lib/beta-config';
 import { useGuest } from '@/contexts/GuestContext';
 import { Media, TMDBResponse, API_CONFIG } from '@/types/media';
@@ -300,10 +300,82 @@ export default function ProfilesPage() {
             {/* Dropdown */}
             {showDropdown && (
               <div className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-2xl shadow-black/30 overflow-hidden z-50">
-                {/* DEBUG: minimal content to test */}
-                <div className="p-4">
-                  <p className="text-sm">Test dropdown</p>
-                  <p className="text-xs text-muted-foreground">{userName}</p>
+                <div className="p-3 border-b border-border">
+                  <p className="text-sm font-semibold text-foreground">{userName}</p>
+                  {userEmail && <p className="text-xs text-muted-foreground mt-0.5">{userEmail}</p>}
+                </div>
+                <div className="p-1.5">
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setShowOfficialLogosModal(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">Thèmes Netplus</p>
+                      <p className="text-[11px] text-muted-foreground">Choisir un logo officiel</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDropdown(false);
+                      setShowCustomLogoModal(true);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <Upload className="w-4 h-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">Changer le logo</p>
+                      <p className="text-[11px] text-muted-foreground">Importer votre propre image</p>
+                    </div>
+                  </button>
+                  {isGuestUser && (
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        router.push('/login');
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <Shield className="w-4 h-4 text-blue-400" />
+                      <div>
+                        <p className="text-sm font-medium">Se connecter</p>
+                        <p className="text-[11px] text-muted-foreground">Créer un compte ou se connecter</p>
+                      </div>
+                    </button>
+                  )}
+                  {!isGuestUser && (
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        setManaging(!managing);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <Pencil className="w-4 h-4 text-amber-400" />
+                      <div>
+                        <p className="text-sm font-medium">Gérer les profils</p>
+                        <p className="text-[11px] text-muted-foreground">Modifier ou ajouter un profil</p>
+                      </div>
+                    </button>
+                  )}
+                  {!isGuestUser && (
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        setShowDisconnectConfirm(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-500/10 transition-colors text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-red-400" />
+                      <div>
+                        <p className="text-sm font-medium">Déconnexion</p>
+                        <p className="text-[11px] text-muted-foreground">Se déconnecter de Netplus</p>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -402,7 +474,7 @@ export default function ProfilesPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-3 mt-4">
-              {OFFICIAL_LOGOS.map((logo) => {
+              {(isGuestUser ? OFFICIAL_LOGOS.slice(0, 5) : OFFICIAL_LOGOS).map((logo) => {
                 const isSelected = selectedOfficialLogo === logo.id || localStorage.getItem('netplus-official-logo') === logo.id;
                 return (
                   <button
