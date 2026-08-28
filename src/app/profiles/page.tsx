@@ -322,13 +322,9 @@ export default function ProfilesPage() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      if (isGuestUser) {
-                        router.push('/login');
-                        return;
-                      }
                       setShowCustomLogoModal(true);
                     }}
-                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " + (isGuestUser ? "text-foreground/30 cursor-not-allowed" : "text-foreground/70 hover:text-foreground hover:bg-muted/50")}
+                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-foreground/70 hover:text-foreground hover:bg-muted/50"}
                   >
                     <Upload className="w-4 h-4" />
                     Changer le logo
@@ -338,13 +334,9 @@ export default function ProfilesPage() {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      if (isGuestUser) {
-                        router.push('/login');
-                        return;
-                      }
                       setShowOfficialLogosModal(true);
                     }}
-                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all " + (isGuestUser ? "text-foreground/30 cursor-not-allowed" : "text-foreground/70 hover:text-foreground hover:bg-muted/50")}
+                    className={"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-foreground/70 hover:text-foreground hover:bg-muted/50"}
                   >
                     <Sparkles className="w-4 h-4" />
                     Gérer le profil
@@ -396,7 +388,7 @@ export default function ProfilesPage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">Importez votre propre logo personnalisé pour votre profil.</p>
+            <p className="text-sm text-muted-foreground mb-4">{isGuestUser ? 'Connectez-vous pour importer votre propre logo personnalisé.' : 'Importez votre propre logo personnalisé pour votre profil.'}</p>
 
             {/* Preview area */}
             <div className="w-32 h-32 mx-auto rounded-xl border-2 border-dashed border-border mb-4 flex items-center justify-center overflow-hidden bg-muted/30">
@@ -438,16 +430,19 @@ export default function ProfilesPage() {
               </button>
               <button
                 onClick={() => {
-                  if (customLogoPreview) {
-                    // Save custom logo to localStorage
-                    localStorage.setItem('netplus-custom-logo', customLogoPreview);
+                  if (!customLogoPreview) return;
+                  if (isGuestUser) {
                     setShowCustomLogoModal(false);
+                    router.push('/login');
+                    return;
                   }
+                  localStorage.setItem('netplus-custom-logo', customLogoPreview);
+                  setShowCustomLogoModal(false);
                 }}
                 disabled={!customLogoPreview}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-black font-semibold hover:bg-primary/90 transition-all text-sm disabled:opacity-40"
               >
-                Appliquer
+                {isGuestUser ? 'Se connecter' : 'Appliquer'}
               </button>
             </div>
           </div>
