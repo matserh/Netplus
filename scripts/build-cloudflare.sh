@@ -16,4 +16,8 @@ npx next build
 echo "[CF Build] OpenNext adapter for Cloudflare..."
 npx @opennextjs/cloudflare || true
 
+echo "[CF Build] Copying Pages proxy _worker.js..."
+cp .pages-proxy/_worker.js .open-next/assets/_worker.js
+echo '_worker.js' > .open-next/assets/.assetsignore
+
 echo "[CF Build] Build complete!"
