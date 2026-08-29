@@ -5,23 +5,19 @@
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
 
-# HTML pages — NEVER cache (must always hit the Worker for fresh content)
-/*.html
+# ALL routes — never cache HTML at CDN or browser level
+/*
   Cache-Control: no-cache,no-store,must-revalidate
   X-Frame-Options: DENY
 
-# Root and all HTML routes
-/
-  Cache-Control: no-cache,no-store,must-revalidate
+# Override: JS/CSS bundles can still be cached
+/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable
 
-/login
-  Cache-Control: no-cache,no-store,must-revalidate
-
-/profiles
-  Cache-Control: no-cache,no-store,must-revalidate
-
+# API routes
 /api/*
   Cache-Control: no-cache,no-store,must-revalidate
 
+# BUILD_ID must always be fresh
 /BUILD_ID
   Cache-Control: no-cache,no-store,must-revalidate
