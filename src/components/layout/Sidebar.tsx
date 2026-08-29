@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/Logo';
 import { DynamicThemeToggle } from '@/components/ui/DynamicThemeToggle';
@@ -26,7 +27,8 @@ import {
   Shield,
   Calendar,
   Award,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react';
 import { Genre } from '@/types/media';
 import { cn } from '@/lib/utils';
@@ -77,6 +79,8 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
   const pathname = usePathname();
   const { profile, profiles, setProfile } = useProfile();
   const router = useRouter();
+  const { status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
   // Resolve the current logo to display
   const [currentLogoSrc, setCurrentLogoSrc] = useState<string | null>(null);
@@ -212,12 +216,16 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                   {/* Official logos row */}
                   <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest px-3 mb-1.5">Thèmes NetPlus</p>
                   <div className="grid grid-cols-5 gap-1.5 px-3">
-                    {OFFICIAL_LOGOS.map((logo) => {
+                    {(isAuthenticated ? OFFICIAL_LOGOS : OFFICIAL_LOGOS.slice(0, 5)).map((logo) => {
                       const isSelected = customLogoId === logo.id;
                       return (
                         <button
                           key={logo.id}
                           onClick={() => {
+                            if (!isAuthenticated) {
+                              router.push('/login');
+                              return;
+                            }
                             localStorage.setItem('netplus-official-logo', logo.id);
                             localStorage.removeItem('netplus-custom-logo');
                             setCurrentLogoSrc(logo.src);
@@ -225,11 +233,17 @@ export function Sidebar({ genres, onGenreSelect, onAIClick, isCollapsed, onToggl
                             setShowProfileSwitcher(false);
                           }}
                           className={cn(
-                            "w-full aspect-square rounded-md overflow-hidden ring-1 transition-all",
-                            isSelected ? "ring-primary ring-2" : "ring-white/10 hover:ring-white/30"
+                            "w-full aspect-square rounded-md overflow-hidden ring-1 transition-all relative",
+                            isSelected ? "ring-primary ring-2" : "ring-white/10 hover:ring-white/30",
+                            !isAuthenticated && "opacity-70"
                           )}
                         >
                           <img src={logo.src} alt={logo.name} className="w-full h-full object-cover" />
+                          {!isAuthenticated && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                              <Lock className="w-3 h-3 text-white/80" />
+                            </div>
+                          )}
                         </button>
                       );
                     })}

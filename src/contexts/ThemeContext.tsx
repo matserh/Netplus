@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useSession } from '@/contexts/AuthContext';
 
 // RGB color type
 interface RGB {
@@ -168,6 +169,8 @@ function generateThemeColors(dominantRgb: RGB): ThemeColors {
 
 // Dynamic Theme Provider component
 export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
+  const { status } = useSession();
+  const isAuthenticated = status === 'authenticated';
   const [isActive, setIsActive] = useState(false);
   const [currentColors, setCurrentColors] = useState<ThemeColors | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
@@ -176,22 +179,27 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const lastExtractedUrlRef = useRef<string | null>(null);
 
-  // Load state from localStorage
+  // Load state from localStorage — only activate if authenticated
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsActive(false);
+      return;
+    }
     const saved = localStorage.getItem('netplus-dynamic-theme');
     if (saved === 'true') {
       setIsActive(true);
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // Listen for changes from the toggle component
+  // Listen for changes from the toggle component — ignore if not authenticated
   useEffect(() => {
     const handleChange = (e: CustomEvent<{ active: boolean }>) => {
+      if (!isAuthenticated) return;
       setIsActive(e.detail.active);
     };
     window.addEventListener('dynamicThemeChange', handleChange as EventListener);
     return () => window.removeEventListener('dynamicThemeChange', handleChange as EventListener);
-  }, []);
+  }, [isAuthenticated]);
 
   // Create canvas for color extraction
   useEffect(() => {
@@ -358,14 +366,22 @@ export function DynamicThemeProvider({ children }: DynamicThemeProviderProps) {
     }, 900);
   }, []);
 
-  // **Main API**: extract colors from image + apply them in one call
+  // **Main API**: extract colors from image + apply them in one call — auth-gated
   const setContentTheme = useCallback(async (imageUrl: string) => {
-    if (!isActive || !imageUrl) return;
+    if (!isActive || !isAuthenticated || !imageUrl) return;
     const colors = await extractColorsFromImage(imageUrl);
     if (colors) {
       applyTheme(colors);
     }
   }, [isActive, extractColorsFromImage, applyTheme]);
+
+  // Reset theme when user logs out
+  useEffect(() => {
+    if (!isAuthenticated && isActive) {
+      setIsActive(false);
+      resetTheme();
+    }
+  }, [isAuthenticated]);
 
   // Handle dynamic theme active state changes
   useEffect(() => {

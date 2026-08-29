@@ -19,6 +19,7 @@ import { SmartVideoPlayer } from '@/components/ui/SmartVideoPlayer';
 import { useChallenge } from '@/contexts/ChallengeContext';
 import { useWatchHistory } from '@/contexts/WatchHistoryContext';
 import { useDynamicTheme } from '@/contexts/ThemeContext';
+import { useSession } from '@/contexts/AuthContext';
 
 interface Episode {
   id: number;
@@ -68,9 +69,31 @@ function AnimeWatchContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { isPremium, isLoaded } = useChallenge();
+  const { isPremium, isLoaded, canWatch, incrementWatchCount, getUserLimit, watchCount, isAdminUser } = useChallenge();
   const { addToHistory, updateProgress, getHistoryEntry } = useWatchHistory();
   const { setContentTheme } = useDynamicTheme();
+  const { status: authStatus } = useSession();
+  const isAuthenticated = authStatus === 'authenticated';
+
+  // Content limit check for non-premium/non-admin
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [limitMessage, setLimitMessage] = useState('');
+  const limitChecked = useRef(false);
+
+  useEffect(() => {
+    if (isLoaded && !limitChecked.current) {
+      limitChecked.current = true;
+      if (!canWatch()) {
+        const limit = getUserLimit();
+        setLimitMessage(isAuthenticated
+          ? `Limite atteinte (${limit} contenus). Complétez les tâches pour débloquer l'accès illimité.`
+          : `Limite invité atteinte (${limit} contenus). Connectez-vous pour plus d'accès.`);
+        setIsBlocked(true);
+      } else {
+        incrementWatchCount();
+      }
+    }
+  }, [isLoaded]);
 
   // Route params
   const mediaId = parseInt(params.id as string);
@@ -94,7 +117,6 @@ function AnimeWatchContent() {
   );
   const [streamUrl, setStreamUrl] = useState<string>('');
   const [streamLoading, setStreamLoading] = useState(true);
-  const [isBlocked, setIsBlocked] = useState(false);
   const [watchTimer, setWatchTimer] = useState(0);
 
   const progressSaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -395,6 +417,27 @@ function AnimeWatchContent() {
       </div>
 
       {/* Video Player */}
+      {isBlocked ? (
+        <div className="pt-11 sm:pt-12 relative">
+          <div className="aspect-video bg-black/80 flex items-center justify-center">
+            <div className="text-center p-6 max-w-md">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">Limite atteinte</h3>
+              <p className="text-sm text-muted-foreground mb-4">{limitMessage}</p>
+              <div className="flex gap-3 justify-center">
+                {!isAuthenticated && (
+                  <button onClick={() => router.push('/login')} className="px-4 py-2 rounded-lg bg-primary text-black font-semibold text-sm hover:bg-primary/90 transition-all">Se connecter</button>
+                )}
+                <button onClick={() => router.push('/pricing')} className="px-4 py-2 rounded-lg bg-white/10 text-foreground font-medium text-sm hover:bg-white/15 transition-all">Voir les offres</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (<>
       <div className="pt-11 sm:pt-12 relative">
         {streamLoading ? (
           <div className="aspect-video bg-black/50 flex items-center justify-center">
@@ -433,8 +476,10 @@ function AnimeWatchContent() {
           </div>
         )}
       </div>
+      </>)}
 
       {/* Content Below Player */}
+      {!isBlocked && (
       <div className="px-3 sm:px-6 py-4 sm:py-8">
         {/* Title & Meta */}
         <div className="mb-4 sm:mb-6">
@@ -483,9 +528,9 @@ function AnimeWatchContent() {
             <span className="text-xs sm:text-sm text-muted-foreground font-medium">Lecteur Anime</span>
           </div>
 
-          {/* Audio Type Tabs: VF / VOSTFR / Dub EN */}
+          {/* Audio Type Tabs: VF / VOSTFR / Dub EN — guests only see VOSTFR */}
           <div className="flex gap-1 sm:gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-            {ANIME_LANGUAGE_GROUPS.map(g => {
+            {(isAuthenticated ? ANIME_LANGUAGE_GROUPS : ANIME_LANGUAGE_GROUPS.filter(g => g.id === 'VOSTFR')).map(g => {
               const serverCount = getAnimeServersByGroup(g.id).length;
               return (
                 <button
@@ -650,6 +695,7 @@ function AnimeWatchContent() {
           </Link>
         </div>
       </div>
+      )}
 
       {/* Backdrop */}
       {backdropUrl && (
